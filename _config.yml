@@ -15,4 +15,4 @@ url: "http://johnvinyard.github.io" # the base hostname & protocol for your site
 github_username:  johnvinyard
 
 # Build settings
-markdown: kramdown
+markdown: redcarpet
