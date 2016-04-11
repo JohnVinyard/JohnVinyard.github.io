@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "Getting Started with Zounds"
-date:   2016-04-10 21:23:29 -0500
+date:   2016-04-10 18:00:00 -0500
 categories: zounds installation
 ---
 [Zounds](https://github.com/JohnVinyard/zounds) is a python library for building audio feature extraction pipelines in a delcarative way, from re-usable building blocks.  It provides many of the primitives you'll need to start experimenting with audio, like [Short-Time fourier and discrete cosine transforms, chroma, and bark-frequency cepstral coefficients](https://github.com/JohnVinyard/zounds/blob/master/zounds/basic/audiograph.py#L28).
