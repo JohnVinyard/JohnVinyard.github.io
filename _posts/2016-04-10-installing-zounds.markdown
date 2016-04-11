@@ -35,7 +35,7 @@ zounds-quickstart --datadir data --port 9999
 Then, in your browser, try the following:
 
 ```python
->>> _id = Document.process(meta=''http://phatdrumloops.com/audio/wav/youregettn.wav)
+>>> _id = Document.process(meta='http://phatdrumloops.com/audio/wav/youregettn.wav')
 >>> doc = Document(_id)
 >>> doc.ogg # this should cause an html5 audio element to appear
 >>> doc.centroid # this should cause a graph of spectral centroid to appear
