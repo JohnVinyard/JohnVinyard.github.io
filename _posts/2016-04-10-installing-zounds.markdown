@@ -41,7 +41,7 @@ Then, in your browser, try the following:
 
 To listen to the original audio, type...
 
-```
+```python
 >>> doc.ogg # this should cause an html5 audio element to appear
 ```
 
@@ -50,7 +50,7 @@ http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com
 
 To see the sound's [spectral centroid](https://en.wikipedia.org/wiki/Spectral_centroid) over time, type...
 
-```
+```python
 >>> doc.centroid # this should cause a graph of spectral centroid to appear
 ```
 
