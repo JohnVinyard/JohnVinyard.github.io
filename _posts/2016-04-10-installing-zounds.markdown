@@ -10,7 +10,7 @@ My goal is to make installing zounds as painless as possible, but as of this wri
 
 # Numpy and Scipy
 
-Zounds depends on numpy and scipy.  If you don't already have them installed (if you do any kind of scientific or numerical computing with python, you surely do), I highly reccomemd [Continuum Analytics' Anaconda distribution](https://www.continuum.io/downloads).  This will get you up and running much more quickly than building numpy and scipy from source yourself.
+Zounds depends on numpy and scipy.  If you don't already have them installed (if you do any kind of scientific or numerical computing with python, you surely do), I highly recommend [Continuum Analytics' Anaconda distribution](https://www.continuum.io/downloads).  This will get you up and running much more quickly than building numpy and scipy from source yourself.
 
 # `libsndfile 1.0.26`
 
