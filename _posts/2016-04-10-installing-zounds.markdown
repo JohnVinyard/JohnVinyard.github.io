@@ -46,7 +46,11 @@ To listen to the original audio, type...
 ```
 
 ...and you should see an html5 audio element that will play the original audio, like this:
-http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/ogg.ogg
+<audio controls="controls">
+  Your browser does not support the <code>audio</code> element.
+  <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/ogg.ogg" type="audio/ogg">
+</audio>
+
 
 To see the sound's [spectral centroid](https://en.wikipedia.org/wiki/Spectral_centroid) over time, type...
 
@@ -66,4 +70,8 @@ Then, let's try sorting the audio frames by spectral centroid, ascending:
 ```
 
 At this point, you shoud see an html5 audio element that will play the sound, ordered by spectral centroid, ascending
-http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/sorted_by_centroid.ogg
+<audio controls="controls">
+  Your browser does not support the <code>audio</code> element.
+  <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/sorted_by_centroid.ogg" type="audio/ogg">
+</audio>
+
