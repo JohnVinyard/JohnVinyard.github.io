@@ -40,24 +40,30 @@ Then, in your browser, try the following:
 ```
 
 To listen to the original audio, type...
+
 ```
 >>> doc.ogg # this should cause an html5 audio element to appear
 ```
+
 ...and you should see an html5 audio element that will play the original audio, like this:
 http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/ogg.ogg
 
 To see the sound's [spectral centroid](https://en.wikipedia.org/wiki/Spectral_centroid) over time, type...
+
 ```
 >>> doc.centroid # this should cause a graph of spectral centroid to appear
 ```
+
 ...and you should see an image like this:
 ![Spectral Centroid](http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/centroid.png)
 
 Then, let's try sorting the audio frames by spectral centroid, ascending:
+
 ```python
 >>> import numpy as np
 >>> indices = np.argsort(doc.centroid)
 >>> synth.synthesize(doc.dct[indices]) # a new html5 audio element should appear.  listen to it!
 ```
+
 At this point, you shoud see an html5 audio element that will play the sound, ordered by spectral centroid, ascending
 http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/sorted_by_centroid.ogg
