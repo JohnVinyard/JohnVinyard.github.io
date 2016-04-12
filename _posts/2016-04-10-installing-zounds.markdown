@@ -18,7 +18,7 @@ Zounds depends on the [most recent release of libsndfile](https://github.com/eri
 
 # Installing From PyPI
 
-Once you've installed got all the dependencies out of the way, your best bet will be to simply `pip install zounds`.  
+Once you've got all the dependencies out of the way, your best bet will be to simply `pip install zounds`.  
 
 # Installing From Source
 
