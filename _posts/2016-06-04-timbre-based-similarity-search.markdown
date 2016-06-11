@@ -123,7 +123,7 @@ Then, calling...
 # Getting a Corpus of Data
 There a tons of great places to find free audio samples online, but I happened upon this [ page](http://wiki.laptop.org/go/Free_sound_samples), hosted by the [One Laptop Per Child organization](http://wiki.laptop.org/go/The_OLPC_Wiki).  After browsing the sample sets available there, I decided that [this set](https://archive.org/details/FlavioGaete) looked like it had enough samples, and enough variety to make this search interesting.
 
-We're going to download this file, and use the `WithTimbre` class we defined above to extract bark-frequency cepstral coefficients by streaming each audio file from the zip archive:
+We're going to download this file, and use the [`WithTimbre`](https://github.com/JohnVinyard/zounds/blob/master/examples/timbre.py#L18) class we defined above to extract bark-frequency cepstral coefficients by streaming each audio file from the zip archive:
 
 ```python
 # Download the zip archive
