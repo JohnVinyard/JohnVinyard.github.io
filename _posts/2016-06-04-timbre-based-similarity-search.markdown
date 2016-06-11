@@ -132,11 +132,12 @@ class BfccKmeans(ff.BaseModel):
 ```
 
 This pipeline will:
+
 - randomly sample from, and shuffle the dataset it receives
 - give each example [unit norm](https://en.wikipedia.org/wiki/Unit_vector), because again, we're interested in the _shape_ of these examples, and not their magnitude
 - Learn 128 means from the data
 - Produce a pipeline that is now capable of transforming our `WithTimbre.bfcc` feature into a [one-hot encoding](https://en.wikipedia.org/wiki/One-hot): a 128-dimensional vector with a single non-zero entry
-- 
+ 
 
 To learn and persist our model, we just need to pass `BfccKmeans` an iterator over the examples we'd like it to learn from:
 
