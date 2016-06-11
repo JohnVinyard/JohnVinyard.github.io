@@ -239,7 +239,7 @@ doc = WithCodes(_id)
 print doc.bfcc_kmeans_pooled
 ```
 
-Both the [`WithCodes.bfcc_kmeans`](https://github.com/JohnVinyard/zounds/blob/master/examples/timbre.py#L60) and `WithCodes.bfcc_kmeans_pooled` features will be computed and stored (the former will be computed because the latter depends upon it).
+Both the [`WithCodes.bfcc_kmeans`](https://github.com/JohnVinyard/zounds/blob/master/examples/timbre.py#L60) and [`WithCodes.bfcc_kmeans_pooled`](https://github.com/JohnVinyard/zounds/blob/master/examples/timbre.py#L72) features will be computed and stored (the former will be computed because the latter depends upon it).
 
 With that in mind, all we have to do now is to define and build our index over the [`WithCodes.bfcc_kmeans_pooled`](https://github.com/JohnVinyard/zounds/blob/master/examples/timbre.py#L72) feature.  The encodings we need will be computed and stored on-demand in the course of building the index.
 
