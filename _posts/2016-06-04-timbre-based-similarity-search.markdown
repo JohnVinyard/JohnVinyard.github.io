@@ -107,7 +107,7 @@ Calling...
 ```python
 >>> WithTimbre(_id).bark
 ```
-...will return a [`ConstantRateTimeSeries`](https://github.com/JohnVinyard/zounds/blob/master/zounds/timeseries/timeseries.py#L172) instance, which is really just a subclass of [`numpy.ndarray`](http://docs.scipy.org/doc/numpy-1.10.0/reference/generated/numpy.ndarray.html) that knows about the frequency and duration of its samples.  It'll look like this, for an audio file containing a short snippet of a cello playing:
+...will return a [`ConstantRateTimeSeries`](https://github.com/JohnVinyard/zounds/blob/master/zounds/timeseries/timeseries.py#L192) instance, which is really just a subclass of [`numpy.ndarray`](http://docs.scipy.org/doc/numpy-1.10.0/reference/generated/numpy.ndarray.html) that knows about the frequency and duration of its samples.  It'll look like this, for an audio file containing a short snippet of a cello playing:
 
 ![Cello Bark Bands](http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/CelloBarkBands.png)
 
@@ -116,7 +116,7 @@ Then, calling...
 ```python
 >>> WithTimbre(_id).bfcc
 ```
-...will return another [`ConstantRateTimeSeries`](https://github.com/JohnVinyard/zounds/blob/master/zounds/timeseries/timeseries.py#L172) that looks something like this, for the same cello sound:
+...will return another [`ConstantRateTimeSeries`](https://github.com/JohnVinyard/zounds/blob/master/zounds/timeseries/timeseries.py#L192) that looks something like this, for the same cello sound:
 
 ![Cell Bark Frequency Cepstral Coefficients](http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/Bfcc.png)
 
