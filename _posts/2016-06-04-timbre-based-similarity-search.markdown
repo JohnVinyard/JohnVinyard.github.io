@@ -59,7 +59,7 @@ We'll be glossing over a lot of details; the goal is to get a high-level idea of
 # Defining our Baseline Features
 Given that we want to group audio roughly by timbre (which is admittedly a very subjective thing), we'll need to transform audio in such a way that we achieve some translation invariance in the frequency domain.  Put another way, we'd like to understand something about the "shape" of the audio spectrum, or the relationships therein, ignoring the exact positions or frequencies of these shapes.
 
-One of the most common ways to achieve this is to use a feature like [MFCC, or Mel-frequency cepstral coefficients](https://en.wikipedia.org/wiki/Mel-frequency_cepstrum).  Roughly speaking, this is a spectrum of a spectrum, discarding phase, so we get an idea of what kinds of intervals, or relationships are present between dominant frequencies in the spectrum, without caring about the exact frequencies.
+One of the most common ways to achieve this is to use a feature like [MFCC, or Mel-frequency cepstral coefficients](https://en.wikipedia.org/wiki/Mel-frequency_cepstrum).  Roughly speaking, this is a spectrum of a spectrum, discarding phase, so we get an idea of what kinds of intervals, or relationships are present between dominant frequencies in the spectrum.
 
 The first step will be to define a class [`WithTimbre`](https://github.com/JohnVinyard/zounds/blob/master/examples/timbre.py#L18) that will first extract [bark bands](https://en.wikipedia.org/wiki/Bark_scale) from the short-time fourier transform frames, and then compute the cepstral coefficients of those frames.
 
