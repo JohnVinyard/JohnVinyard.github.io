@@ -95,6 +95,7 @@ for zf in ff.iter_zip(filename):
 ```
 
 Notice the call to `WithTimbre.process(meta=zf)` in the very last line there.
+
 # Learning a Good Representation
 Now that we've processed all that audio, and persisted the extracted features to disk, we'd like to learn a representation of the features that is binary, making it possible to pack those features into bitarrays, and perform a brute-force, but fast bitwise hamming distance computation against every example in our dataset.
 
