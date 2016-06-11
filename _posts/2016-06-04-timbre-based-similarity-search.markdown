@@ -146,7 +146,7 @@ BfccKmeans.process(docs=(wt.bfcc for wt in WithTimbre))
 ```
 
 # Building an Index
-Now that we've learned a good representation of our `WithTimbre.bfcc` feature, we'd like to store that encoding.  Additionally, we know our choice of feature gives us translation invariance in the frequency domain, but we'd also like to introduce some invariance in the time domain, so in addition to storing our one-hot encoding, we'll also pool the feature together over short spans of time, so that, given our 128-dimensional one-hot encoding, pooled over say, 30 frames, we'd have a new 128-dimensional binary vector with at most 30 "on entries", in the case where each of the thirty frames has a different code.
+Now that we've learned a good representation of our `WithTimbre.bfcc` feature, we'd like to store that encoding.  Additionally, we know our choice of feature gives us translation invariance in the frequency domain, but we'd also like to introduce some invariance in the time domain, so in addition to storing our one-hot encoding, we'll also pool the feature together over short spans of time, so that, given our 128-dimensional one-hot encoding, pooled over say, 30 frames, we'd have a new 128-dimensional binary vector with at most 30 "on" entries, in the case where each of the thirty frames has a different code.
 
 To achieve this, we'll define a new class, derived from our original `WithTimbre` class, that adds these new features:
 
