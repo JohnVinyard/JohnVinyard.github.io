@@ -1,3 +1,9 @@
+---
+layout: post
+title:  "Building a Timbre-Based Similarity Search"
+date:   2016-06-04 18:00:00 -0500
+categories: zounds indexing search
+---
 For quite some time, I've been fascinated with the idea of indexing large corpuses of audio, based on some perceptual similarity metric.  This means that it isn't necessary for some human to listen to and tag each audio sample manually.  Searches are by example ([rather like the "search by image" feature that you've probably encountered](https://images.google.com/)), and it's possible to explore "neighborhoods" of similar sounds.
 
 Prototyping these kinds of systems can be cumbersome and time-consuming.  When experimenting with these kinds of systems in the past, I've spent way too much time dealing with the mundane, but totally necessary details of:
