@@ -25,7 +25,7 @@ We'd like to be able to find similar groups of sounds in a large corpus, based o
 >
 > the character or quality of a musical sound or voice as distinct from its pitch and intensity.
 
-[Here's a group of sounds with similar timbre, from a search interface built using zounds](http://23.253.119.81/?query=AIAAAAAAAAAAQAAAAAAAEA%3D%3D).
+[Here's a group of sounds with similar timbre, from a search interface built using zounds](http://23.253.119.81/?query=AAAAAAAwAAAAAAAAAgAAAA%3D%3D).
 
 
 In order to do that, we'll be [working from this example from the zounds repository](https://github.com/JohnVinyard/zounds/blob/master/examples/timbre.py), and building a very simple, timbre-based similarity search.  Once you've read through this post, you shouldn't need to write a single line of code; just run [this example from the zounds repository](https://github.com/JohnVinyard/zounds/blob/master/examples/timbre.py), and it will run through each of the steps described below.
