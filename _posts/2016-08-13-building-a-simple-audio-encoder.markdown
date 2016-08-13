@@ -12,7 +12,7 @@ a very rudimentary audio encoder and decoder.  If you want to jump ahead, the
 
 # The Modified Discrete Cosine Transform
 We'll be using the mofified discrete cosine transform (or MDCT for short), as
-the basis for our encoder.  
+the basis for our encoder.  [The Ogg Vorbis audio encoding also takes the MDCT as its starting point](https://xiph.org/vorbis/doc/Vorbis_I_spec.html#x1-230001.3.2)
 
 A cosine transform uses a set of cosine functions,
 oscillating at different frequencies as its basis functions, and expresses a
@@ -38,7 +38,7 @@ While we can perfectly reconstruct the original signal given these coefficients
 , we have poor localization in time.  The MDCT solves this problem by
 applying the same transformation to short, overlapping blocks of a signal.
 
-If we use the processing graph [defined here](https://github.com/JohnVinyard/zounds/blob/master/examples/mdct_synth.py#L10) to instead extract the MDCT, we something a bit different.  Running...
+If we use the processing graph [defined here](https://github.com/JohnVinyard/zounds/blob/master/examples/mdct_synth.py#L10) to instead extract the MDCT, we end up with something a bit different.  Running...
 
 ```python
 >>> _id = Document.process(meta=signal.encode())
@@ -53,3 +53,10 @@ will display something like this:
 Here, you can see the same peaks, but instead of a single vector representing
 coefficients for the entire signal, we see a vector of coefficients for each
 short slice of time.
+
+We can recover the original audio by doing the following:
+
+```python
+>>> mdct_synth = zounds.MDCTSynthesizer()
+>>> mdct_synth.synthesize(doc.mdct)
+```
