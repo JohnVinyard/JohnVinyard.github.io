@@ -105,8 +105,8 @@ block boundaries
 time-domain signal that can be streamed directly to an audio device
 
 # The Encoding Idea
-Cosines osciallating at different frequencies serve as pretty good basis functions, and allow us to express pretty much any sound imaginable, but on their own, they
-don't allow help us to compress the audio much, which is one very desirable
+Cosines osciallating at different frequencies serve as good basis functions, and allow us to express pretty much any sound imaginable, but on their own, they
+don't allow us to compress the audio much, which is one very desirable
 feature of an audio encoding.
 
 Pure tones don't occur much in natural sounds; nature is full of transients
@@ -122,7 +122,7 @@ interpretable encoding.
 # Simple K-Means Clustering
 One incredibly straightforward way to learn basis functions from real-world
 data is [k-means clustering](https://en.wikipedia.org/wiki/K-means_clustering),
-which in our case, will learn K basis functions, corresponding to
+which in our case, will learn K basis functions corresponding to
 commonly occurring spectral shapes from our training data.  For example, there
 might be a cluster or centroid corresponding to the broad-band noise of a snare
 attack, and another centroid corresponding to the fundamental frequency and
@@ -209,6 +209,7 @@ phrase with rich harmonics, but our reconstruction sounds like something out of 
   Your browser does not support the <code>audio</code> element.
   <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/Cello.ogg" type="audio/ogg">
 </audio>
+
 ### Reconstruction
 <audio controls="controls">
   Your browser does not support the <code>audio</code> element.
@@ -225,6 +226,7 @@ only captures the low frequencies, sounding muffled and garbled.
   Your browser does not support the <code>audio</code> element.
   <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/BassOrig.ogg" type="audio/ogg">
 </audio>
+
 ### Reconstruction
 <audio controls="controls">
   Your browser does not support the <code>audio</code> element.
@@ -241,6 +243,7 @@ recreates the kick drum, and not much else.
   Your browser does not support the <code>audio</code> element.
   <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/BeatOrig.ogg" type="audio/ogg">
 </audio>
+
 ### Reconstruction
 <audio controls="controls">
   Your browser does not support the <code>audio</code> element.
@@ -256,6 +259,7 @@ Here's a short cello-like phrase.  Our reconstruction ends up back in Atari-land
   Your browser does not support the <code>audio</code> element.
   <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/CelloOrig.ogg" type="audio/ogg">
 </audio>
+
 ### Reconstruction
 <audio controls="controls">
   Your browser does not support the <code>audio</code> element.
@@ -335,6 +339,7 @@ sounds more natural, and there are audible harmonics.
   Your browser does not support the <code>audio</code> element.
   <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/MonophonicOrig.ogg" type="audio/ogg">
 </audio>
+
 ### Reconstruction
 <audio controls="controls">
   Your browser does not support the <code>audio</code> element.
@@ -351,6 +356,7 @@ much more natural, and not entirely dominated by bass frequencies.
   Your browser does not support the <code>audio</code> element.
   <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/BassOrig.ogg" type="audio/ogg">
 </audio>
+
 ### Reconstruction
 <audio controls="controls">
   Your browser does not support the <code>audio</code> element.
@@ -366,6 +372,7 @@ Hey listen to that, the hi-hat is back!
   Your browser does not support the <code>audio</code> element.
   <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/BeatOrig.ogg" type="audio/ogg">
 </audio>
+
 ### Reconstruction
 <audio controls="controls">
   Your browser does not support the <code>audio</code> element.
@@ -382,6 +389,7 @@ sounds more cello-like.
   Your browser does not support the <code>audio</code> element.
   <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/CelloOrig.ogg" type="audio/ogg">
 </audio>
+
 ### Reconstruction
 <audio controls="controls">
   Your browser does not support the <code>audio</code> element.
