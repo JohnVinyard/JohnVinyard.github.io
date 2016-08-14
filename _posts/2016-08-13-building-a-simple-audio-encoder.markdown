@@ -53,7 +53,7 @@ class Settings(ff.PersistenceSettings):
     """
     These settings make it possible to specify an id (rather than automatically
     generating one) when analyzing a file, so that it's easier to reference
-    them later.
+    that file by name later.
     """
     id_provider = ff.UserSpecifiedIdProvider(key='_id')
     key_builder = ff.StringDelimitedKeyBuilder()
