@@ -46,22 +46,29 @@ import zounds
 from random import choice
 
 samplerate = zounds.SR11025()
-BaseDocument = zounds.stft(resample_to=samplerate)
+STFT = zounds.stft(resample_to=samplerate)
 
 
-@zounds.simple_lmdb_settings('mdct_synth', map_size=1e10)
-class Document(BaseDocument):
+class Settings(ff.PersistenceSettings):
+    """
+    These settings make it possible to specify an id (rather than automatically
+    generating one) when analyzing a file, so that it's easier to reference
+    them later.
+    """
+    id_provider = ff.UserSpecifiedIdProvider(key='_id')
+    key_builder = ff.StringDelimitedKeyBuilder()
+    database = ff.LmdbDatabase(
+            'mdct_synth', map_size=1e10, key_builder=key_builder)
 
-    # compute the MDCT over a sliding window of time-domain samples
+
+class Document(STFT, Settings):
+    """
+    Inherit from a basic processing graph, and add a Modified Discrete Cosine
+    Transform feature
+    """
     mdct = zounds.TimeFrequencyRepresentationFeature(
             zounds.MDCT,
-            needs=BaseDocument.windowed,
-            store=True)
-
-    # compute bark bands, for display purposes
-    bark = zounds.ConstantRateTimeSeriesFeature(
-            zounds.BarkBands,
-            needs=BaseDocument.fft,
+            needs=STFT.windowed,
             store=True)
 ```
 
