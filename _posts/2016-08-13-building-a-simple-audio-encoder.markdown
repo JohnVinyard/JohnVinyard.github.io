@@ -329,6 +329,10 @@ class DctKmeansWithLogAmplitude(ff.BaseModel):
             store=True)
 ```
 
+Now, our basis functions look like this:
+
+![K-Means basis functions with log amplitude](http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/LogAmplitudeCodebook.png)
+
 ## Monophonic Phrase
 
 When we revisit the monophonic phrase with our log-amplitude encoder, we still have
