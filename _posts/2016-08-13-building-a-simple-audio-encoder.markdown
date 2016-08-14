@@ -201,16 +201,16 @@ encoder to subjectively evaluate its performance.
 
 ## Monophonic Phrase
 
-Problems with our encoder become apparent right away.  The original sound is a high-pitched,
+Problems with our encoder become apparent right away.  The original sound is a high-pitched
 phrase with rich harmonics, but our reconstruction sounds like something out of an Atari game.
 
-### Original
+#### Original
 <audio controls="controls">
   Your browser does not support the <code>audio</code> element.
   <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/MonophonicOrig.ogg" type="audio/ogg">
 </audio>
 
-### Reconstruction
+#### Reconstruction
 <audio controls="controls">
   Your browser does not support the <code>audio</code> element.
   <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/Monophonic.ogg" type="audio/ogg">
@@ -221,13 +221,13 @@ phrase with rich harmonics, but our reconstruction sounds like something out of 
 This synth sound has tons of texture and a very broad frequency range, but our reconstruction
 only captures the low frequencies, sounding muffled and garbled.
 
-### Original
+#### Original
 <audio controls="controls">
   Your browser does not support the <code>audio</code> element.
   <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/BassOrig.ogg" type="audio/ogg">
 </audio>
 
-### Reconstruction
+#### Reconstruction
 <audio controls="controls">
   Your browser does not support the <code>audio</code> element.
   <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/Bass.ogg" type="audio/ogg">
@@ -238,13 +238,13 @@ only captures the low frequencies, sounding muffled and garbled.
 This simple drumbeat has a bassy kick, and high, clicky hi-hat sounds.  Our reconstruction
 recreates the kick drum, and not much else.
 
-### Original
+#### Original
 <audio controls="controls">
   Your browser does not support the <code>audio</code> element.
   <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/BeatOrig.ogg" type="audio/ogg">
 </audio>
 
-### Reconstruction
+#### Reconstruction
 <audio controls="controls">
   Your browser does not support the <code>audio</code> element.
   <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/Beat.ogg" type="audio/ogg">
@@ -254,13 +254,13 @@ recreates the kick drum, and not much else.
 
 Here's a short cello-like phrase.  Our reconstruction ends up back in Atari-land. 
 
-### Original
+#### Original
 <audio controls="controls">
   Your browser does not support the <code>audio</code> element.
   <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/CelloOrig.ogg" type="audio/ogg">
 </audio>
 
-### Reconstruction
+#### Reconstruction
 <audio controls="controls">
   Your browser does not support the <code>audio</code> element.
   <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/Cello2.ogg" type="audio/ogg">
@@ -269,10 +269,11 @@ Here's a short cello-like phrase.  Our reconstruction ends up back in Atari-land
 # Adding Log Amplitude
 
 The original encodings sound pretty awful for a couple reasons:
+
 - They tend to emphasize the single, dominant frequency in a frame, and ignore the rest
 - They tend to over-emphasize lower frequencies
 
-[We know that we tend to perceive amplitude on something like a logarithmic scale](https://en.wikipedia.org/wiki/Decibel#Acoustics), meaning that while
+[We actually tend to perceive amplitude on something like a logarithmic scale](https://en.wikipedia.org/wiki/Decibel#Acoustics), meaning that while
 we're able to perceive a *huge* range of sound pressure levels, our perception of those
 levels is compressed, or smooshed (a technical term) closer together.
 
@@ -334,13 +335,13 @@ When we revisit the monophonic phrase with our log-amplitude encoder, we still h
 something that probably belongs in a video game, but the relationship between frequencies
 sounds more natural, and there are audible harmonics.
 
-### Original
+#### Original
 <audio controls="controls">
   Your browser does not support the <code>audio</code> element.
   <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/MonophonicOrig.ogg" type="audio/ogg">
 </audio>
 
-### Reconstruction
+#### Reconstruction
 <audio controls="controls">
   Your browser does not support the <code>audio</code> element.
   <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/MonophonicLog.ogg" type="audio/ogg">
@@ -351,13 +352,13 @@ sounds more natural, and there are audible harmonics.
 Here, we lose a lot of the rhythmic separation between notes, but again, the spectrum sounds
 much more natural, and not entirely dominated by bass frequencies.
 
-### Original
+#### Original
 <audio controls="controls">
   Your browser does not support the <code>audio</code> element.
   <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/BassOrig.ogg" type="audio/ogg">
 </audio>
 
-### Reconstruction
+#### Reconstruction
 <audio controls="controls">
   Your browser does not support the <code>audio</code> element.
   <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/BassLog.ogg" type="audio/ogg">
@@ -367,13 +368,13 @@ much more natural, and not entirely dominated by bass frequencies.
 
 Hey listen to that, the hi-hat is back!
 
-### Original
+#### Original
 <audio controls="controls">
   Your browser does not support the <code>audio</code> element.
   <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/BeatOrig.ogg" type="audio/ogg">
 </audio>
 
-### Reconstruction
+#### Reconstruction
 <audio controls="controls">
   Your browser does not support the <code>audio</code> element.
   <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/BeatLog.ogg" type="audio/ogg">
@@ -384,13 +385,13 @@ Hey listen to that, the hi-hat is back!
 We're back to the 8-bit video game music to some degree, but the texture definitely
 sounds more cello-like.
 
-### Original
+#### Original
 <audio controls="controls">
   Your browser does not support the <code>audio</code> element.
   <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/CelloOrig.ogg" type="audio/ogg">
 </audio>
 
-### Reconstruction
+#### Reconstruction
 <audio controls="controls">
   Your browser does not support the <code>audio</code> element.
   <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/CelloLog.ogg" type="audio/ogg">
