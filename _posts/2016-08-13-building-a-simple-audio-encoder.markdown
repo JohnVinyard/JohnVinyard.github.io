@@ -207,13 +207,13 @@ phrase with rich harmonics, but our reconstruction sounds like something out of 
 ### Original
 <audio controls="controls">
   Your browser does not support the <code>audio</code> element.
-  <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/Cello.ogg" type="audio/ogg">
+  <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/MonophonicOrig.ogg" type="audio/ogg">
 </audio>
 
 ### Reconstruction
 <audio controls="controls">
   Your browser does not support the <code>audio</code> element.
-  <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/Cello.ogg" type="audio/ogg">
+  <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/Monophonic.ogg" type="audio/ogg">
 </audio>
 
 ## Broad-Band Synth
