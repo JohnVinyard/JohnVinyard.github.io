@@ -96,6 +96,7 @@ We can recover the original audio by doing the following:
 ```
 
 The above code will:
+
 - multiply the MDCT coefficients in each frameby the cosine basis functions,
 turning the frequency-domain representation back into a time-domain one
 - Apply a windowing function to the time-domain frames to avoid artifacts at
