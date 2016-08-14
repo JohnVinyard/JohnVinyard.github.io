@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "Building a Simple Audio Encoder"
-date:   2017-08-13 07:00:00 -0500
+date:   2016-08-13 07:00:00 -0500
 categories: zounds synthesis
 ---
 
@@ -126,7 +126,8 @@ We can define the following graph...
 @zounds.simple_settings
 class DctKmeans(ff.BaseModel):
     """
-    TODO: Write this
+    A pipeline that does example-wise normalization by giving each example
+    unit-norm, and learns 512 centroids from those examples.
     """
     docs = ff.Feature(
             ff.IteratorNode,
@@ -168,33 +169,213 @@ class DctKmeans(ff.BaseModel):
 DctKmeans.process(docs=(doc.mdct for doc in Document))
 ```
 
+At this point, we can visualize the basis functions we've learned:
+
+![K-Means Basis Functions](http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/Codebook.png)
+
+Each one-pixel-wide vertical slice of this image represents a single basis function.  To
+encode a single frame of audio, we need to record its euclidean norm, and which of the 512
+centroids, or basis functions, is closest in euclidean space to the frame we're encoding.
+
+In zounds in-browser interactive REPL, We can do an encode and decode pass for a particular piece of audio like so:
+
+```python
+>>> kmeans = DctKMeans()
+>>> doc = Document(_id='FlavioGaete22/TFS2_TVla09.wav')
+>>> transform_result = kmeans.pipeline.transform(doc.mdct)
+>>> recon_mdct = transform_result.inverse_transform()
+>>> synth = zounds.MDCTSynthesizer()
+>>> recon_audio = synth.synthesize(recon_mdct)
+```
+
 Then, we can listen back to some audio alongside the reconstructions from our
 encoder to subjectively evaluate its performance.
 
 ## Monophonic Phrase
 
+Problems with our encoder become apparent right away.  The original sound is a high-pitched,
+phrase with rich harmonics, but our reconstruction sounds like something out of an Atari game.
+
+### Original
+<audio controls="controls">
+  Your browser does not support the <code>audio</code> element.
+  <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/Cello.ogg" type="audio/ogg">
+</audio>
+### Reconstruction
+<audio controls="controls">
+  Your browser does not support the <code>audio</code> element.
+  <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/Cello.ogg" type="audio/ogg">
+</audio>
+
 ## Broad-Band Synth
+
+This synth sound has tons of texture and a very broad frequency range, but our reconstruction
+only captures the low frequencies, sounding muffled and garbled.
+
+### Original
+<audio controls="controls">
+  Your browser does not support the <code>audio</code> element.
+  <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/BassOrig.ogg" type="audio/ogg">
+</audio>
+### Reconstruction
+<audio controls="controls">
+  Your browser does not support the <code>audio</code> element.
+  <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/Bass.ogg" type="audio/ogg">
+</audio>
 
 ## Drum Beat
 
+This simple drumbeat has a bassy kick, and high, clicky hi-hat sounds.  Our reconstruction
+recreates the kick drum, and not much else.
+
+### Original
+<audio controls="controls">
+  Your browser does not support the <code>audio</code> element.
+  <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/BeatOrig.ogg" type="audio/ogg">
+</audio>
+### Reconstruction
+<audio controls="controls">
+  Your browser does not support the <code>audio</code> element.
+  <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/Beat.ogg" type="audio/ogg">
+</audio>
+
 ## Cello
+
+Here's a short cello-like phrase.  Our reconstruction ends up back in Atari-land. 
+
+### Original
+<audio controls="controls">
+  Your browser does not support the <code>audio</code> element.
+  <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/CelloOrig.ogg" type="audio/ogg">
+</audio>
+### Reconstruction
+<audio controls="controls">
+  Your browser does not support the <code>audio</code> element.
+  <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/Cello2.ogg" type="audio/ogg">
+</audio>
 
 # Adding Log Amplitude
 
+The original encodings sound pretty awful for a couple reasons:
+- They tend to emphasize the single, dominant frequency in a frame, and ignore the rest
+- They tend to over-emphasize lower frequencies
+
+[We know that we tend to perceive amplitude on something like a logarithmic scale](https://en.wikipedia.org/wiki/Decibel#Acoustics), meaning that while
+we're able to perceive a *huge* range of sound pressure levels, our perception of those
+levels is compressed, or smooshed (a technical term) closer together.
+
+This could explain why our basis functions just seem wrong at this point, and our 
+reconstructions sound awful: the single loudest frequency dominates the euclidean distance
+calculation when we're learning our basis functions.
+
+We'll try a new pipeline that attempts to compensate for this problem by using a log
+amplitude scale:
+
+```python
+@zounds.simple_settings
+class DctKmeansWithLogAmplitude(ff.BaseModel):
+    """
+    A pipeline that applies a logarithmic weighting to the magnitudes of the
+    spectrum before learning centroids,
+    """
+    docs = ff.Feature(
+            ff.IteratorNode,
+            store=False)
+
+    # randomize the order of the data
+    shuffle = ff.NumpyFeature(
+            zounds.ReservoirSampler,
+            nsamples=1e6,
+            needs=docs,
+            store=True)
+
+    log = ff.PickleFeature(
+            zounds.Log,
+            needs=shuffle,
+            store=False)
+
+    # give each frame unit norm, since we care about the shape of the spectrum
+    # and not its magnitude
+    unit_norm = ff.PickleFeature(
+            zounds.UnitNorm,
+            needs=log,
+            store=False)
+
+    # learn 512 centroids, or basis functions
+    kmeans = ff.PickleFeature(
+            zounds.KMeans,
+            centroids=512,
+            needs=unit_norm,
+            store=False)
+
+    # assemble the previous steps into a re-usable pipeline, which can perform
+    # forward and backward transformations
+    pipeline = ff.PickleFeature(
+            zounds.PreprocessingPipeline,
+            needs=(log, unit_norm, kmeans),
+            store=True)
+```
+
 ## Monophonic Phrase
+
+When we revisit the monophonic phrase with our log-amplitude encoder, we still have
+something that probably belongs in a video game, but the relationship between frequencies
+sounds more natural, and there are audible harmonics.
+
+### Original
+<audio controls="controls">
+  Your browser does not support the <code>audio</code> element.
+  <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/MonophonicOrig.ogg" type="audio/ogg">
+</audio>
+### Reconstruction
+<audio controls="controls">
+  Your browser does not support the <code>audio</code> element.
+  <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/MonophonicLog.ogg" type="audio/ogg">
+</audio>
 
 ## Broad-Band Synth
 
+Here, we lose a lot of the rhythmic separation between notes, but again, the spectrum sounds
+much more natural, and not entirely dominated by bass frequencies.
+
+### Original
+<audio controls="controls">
+  Your browser does not support the <code>audio</code> element.
+  <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/BassOrig.ogg" type="audio/ogg">
+</audio>
+### Reconstruction
+<audio controls="controls">
+  Your browser does not support the <code>audio</code> element.
+  <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/BassLog.ogg" type="audio/ogg">
+</audio>
+
 ## Drum Beat
+
+Hey listen to that, the hi-hat is back!
+
+### Original
+<audio controls="controls">
+  Your browser does not support the <code>audio</code> element.
+  <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/BeatOrig.ogg" type="audio/ogg">
+</audio>
+### Reconstruction
+<audio controls="controls">
+  Your browser does not support the <code>audio</code> element.
+  <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/BeatLog.ogg" type="audio/ogg">
+</audio>
 
 ## Cello
 
-# Adding Perceptual Frequency Weighting
+We're back to the 8-bit video game music to some degree, but the texture definitely
+sounds more cello-like.
 
-## Monophonic Phrase
-
-## Broad-Band Synth
-
-## Drum Beat
-
-## Cello
+### Original
+<audio controls="controls">
+  Your browser does not support the <code>audio</code> element.
+  <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/CelloOrig.ogg" type="audio/ogg">
+</audio>
+### Reconstruction
+<audio controls="controls">
+  Your browser does not support the <code>audio</code> element.
+  <source src="http://ec57ca2a108ec3bc8dd1-4304b0dba8021a8b61951b8806b1581c.r24.cf1.rackcdn.com/CelloLog.ogg" type="audio/ogg">
+</audio>
