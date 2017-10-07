@@ -27,7 +27,7 @@ As usual, if you want to jump ahead, you can see the entire example [here](https
 # Extracing Features from a Dataset
 
 First, we'll need to extract the features that the autoencoder will be trained
-on.  In this example, we're going to diverge from our previous [K-Means example]((http://johnvinyard.github.io/zounds/synthesis/2016/08/13/building-a-simple-audio-encoder.html))
+on.  In this example, we're going to diverge from our previous [K-Means example](http://johnvinyard.github.io/zounds/synthesis/2016/08/13/building-a-simple-audio-encoder.html)
 in a couple ways:
 
 - First, we'll learn from a little over half a second of audio at a time, rather
