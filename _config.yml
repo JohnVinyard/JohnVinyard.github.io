@@ -16,5 +16,3 @@ github_username:  johnvinyard
 
 # Build settings
 markdown: kramdown
-
-theme: jekyll-theme-minimal
