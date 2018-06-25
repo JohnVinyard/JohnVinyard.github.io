@@ -16,3 +16,6 @@ github_username:  johnvinyard
 
 # Build settings
 markdown: kramdown
+
+# Theme
+remote_theme: fongandrew/hydeout
