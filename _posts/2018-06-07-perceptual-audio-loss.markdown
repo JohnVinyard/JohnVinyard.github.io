@@ -21,9 +21,6 @@ Given enough capacity, data, and time, a model trained using mean squared error
 I used [`zounds`](https://github.com/JohnVinyard/zounds) and
 [`pytorch`](https://pytorch.org/) to build a small experiment where I dip the
 first half of my pinkie toe into these waters.
-
-https://github.com/JohnVinyard/experiments/tree/master/deep-audio-prior
-
 # The Experiment
 
 In this experiment, I'll train a "generator" network to transform a fixed noise
@@ -83,7 +80,7 @@ explore losses that go beyond simple per-pixel (or per-sample) metrics.
 ## Richard Nixon Speaking
 
 ### Original
-<audio src="https://drive.google.com/open?id=1A7R9W-UH9lDP1h9vl62ola52kz3TRBdv" controls></audio>
+<audio src="https://drive.google.com/open?id=1A7R9W-UH9lDP1h9vl62ola52kz3TRBdv&export=download" controls></audio>
 
 ### Mean Squared Error
 #### 250 Epochs
