@@ -83,7 +83,7 @@ iterations.
 ## Richard Nixon Speaking
 
 ### Original
-<audio src="https://drive.google.com/open?id=1A7R9W-UH9lDP1h9vl62ola52kz3TRBdv&export=download" controls></audio>
+<audio src="https://drive.google.com/uc?id=1A7R9W-UH9lDP1h9vl62ola52kz3TRBdv&authuser=0&export=download" controls></audio>
 
 ### Mean Squared Error
 #### 250 Epochs
@@ -296,5 +296,6 @@ becomes a lot harder for the model to get "partial credit" and coast along
 happily
 
 This is very clever, but doesn't totally sit right with me, because audio samples
-*are* continuous, so why can't we model them as such.  Is the problem a missing
-perceptual model that
+*are* continuous, so why can't we model them as such?  Is the problem a missing
+perceptual model that maps groups of "raw" audio samples into a more perceptually
+appropriate space.  Would regression in that space work better?
