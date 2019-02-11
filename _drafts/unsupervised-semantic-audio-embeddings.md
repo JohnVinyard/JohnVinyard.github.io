@@ -7,17 +7,27 @@ search I recently built.  There was a lot to cover in an hour, and much that was
 glossed over, so I decided to write a blog post covering the process in a little
 more detail.
 
-[Slides from the talk](https://docs.google.com/presentation/d/1EB-B7WI42gOEKozXIkDvNUWaVjKQb_bqk5M_mUiueS0/edit?usp=sharing)
+[You can find slides from the original talk here](https://docs.google.com/presentation/d/1EB-B7WI42gOEKozXIkDvNUWaVjKQb_bqk5M_mUiueS0/edit?usp=sharing)
 
 
 ## Why Audio Search?
-There's a ton of unlabelled audio data out there.  What if musicians and sound
-designers could access large portions of it in a quick and intuitive way without
-relying on manual tagging?
+There are countless hours of audio out there on the internet, and much of it is
+either not indexed at all, or is searchable only via subjective and relatively
+low-bandwidth textual tags.  What if it was possible for musicians and sound
+designers to navigate this data in an intuitive way, without depending on manual
+annotations.
 
 ## Unsupervised Learning of Semantic Audio Representations
-Train a network to produce representations of sound in a way that's similar to 
-how word embeddings are produced.
+The first challenge in building this kind of index is producing a 
+representation of short audio segments that captures important perceptual 
+qualities of the sound.  This is of course subjective, and somewhat 
+task-dependent (e.g., am I searching for audio with a similar timbre, or just
+the same pitch, or maybe a similar loudness envelope), but in this case, we'd 
+like to find some embedding space where elements are near one another if a 
+human would likely assign the two sounds to the same class.  For example, two 
+segments of classical solo piano music should fall closer together in the space 
+than a segment of solo classical piano music and a segment of rock music. 
+
 
 https://arxiv.org/abs/1711.02209
 
@@ -41,3 +51,4 @@ lie close together in the embedding space.
 
 ## Building an Index with Random Projections 
 
+## Future Directions
