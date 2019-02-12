@@ -28,20 +28,35 @@ human would likely assign the two sounds to the same class.  For example, two
 segments of classical solo piano music should fall closer together in the space 
 than a segment of solo classical piano music and a segment of rock music. 
 
+There's a great paper called 
+[Unsupervised Learning of Semantic Audio Representations](https://arxiv.org/abs/1711.02209) 
+from [Dan Ellis'](https://ai.google/research/people/DanEllis) research group at 
+Google that develops one such representation by first noting a few things:
 
-https://arxiv.org/abs/1711.02209
+- certain types of transformations (e.g. pitch shifts and time dilation) don't
+typically change the general sound class
+- sounds that are temporally proximal (occur near in time) tend to be assigned
+to the same sound class
+- mixtures of sounds inherit the sound classes of the original elements
+
+They leverage these observations to train a neural network that produces dense, 
+128-dimensional embeddings of short (~one second) spectrograms such that 
+perceptually similar sounds have a low cosine distance, or angle on the unit 
+sphere.  What's neat is that this insight allows them to train in an 
+unsupervised fashion, not requiring a large, labelled audio dataset to get 
+started.
 
 ## Deformations
-We'd like our model to produce representations that are invariant to
- 
-- pitch shifts
-- time stretches
-- additive noise
+First, to prove to ourselves that the observations are valid, we can listen to 
+some example deformations to get a feel for some of the transformations we'll
+be applying.
 
-Also, and probably most importantly, temporally proximal audio segments should
-lie close together in the embedding space.
+TODO: inline the audio and sections from here:
+https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/deformations.htm
+
 
 ## Triplet Loss
+
 
 ## Log-Scaled Mel Spectrograms
 
