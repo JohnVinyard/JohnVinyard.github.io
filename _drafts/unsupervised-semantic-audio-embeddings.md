@@ -51,8 +51,58 @@ First, to prove to ourselves that the observations are valid, we can listen to
 some example deformations to get a feel for some of the transformations we'll
 be applying.
 
-TODO: inline the audio and sections from here:
-https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/deformations.htm
+### Original file
+<audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/original.ogg"></audio>
+
+### Pitch Shift
+
+Relatively small changes in pitch change the sound class we assign.
+
+#### Higher
+<audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/pitch-shift-up.ogg"></audio>
+#### Lower
+<audio control src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/pitch-shift-down.ogg"></audio>
+
+### Time Stretch
+
+Similarly, small changes in the duration of a sound shouldn't change the class
+we assign either.
+
+#### Longer
+<audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/time-stretch-longer.ogg"></audio>
+#### Shorter
+<audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/time-stretch-faster.ogg"></audio>
+
+### Temporal Proximity
+
+If we're listening to an unedited audio recording (i.e., not spliced together
+from many different sources), sounds that occur near one another in time are 
+typically assigned to the same sound class.
+
+#### Beginning
+<audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/original-beginning.ogg"></audio>
+#### Middle
+<audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/original-middle.ogg"></audio>
+#### End
+<audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/original-end.ogg"></audio>
+
+### Additive Noise
+
+Small amounts of noise should not affect the sound class assigned.
+
+<audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/additive-noise.ogg"></audio>
+
+### Mixtures of Sounds
+Mixtures of two sounds should inherit the classes of their "parent" sounds.
+
+#### Drums
+<audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/drums.ogg"></audio>
+
+#### Flute
+<audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/flute.ogg"></audio>
+
+#### Flute and Drums
+<audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/drums-and-flute.ogg"></audio>
 
 
 ## Triplet Loss
