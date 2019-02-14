@@ -6,8 +6,6 @@ categories: zounds search embeddings neural-networks pytorch
 published: false
 ---
 
-# Audio Query-By-Example via Unsupervised Embeddings
-
 A couple months ago, I gave a talk at the 
 [Austin Deep Learning Meetup](https://www.meetup.com/Austin-Deep-Learning/events/256293686/) 
 about building [Cochlea](https://cochlea.xyz), a prototype audio similarity 
@@ -118,9 +116,10 @@ Mixtures of two sounds should inherit the classes of their "parent" sounds.
 
 
 ## Triplet Loss
-So, we'd like to learn a function or mapping that simple cosine distance in the
-target or embedding space corresponds to some of the highly complex geometric
-relationships between the anchor and deformed sounds we've just listened to.
+So, we'd like to learn a function or mapping such that simple cosine distance 
+in the target or embedding space corresponds to some of the highly complex 
+geometric relationships between the anchor and deformed sounds we've just 
+listened to.
   
 For this experiment, that function will take the form of a deep convolutional
 neural network with learn-able parameters:
@@ -133,14 +132,26 @@ The original space is expressed as $\mathbb{R}^{frequency \times time}$ because
 our input representation will be a spectrogram, which we'll cover in more detail
 in the next section.
 
-The data we'll use to train our neural network will take the form of many 
-"triplets" of data, which will look something like this:
+Our dataset will consist of $N$ "triplets" of data:
+
+{% raw %}
+$$\tau  = \{ t_i\}_{i=1}^N$$
+{% endraw %}
+
+
+Each triplet will look something like this:
 
 {% raw %}
 $$t_i = (x_{a}^{(i)}, x_{p}^{(i)}, x_{n}^{(i)})$$
 {% endraw %}
 
-Where each $x_a$ represents an *anchor* audio segment, $a_p$ represents our 
+and each member of the triplet will be a spectogram:
+ 
+{% raw %}
+$$x_a^{(i)}, x_p^{(i)}, x_n^{(i)} \in \mathbb{R}^{frequency \times time}  $$
+{% endraw %}
+
+Each $x_a$ represents an *anchor* audio segment, $a_p$ represents our 
 *positive* example, i.e., the anchor with one of our audio deformations applied, 
 or another audio segment that occurs near in time to the anchor, and $a_n$ 
 represents our negative example, which we'll choose by picking any other audio 
@@ -149,9 +160,22 @@ random strategy for choosing the negative example is probably fairly safe,
 but we will take some care  to not accidentally choose negative examples that 
 are actually more perceptually similar to the anchor than the positive example.
 
+We'll minimize a loss with respect to our network parameters that will try to 
+push the anchor and positive examples closer together in our embedding space, 
+while it also pushes our anchor and negative examples further apart:
+
 {% raw %}
-$$t_i = (x_{a}^{(i)}, x_{p}^{(i)}, x_{n}^{(i)})$$
+$$\mathcal{L}(\tau ) = \sum_{i=1}^{N}\left [  \left \|  g(x_a^{(i)}) - g(x_p^{(i)})\right \|_2^2 - \left \| g(x_a^{(i)}) - g(x_n^{(i)})\right \|_2^2   + \delta \right]_+$$
 {% endraw %}
+
+So, we'll try to ensure that the distance from anchor to positive examples is 
+less than the distance from anchor to negative examples by some positive margin 
+$\delta$, and the $_+$ here indicates the hinge loss, which really just means
+that our loss goes to zero if it's less than this margin.  As usual, since we 
+can't optimize over this term over all $N$ triplets, we'll optimize the 
+learn-able parameters using minibatches of data.  Additionally, we'll see later
+that because of the way we're sampling these triplets, our dataset is 
+effectively infinite, or unbounded.
  
 ## Log-Scaled Mel Spectrograms
 
