@@ -60,14 +60,18 @@ some example deformations to get a feel for some of the transformations we'll
 be applying.
 
 ### Original file
+We'll choose the sound of a violin string being bowed, and use that as our 
+anchor, applying different deformations to understand what those sound like, and
+how they change our perception of the sound.
+
 <audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/original.ogg"></audio>
 
 ### Pitch Shift
-
 Relatively small changes in pitch change the sound class we assign.
 
 #### Higher
 <audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/pitch-shift-up.ogg"></audio>
+
 #### Lower
 <audio control src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/pitch-shift-down.ogg"></audio>
 
@@ -78,6 +82,7 @@ we assign either.
 
 #### Longer
 <audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/time-stretch-longer.ogg"></audio>
+
 #### Shorter
 <audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/time-stretch-faster.ogg"></audio>
 
@@ -89,8 +94,10 @@ typically assigned to the same sound class.
 
 #### Beginning
 <audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/original-beginning.ogg"></audio>
+
 #### Middle
 <audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/original-middle.ogg"></audio>
+
 #### End
 <audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/original-end.ogg"></audio>
 
@@ -114,8 +121,19 @@ Mixtures of two sounds should inherit the classes of their "parent" sounds.
 
 
 ## Triplet Loss
+So, we'd like to learn a function or mapping that simple cosine distance in the
+target or embedding space corresponds to some of the highly complex geometric
+relationships between the anchor and deformed sounds we've just listened to.
+  
+For this experiment, that function will take the form of a deep convolutional
+neural network with learn-able parameters:
 
+{% raw %}
+$$g: \mathbb{R}^{F \times T} \rightarrow \mathbb{R}^d$$
+{% endraw %}
 
+    
+ 
 ## Log-Scaled Mel Spectrograms
 
 ## Within-Batch Semi-Hard Negative Mining
