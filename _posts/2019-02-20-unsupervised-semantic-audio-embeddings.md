@@ -9,14 +9,11 @@ published: false
 # Audio Query-By-Example via Unsupervised Embeddings
 
 A couple months ago, I gave a talk at the 
-[Austin Deep Learning Meetup](https://www.meetup.com/Austin-Deep-Learning/) 
+[Austin Deep Learning Meetup](https://www.meetup.com/Austin-Deep-Learning/events/256293686/) 
 about building [Cochlea](https://cochlea.xyz), a prototype audio similarity 
 search I recently built.  There was a lot to cover in an hour, and much that was
 glossed over, so I decided to write a blog post covering the process in a little
 more detail.
-
-[You can find slides from the original talk here](https://docs.google.com/presentation/d/1EB-B7WI42gOEKozXIkDvNUWaVjKQb_bqk5M_mUiueS0/edit?usp=sharing)
-
 
 ## Why Audio Search?
 There are countless hours of audio out there on the internet, and much of it is
@@ -129,10 +126,32 @@ For this experiment, that function will take the form of a deep convolutional
 neural network with learn-able parameters:
 
 {% raw %}
-$$g: \mathbb{R}^{F \times T} \rightarrow \mathbb{R}^d$$
+$$g: \mathbb{R}^{frequency \times time} \rightarrow \mathbb{R}^{embedding\_dim}$$
 {% endraw %}
 
-    
+The original space is expressed as $\mathbb{R}^{frequency \times time}$ because 
+our input representation will be a spectrogram, which we'll cover in more detail
+in the next section.
+
+The data we'll use to train our neural network will take the form of many 
+"triplets" of data, which will look something like this:
+
+{% raw %}
+$$t_i = (x_{a}^{(i)}, x_{p}^{(i)}, x_{n}^{(i)})$$
+{% endraw %}
+
+Where each $x_a$ represents an *anchor* audio segment, $a_p$ represents our 
+*positive* example, i.e., the anchor with one of our audio deformations applied, 
+or another audio segment that occurs near in time to the anchor, and $a_n$ 
+represents our negative example, which we'll choose by picking any other audio 
+segment from our dataset at random.  Given a large enough  dataset, our 
+random strategy for choosing the negative example is probably fairly safe, 
+but we will take some care  to not accidentally choose negative examples that 
+are actually more perceptually similar to the anchor than the positive example.
+
+{% raw %}
+$$t_i = (x_{a}^{(i)}, x_{p}^{(i)}, x_{n}^{(i)})$$
+{% endraw %}
  
 ## Log-Scaled Mel Spectrograms
 
@@ -143,3 +162,7 @@ $$g: \mathbb{R}^{F \times T} \rightarrow \mathbb{R}^d$$
 ## Building an Index with Random Projections 
 
 ## Future Directions
+
+## Notes
+[You can find slides from the original talk here](https://docs.google.com/presentation/d/1EB-B7WI42gOEKozXIkDvNUWaVjKQb_bqk5M_mUiueS0/edit?usp=sharing), 
+and watch a [video here](https://www.youtube.com/watch?v=hKYuEZ0dEu0&feature=youtu.be).
