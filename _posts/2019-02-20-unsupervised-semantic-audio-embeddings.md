@@ -3,7 +3,7 @@ layout: post
 title:  "Audio Query-By-Example via Unsupervised Embeddings"
 date:   2019-02-13 07:00:00 -0500
 categories: zounds search embeddings neural-networks pytorch
-published: false
+published: true
 ---
 
 A couple months ago, I gave a talk at the 
@@ -125,12 +125,13 @@ For this experiment, that function will take the form of a deep convolutional
 neural network with learn-able parameters:
 
 {% raw %}
-$$g: \mathbb{R}^{frequency \times time} \rightarrow \mathbb{R}^{embedding\_dim}$$
+$$g: \mathbb{R}^{F \times T} \rightarrow \mathbb{R}^{embedding\_dim}$$
 {% endraw %}
 
-The original space is expressed as $\mathbb{R}^{frequency \times time}$ because 
-our input representation will be a spectrogram, which we'll cover in more detail
-in the next section.
+The original space is expressed as having dimensionality $F \times T$ because
+our input representation will be a spectrogram, with the $F$ and $T$ 
+representing the frequency and time dimensions, respectively.  We'll go into 
+more detail about how this representation will be computed in the next section.
 
 Our dataset will consist of $N$ "triplets" of data:
 
@@ -148,7 +149,7 @@ $$t_i = (x_{a}^{(i)}, x_{p}^{(i)}, x_{n}^{(i)})$$
 and each member of the triplet will be a spectogram:
  
 {% raw %}
-$$x_a^{(i)}, x_p^{(i)}, x_n^{(i)} \in \mathbb{R}^{frequency \times time}  $$
+$$x_a^{(i)}, x_p^{(i)}, x_n^{(i)} \in \mathbb{R}^{F \times T}  $$
 {% endraw %}
 
 Each $x_a$ represents an *anchor* audio segment, $a_p$ represents our 
@@ -175,9 +176,51 @@ that our loss goes to zero if it's less than this margin.  As usual, since we
 can't optimize over this term over all $N$ triplets, we'll optimize the 
 learn-able parameters using minibatches of data.  Additionally, we'll see later
 that because of the way we're sampling these triplets, our dataset is 
-effectively infinite, or unbounded.
+effectively unbounded.
  
 ## Log-Scaled Mel Spectrograms
+
+The paper's authors compute their input spectrograms by:
+
+1. using short time fourier transforms
+1. discarding phase
+1. mapping the resulting linear-spaced frequency bins onto an approximately log-spaced mel scale
+1. applying a logarithmic scaling to the magnitudes
+
+This is a fairly standard pipeline for computing a perceptually-motivated 
+audio representation.  They go on to apply the various deformations mentioned 
+above in this frequency domain.  There are some problems with this approach:
+
+- mapping onto the Mel scale is done after the fact, from linear-spaced 
+frequency bins that don't have the frequency resolution we'd like in lower 
+frequency ranges and are needlessly precise in higher frequency ranges
+- the representation isn't invertible, as phase is discarded and many frequency
+bins in the higher ranges are averaged together, meaning that it's impossible to
+know if the transformations actually _sound_ plausible.
+
+For this project, I decided to perform all deformations in the time domain, 
+mostly to convince myself that all of them continued to sound plausible.  I also 
+opted to compute the time-frequency representation using a bank of log-spaced 
+morlet wavelets, so that perceptually-inspired frequency spacing and 
+time-frequency resolution trade-offs could be accounted for from the outset, 
+instead of being something of an afterthought.
+ 
+One nice side effect of this decision is that now the computation of the 
+time-frequency representation happens in our neural network, or as part of our 
+function $g$ with just another convolutional layer (with frozen, or 
+non-learnable parameters), meaning that our input representation is now 
+just $\mathbb{R}^T$, with $^T$ being the number of audio samples in each segment.
+While the filter bank is not included in the network's learn-able parameters for 
+this initial experiment, a learn-able time frequency transform is an open 
+possibility in future iterations of this work.
+
+You can see the implementation of our 
+[learn-able $g$ function here](https://github.com/JohnVinyard/experiments/blob/master/unsupervised-semantic-audio-embeddings/network.py), 
+which uses the [`zounds.learn.FilterBank`](https://zounds.readthedocs.io/en/latest/learn.html#zounds.learn.FilterBank)
+module to compute the time frequency representation before passing it on to a 
+stack of convolutional layers.  Also, [this jupyter notebook](https://github.com/JohnVinyard/experiments/blob/master/unsupervised-semantic-audio-embeddings/mel-scale-log-spectrogram.ipynb)
+offers a more in-depth exploration of the motivations behind using a bank of 
+log-spaced morlet wavelets to compute our log-frequency represnetation.
 
 ## Within-Batch Semi-Hard Negative Mining
 
