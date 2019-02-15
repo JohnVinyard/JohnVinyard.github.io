@@ -3,7 +3,7 @@ layout: post
 title:  "Audio Query-By-Example via Unsupervised Embeddings"
 date:   2019-02-13 07:00:00 -0500
 categories: zounds search embeddings neural-networks pytorch
-published: false
+published: true
 ---
 
 A couple months ago, I gave a talk at the 
@@ -50,6 +50,12 @@ unsupervised fashion, not requiring a large, labelled audio dataset to get
 started.
 
 ## Deformations
+{% raw %}
+<script type="text/javascript">
+console.log('hi');
+</script>
+{% endraw %}
+
 First, to prove to ourselves that the observations are valid, we can listen to 
 some example deformations to get a feel for some of the transformations we'll
 be applying.
