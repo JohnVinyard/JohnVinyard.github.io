@@ -8,17 +8,17 @@ published: false
 
 A couple months ago, I gave a talk at the 
 [Austin Deep Learning Meetup](https://www.meetup.com/Austin-Deep-Learning/events/256293686/) 
-about building [Cochlea](https://cochlea.xyz), a prototype audio similarity 
-search I recently built.  There was a lot to cover in an hour, and much that was
-glossed over, so I decided to write a blog post covering the process in a little
-more detail.
+about building [Cochlea](https://cochlea.xyz?query=cello), a prototype audio 
+similarity search I recently built.  There was a lot to cover in an hour, and 
+much that was glossed over, so I decided to write a blog post covering the 
+process in a little more detail.
 
 ## Why Audio Search?
 There are countless hours of audio out there on the internet, and much of it is
-either not indexed at all, or is searchable only via subjective and relatively
-low-bandwidth textual tags.  What if it was possible for musicians and sound
-designers to navigate this data in an intuitive way, without depending on manual
-annotations.
+either not indexed at all, or is searchable only via subjective, noisy and 
+relatively low-bandwidth textual tags.  What if it was possible for 
+musicians and sound designers to navigate this data in an intuitive way, 
+without depending on manual annotations?
 
 ## Unsupervised Learning of Semantic Audio Representations
 The first challenge in building this kind of index is producing a 
@@ -40,13 +40,13 @@ Google that develops one such representation by first noting a few things:
 typically change the general sound class
 - sounds that are temporally proximal (occur near in time) tend to be assigned
 to the same sound class
-- mixtures of sounds inherit the sound classes of the original elements
+- mixtures of sounds inherit the sound classes of the constituent elements
 
 They leverage these observations to train a neural network that produces dense, 
 128-dimensional embeddings of short (~one second) spectrograms such that 
 perceptually similar sounds have a low cosine distance, or angle on the unit 
 sphere.  What's neat is that this insight allows them to train in an 
-unsupervised fashion, not requiring a large, labelled audio dataset to get 
+unsupervised fashion, not requiring a large, hand-labelled audio dataset to get 
 started.
 
 ## Deformations
@@ -242,6 +242,16 @@ anchor requires that we compute the distance from every anchor embedding to
 every negative embedding.  This is obviously prohibitively slow to do with our 
 entire dataset, and isn't really possible anyway due to the fact that we're 
 building batches on the fly, so we'll instead do it _within_ each batch.
+
+You can see the results of this process on several batches of size eight in the
+graph below.  After re-assigning the negative examples, the 
+anchor-to-negative distances for each example tend to be closer to the 
+anchor-to-positive distances while still maintaining a positive margin.  It's 
+worth noting that the technique I'm using to re-assign the negative examples 
+allows for the same negative example to be assigned to multiple triplets, if it 
+meets the criteria we set out above.
+
+![negative mining results](https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/negative_mining.png)
 
 ## Training
 
