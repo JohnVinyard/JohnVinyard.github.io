@@ -50,12 +50,6 @@ unsupervised fashion, not requiring a large, labelled audio dataset to get
 started.
 
 ## Deformations
-{% raw %}
-<script type="text/javascript">
-console.log('hi');
-</script>
-{% endraw %}
-
 First, to prove to ourselves that the observations are valid, we can listen to 
 some example deformations to get a feel for some of the transformations we'll
 be applying.
@@ -135,7 +129,7 @@ $$g: \mathbb{R}^{F \times T} \rightarrow \mathbb{R}^{embedding\_dim}$$
 {% endraw %}
 
 The original space is expressed as having dimensionality $F \times T$ because
-our input representation will be a spectrogram, with the $F$ and $T$ 
+our input representation will be a spectrogram, with the $^F$ and $^T$ 
 representing the frequency and time dimensions, respectively.  We'll go into 
 more detail about how this representation will be computed in the next section.
 
@@ -209,7 +203,10 @@ mostly to convince myself that all of them continued to sound plausible.  I also
 opted to compute the time-frequency representation using a bank of log-spaced 
 morlet wavelets, so that perceptually-inspired frequency spacing and 
 time-frequency resolution trade-offs could be accounted for from the outset, 
-instead of being something of an afterthought.
+instead of being something of an afterthought.  Our bank of filters will look 
+something like this:
+
+![filter bank with log-space frequencies](https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/filter_bank.png)
  
 One nice side effect of this decision is that now the computation of the 
 time-frequency representation happens in our neural network, or as part of our 
@@ -220,6 +217,10 @@ While the filter bank is not included in the network's learn-able parameters for
 this initial experiment, a learn-able time frequency transform is an open 
 possibility in future iterations of this work.
 
+The time frequency representations we compute will look something like this:
+
+![spectrogram](https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/mel_scale_log_spectrogram.png)
+
 You can see the implementation of our 
 [learn-able $g$ function here](https://github.com/JohnVinyard/experiments/blob/master/unsupervised-semantic-audio-embeddings/network.py), 
 which uses the [`zounds.learn.FilterBank`](https://zounds.readthedocs.io/en/latest/learn.html#zounds.learn.FilterBank)
@@ -229,6 +230,18 @@ offers a more in-depth exploration of the motivations behind using a bank of
 log-spaced morlet wavelets to compute our log-frequency represnetation.
 
 ## Within-Batch Semi-Hard Negative Mining
+The paper's authors also use a technique called 
+"within-batch, semi-hard negative" mining to make training batches as difficult 
+as possible for the network.  Since our loss encourages our learn-able function 
+to widen the gap between the anchor-to-positive and anchor-to-negative 
+embedding distances, we'd like to arrange our training data in such a way that 
+that gap between embeddings is _narrowed_, forcing our network to work harder 
+to push anchor and negative embeddings further apart, and anchor and positive 
+embeddings closer together.  Picking the hardest negative example for each 
+anchor requires that we compute the distance from every anchor embedding to 
+every negative embedding.  This is obviously prohibitively slow to do with our 
+entire dataset, and isn't really possible anyway due to the fact that we're 
+building batches on the fly, so we'll instead do it _within_ each batch.
 
 ## Training
 
