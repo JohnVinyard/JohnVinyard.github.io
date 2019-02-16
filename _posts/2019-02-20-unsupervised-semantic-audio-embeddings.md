@@ -277,8 +277,33 @@ weights
 Finally, we'd like to be able to leverage this new representation to build an 
 index over lots and lots of audio.  A brute-force linear-time distance 
 computation over every embedding obviously won't scale well, but there are 
-plenty of techniques for performing approximate K-nearest neighbors search in 
-sub-linear time.   
+plenty of techniques for performing approximate K-nearest neighbors search over 
+high-dimensional data in sub-linear time.  
+
+One such approach that gets us log-ish retrieval times builds a tree from every 
+example in our space by choosing a random hyperplane for each node in the tree 
+and bisecting that node's data based on which side of the hyperplane each data 
+point lies.  Some folks from spotify took this approach, along with some cool 
+modifications and open-sourced their work as a library called 
+[Annoy (Approximate Nearest Neighbors Oh Yeah)](https://github.com/spotify/annoy).
+
+The first trick they introduce is simply to search both of a node's subtrees 
+when a query vector lies sufficiently close to that node's hyperplane.  The 
+intuition here is that good candidate vectors that lie just on the other side 
+of the hyperplane "fence" would be missed, despite the fact that they're nearby.
+  
+The second trick is to build multiple trees.  All of the trees can be searched 
+in parallel by building a priority queue of nodes to search, where priority is 
+determined by how far the query vector lies from each node's hyperplane.  As we 
+observed when discussing the first trick, hyperplanes that are far from the 
+query vector are more likely to catch nearby candidates, so we'll prefer those 
+nodes, searching until we've reached some threshold of candidates we'd like to 
+consider.
+
+Finally, we perform a brute-force distance search over our pool of candidates, 
+which is typically orders of magnitude smaller than our total index size.
+
+
 
 ## Future Directions
 
