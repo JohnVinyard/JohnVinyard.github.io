@@ -255,7 +255,30 @@ meets the criteria we set out above.
 
 ## Training
 
-## Building an Index with Random Projections 
+Once we've got all of this ironed out, training the network is fairly 
+straightforward, and follows this procedure:
+ 
+1. choose a minibatch of anchor examples
+1. either apply a deformation (e.g., time stretch, pitch shift, etc.) or 
+choose segments that occur within ten seconds of each anchor to produce 
+positive examples
+1. choose negative examples at random to complete the triplets
+1. use our network $g$ to compute embeddings for the anchor, positive, and 
+negative examples
+1. perform within-batch semi-hard negative mining, re-assigning some or all of 
+the negative embeddings to make each example in the batch "harder", i.e., the 
+loss greater
+1. compute triplet loss, compute gradients via backprop, and update our network's 
+weights
+1. rinse and repeat!    
+
+## Building an Index with Random Projections
+
+Finally, we'd like to be able to leverage this new representation to build an 
+index over lots and lots of audio.  A brute-force linear-time distance 
+computation over every embedding obviously won't scale well, but there are 
+plenty of techniques for performing approximate K-nearest neighbors search in 
+sub-linear time.   
 
 ## Future Directions
 
