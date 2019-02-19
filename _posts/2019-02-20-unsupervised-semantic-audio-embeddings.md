@@ -303,7 +303,17 @@ consider.
 Finally, we perform a brute-force distance search over our pool of candidates, 
 which is typically orders of magnitude smaller than our total index size.
 
+In the graph below, you can look at the speed/accuracy tradeoffs we can make 
+for our search using from one to 64 trees.  Accuracy here (ranging from 0 to 
+one) on the x-axis is defined as the overlap with results from our 
+brute force source-of-truth search.  There are other parameters that can be 
+tweaked, such as our threshold for searching both paths for a given node, and 
+the size of the candidate pool over which we'll perform our final brute force 
+search, but this holds those parameters constant, only varying the number of 
+trees we're using.
 
+
+![search comparison](https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/search_times.png)
 
 ## Future Directions
 
