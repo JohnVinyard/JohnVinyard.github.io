@@ -50,69 +50,21 @@ unsupervised fashion, not requiring a large, hand-labelled audio dataset to get
 started.
 
 ## Deformations
+
 First, to prove to ourselves that the observations are valid, we can listen to 
 some example deformations to get a feel for some of the transformations we'll
 be applying.
 
-### Original file
-We'll choose the sound of a violin string being bowed, and use that as our 
-anchor, applying different deformations to understand what those sound like, and
-how they change our perception of the sound.
-
-<audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/original.ogg"></audio>
-
-### Pitch Shift
-Relatively small changes in pitch change the sound class we assign.
-
-#### Higher
-<audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/pitch-shift-up.ogg"></audio>
-
-#### Lower
-<audio control src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/pitch-shift-down.ogg"></audio>
-
-### Time Stretch
-
-Similarly, small changes in the duration of a sound shouldn't change the class
-we assign either.
-
-#### Longer
-<audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/time-stretch-longer.ogg"></audio>
-
-#### Shorter
-<audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/time-stretch-faster.ogg"></audio>
-
-### Temporal Proximity
-
-If we're listening to an unedited audio recording (i.e., not spliced together
-from many different sources), sounds that occur near one another in time are 
-typically assigned to the same sound class.
-
-#### Beginning
-<audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/original-beginning.ogg"></audio>
-
-#### Middle
-<audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/original-middle.ogg"></audio>
-
-#### End
-<audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/original-end.ogg"></audio>
-
-### Additive Noise
-
-Small amounts of noise should not affect the sound class assigned.
-
-<audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/additive-noise.ogg"></audio>
-
-### Mixtures of Sounds
-Mixtures of two sounds should inherit the classes of their "parent" sounds.
-
-#### Drums
-<audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/drums.ogg"></audio>
-
-#### Flute
-<audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/flute.ogg"></audio>
-
-#### Flute and Drums
-<audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/drums-and-flute.ogg"></audio>
+| Deformation          | Audio |
+|----------------------|-------|
+| none/original        | <audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/original.ogg"></audio> |
+| pitch shift up | <audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/pitch-shift-up.ogg"></audio> |
+| pitch shift down | <audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/pitch-shift-down.ogg"></audio> |
+| time dilation | <audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/time-stretch-longer.ogg"></audio> |
+| time compression | <audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/time-stretch-faster.ogg"></audio> |
+| additive noise | <audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/additive-noise.ogg"></audio> |
+| temporal proximity beginning |   <audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/original-beginning.ogg"></audio> |
+| temporal proximity end | <audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/original-end.ogg"></audio> |
 
 
 ## Triplet Loss
@@ -258,26 +210,26 @@ meets the criteria we set out above.
 Once we've got all of this ironed out, training the network is fairly 
 straightforward, and follows this procedure:
  
-1. choose a minibatch of anchor examples
+1. choose a minibatch of **anchor** examples
 1. either apply a deformation (e.g., time stretch, pitch shift, etc.) or 
 choose segments that occur within ten seconds of each anchor to produce 
-positive examples
-1. choose negative examples at random to complete the triplets
-1. use our network $g$ to compute embeddings for the anchor, positive, and 
-negative examples
+**positive** examples
+1. choose **negative** examples at random to complete the triplets
+1. use our network $g$ in its current state to compute embeddings for the 
+anchor, positive, and negative examples
 1. perform within-batch semi-hard negative mining, re-assigning some or all of 
 the negative embeddings to make each example in the batch "harder", i.e., the 
 loss greater
 1. compute triplet loss, compute gradients via backprop, and update our network's 
-weights
-1. rinse and repeat!    
+weights    
 
 ## Building an Index with Random Projections
 
-Finally, we'd like to be able to leverage this new representation to build an 
-index over lots and lots of audio.  A brute-force linear-time distance 
-computation over every embedding obviously won't scale well, but there are 
-plenty of techniques for performing approximate K-nearest neighbors search over 
+Now, if we'd like to use our new embedding space to support query-by-example, it
+means computing the distance between a query embedding and *every other segment
+in our database!*  A brute-force linear-time distance computation over every 
+embedding obviously won't scale well, but thanfully there are plenty of 
+techniques for performing approximate K-nearest neighbors search over 
 high-dimensional data in sub-linear time.  
 
 One such approach that gets us log-ish retrieval times builds a tree from every 
@@ -308,7 +260,7 @@ for our search using from one to 64 trees.  Accuracy here (ranging from 0 to
 one) on the x-axis is defined as the overlap with results from our 
 brute force source-of-truth search.  There are other parameters that can be 
 tweaked, such as our threshold for searching both paths for a given node, and 
-the size of the candidate pool over which we'll perform our final brute force 
+the size of the candidate pool over which we'll perform our final brute-force 
 search, but this holds those parameters constant, only varying the number of 
 trees we're using.
 
@@ -318,5 +270,8 @@ trees we're using.
 ## Future Directions
 
 ## Notes
-[You can find slides from the original talk here](https://docs.google.com/presentation/d/1EB-B7WI42gOEKozXIkDvNUWaVjKQb_bqk5M_mUiueS0/edit?usp=sharing), 
+- [You can find slides from the original talk here](https://docs.google.com/presentation/d/1EB-B7WI42gOEKozXIkDvNUWaVjKQb_bqk5M_mUiueS0/edit?usp=sharing), 
 and watch a [video here](https://www.youtube.com/watch?v=hKYuEZ0dEu0&feature=youtu.be).
+- There's a good blog post where Annoy's author explains it in detail 
+[here](https://erikbern.com/2015/10/01/nearest-neighbors-and-vector-models-part-2-how-to-search-in-high-dimensional-spaces.html)
+and an [attendant talk](https://www.youtube.com/watch?v=QkCCyLW0ehU).
