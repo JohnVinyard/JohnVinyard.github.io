@@ -8,7 +8,7 @@ published: false
 
 A couple months ago, I gave a talk at the 
 [Austin Deep Learning Meetup](https://www.meetup.com/Austin-Deep-Learning/events/256293686/) 
-about building [Cochlea](https://cochlea.xyz?query=cello), a prototype audio 
+about building [Cochlea](https://cochlea.xyz/sounds?query=flute), a prototype audio 
 similarity search I recently built.  There was a lot to cover in an hour, and 
 much that was glossed over, so I decided to write a blog post covering the 
 process in a little more detail.
@@ -238,6 +238,11 @@ and bisecting that node's data based on which side of the hyperplane each data
 point lies.  Some folks from spotify took this approach, along with some cool 
 modifications and open-sourced their work as a library called 
 [Annoy (Approximate Nearest Neighbors Oh Yeah)](https://github.com/spotify/annoy).
+
+Here's a visualization of a single hyperplane tree built from our learned 
+embeddings:
+
+![hyperplane tree](https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/tree.png)
 
 The first trick they introduce is simply to search both of a node's subtrees 
 when a query vector lies sufficiently close to that node's hyperplane.  The 
