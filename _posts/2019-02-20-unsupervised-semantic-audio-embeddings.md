@@ -6,19 +6,20 @@ categories: zounds search embeddings neural-networks pytorch
 published: false
 ---
 
-A couple months ago, I gave a talk at the 
+A couple of months ago, I gave a talk at the 
 [Austin Deep Learning Meetup](https://www.meetup.com/Austin-Deep-Learning/events/256293686/) 
 about building [Cochlea](https://cochlea.xyz/sounds?query=flute), a prototype audio 
-similarity search I recently built.  There was a lot to cover in an hour, and 
-much that was glossed over, so I decided to write a blog post covering the 
-process in a little more detail.
+similarity search I recently built.  There was a lot to cover in an hour, some 
+details were glossed over, and I've learned a few things since the talk, so I 
+decided to write a blog post covering the process in a little more detail.
 
 ## Why Audio Search?
 There are countless hours of audio out there on the internet, and much of it is
 either not indexed at all, or is searchable only via subjective, noisy and 
-relatively low-bandwidth textual tags.  What if it was possible for 
-musicians and sound designers to navigate this data in an intuitive way, 
-without depending on manual annotations?
+relatively low-bandwidth text descriptions and tags.  What if it was possible 
+to index all this audio data by perceptual similarity, allowing musicians and 
+sound designers to navigate the data in an intuitive way, without depending on 
+manual tagging?
 
 ## Unsupervised Learning of Semantic Audio Representations
 The first challenge in building this kind of index is producing a 
@@ -44,20 +45,20 @@ to the same sound class
 
 They leverage these observations to train a neural network that produces dense, 
 128-dimensional embeddings of short (~one second) spectrograms such that 
-perceptually similar sounds have a low cosine distance, or angle on the unit 
-sphere.  What's neat is that this insight allows them to train in an 
+perceptually similar sounds have a low cosine distance, or small angle on the 
+unit (hyper)sphere.  What's neat is that this insight allows them to train in an 
 unsupervised fashion, not requiring a large, hand-labelled audio dataset to get 
 started.
 
 ## Deformations
 
-First, to prove to ourselves that the observations are valid, we can listen to 
-some example deformations to get a feel for some of the transformations we'll
-be applying.
+First, to prove to ourselves that the observations are valid, we can apply the 
+deformations to some audio and listen to ensure that some kind of perceptual 
+similarity is maintained.
 
 | Deformation          | Audio |
 |----------------------|-------|
-| none/original        | <audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/original.ogg"></audio> |
+| original        | <audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/original.ogg"></audio> |
 | pitch shift up | <audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/pitch-shift-up.ogg"></audio> |
 | pitch shift down | <audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/pitch-shift-down.ogg"></audio> |
 | time dilation | <audio controls src="https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/time-stretch-longer.ogg"></audio> |
@@ -68,13 +69,13 @@ be applying.
 
 
 ## Triplet Loss
-So, we'd like to learn a function or mapping such that simple cosine distance 
+Next, we'd like to learn a function or mapping such that simple cosine distance 
 in the target or embedding space corresponds to some of the highly complex 
-geometric relationships between the anchor and deformed sounds we've just 
-listened to.
+geometric relationships between the anchor and deformed sounds represented in 
+the audio we've just listened to.
   
-For this experiment, that function will take the form of a deep convolutional
-neural network with learn-able parameters:
+For this experiment, that function, which we'll call $g$, will take the form 
+of a deep convolutional neural network with learn-able parameters:
 
 {% raw %}
 $$g: \mathbb{R}^{F \times T} \rightarrow \mathbb{R}^{embedding\_dim}$$
@@ -104,9 +105,9 @@ and each member of the triplet will be a spectogram:
 $$x_a^{(i)}, x_p^{(i)}, x_n^{(i)} \in \mathbb{R}^{F \times T}  $$
 {% endraw %}
 
-Each $x_a$ represents an *anchor* audio segment, $a_p$ represents our 
+Each $x_a$ represents an *anchor* audio segment, $x_p$ represents our 
 *positive* example, i.e., the anchor with one of our audio deformations applied, 
-or another audio segment that occurs near in time to the anchor, and $a_n$ 
+or another audio segment that occurs near in time to the anchor, and $x_n$ 
 represents our negative example, which we'll choose by picking any other audio 
 segment from our dataset at random.  Given a large enough  dataset, our 
 random strategy for choosing the negative example is probably fairly safe, 
@@ -115,33 +116,50 @@ are actually more perceptually similar to the anchor than the positive example.
 
 We'll minimize a loss with respect to our network parameters that will try to 
 push the anchor and positive examples closer together in our embedding space, 
-while it also pushes our anchor and negative examples further apart:
+while it also pushes our anchor and negative examples further apart, given some 
+distance function $d$:
 
 {% raw %}
-$$\mathcal{L}(\tau ) = \sum_{i=1}^{N}\left [  \left \|  g(x_a^{(i)}) - g(x_p^{(i)})\right \|_2^2 - \left \| g(x_a^{(i)}) - g(x_n^{(i)})\right \|_2^2   + \delta \right]_+$$
+$$\mathcal{L}(\tau ) = \sum_{i=1}^{N}\left [  d(g(x_a^{(i)}), g(x_p^{(i)})) - d(g(x_a^{(i)}), g(x_n^{(i)}))   + \delta \right]_+$$
 {% endraw %}
 
-So, we'll try to ensure that the distance from anchor to positive examples is 
-less than the distance from anchor to negative examples by some positive margin 
-$\delta$, and the $_+$ here indicates the hinge loss, which really just means
-that our loss goes to zero if it's less than this margin.  As usual, since we 
-can't optimize over this term over all $N$ triplets, we'll optimize the 
-learn-able parameters using minibatches of data.  Additionally, we'll see later
-that because of the way we're sampling these triplets, our dataset is 
+Our network's job is to ensure that the distance $d$ from anchor to positive 
+examples is less than the distance from anchor to negative examples by some 
+positive margin $\delta$.  The paper's authors used squared l2 distance as 
+their $d$:
+
+{% raw %}
+$$d(a, b) = \left \|  a - b \right \|_2^2$$
+{% endraw %}
+
+While I used cosine distance:
+
+{% raw %}
+$$dist(a, b) = 1 - \frac{a \cdot b}{\left\| a \right\|_2 \left\| b \right\|_2}$$
+{% endraw %}
+
+
+The $_+$ here indicates the hinge loss, which really just means
+that our loss goes to zero if it's less than this margin $\delta$.  As usual, 
+since we can't optimize over this term over all $N$ triplets, we'll optimize 
+the learn-able parameters using minibatches of data.  Additionally, we'll see 
+later that because of the way we're sampling these triplets, our dataset is 
 effectively unbounded.
+
  
 ## Log-Scaled Mel Spectrograms
 
 The paper's authors compute their input spectrograms by:
 
-1. using short time fourier transforms
+1. using short-time fourier transforms
 1. discarding phase
 1. mapping the resulting linear-spaced frequency bins onto an approximately log-spaced mel scale
 1. applying a logarithmic scaling to the magnitudes
 
 This is a fairly standard pipeline for computing a perceptually-motivated 
 audio representation.  They go on to apply the various deformations mentioned 
-above in this frequency domain.  There are some problems with this approach:
+above in this frequency domain.  I was a little uneasy with this approach 
+because:
 
 - mapping onto the Mel scale is done after the fact, from linear-spaced 
 frequency bins that don't have the frequency resolution we'd like in lower 
@@ -161,13 +179,13 @@ something like this:
 ![filter bank with log-space frequencies](https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/filter_bank.png)
  
 One nice side effect of this decision is that now the computation of the 
-time-frequency representation happens in our neural network, or as part of our 
-function $g$ with just another convolutional layer (with frozen, or 
-non-learnable parameters), meaning that our input representation is now 
-just $\mathbb{R}^T$, with $^T$ being the number of audio samples in each segment.
-While the filter bank is not included in the network's learn-able parameters for 
-this initial experiment, a learn-able time frequency transform is an open 
-possibility in future iterations of this work.
+time-frequency transform is performed as part of our neural network, or as 
+part of our function $g$, by a convolutional layer with frozen parameters, 
+meaning that our input representation is now just $\mathbb{R}^T$, with $^T$ 
+being the number of audio samples in each segment.  While the filter bank is 
+not included in the network's learn-able parameters for this initial 
+experiment, a learn-able time-frequency transform is an open possibility in 
+future iterations of this work.
 
 The time frequency representations we compute will look something like this:
 
@@ -196,19 +214,38 @@ entire dataset, and isn't really possible anyway due to the fact that we're
 building batches on the fly, so we'll instead do it _within_ each batch.
 
 You can see the results of this process on several batches of size eight in the
-graph below.  After re-assigning the negative examples, the 
-anchor-to-negative distances for each example tend to be closer to the 
-anchor-to-positive distances while still maintaining a positive margin.  It's 
-worth noting that the technique I'm using to re-assign the negative examples 
-allows for the same negative example to be assigned to multiple triplets, if it 
-meets the criteria we set out above.
+graph below.  After re-assigning the negative examples, the new 
+anchor-to-negative distances (in red) for each example tend to be closer to the 
+anchor-to-positive distances (in blue) than the original anchor-to-negative 
+distances (in green), while still maintaining a positive margin.  It's worth 
+noting that the technique I'm using to re-assign the negative examples allows 
+for the same negative example to be assigned to multiple triplets, if it meets 
+the criteria we set out above.
 
 ![negative mining results](https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/negative_mining.png)
 
+There's a little more detail about the algorithm I used to perform within-batch 
+semi-hard negative mining in [this jupyter notebook](https://github.com/JohnVinyard/experiments/blob/master/unsupervised-semantic-audio-embeddings/within-batch-semi-hard-negative-mining.ipynb).
+
+## Training Data
+
+The paper's authors used [Google's AudioSet](https://research.google.com/audioset/)
+for their training data, but I chose to pull together around 70 hours of sound 
+and music from various sources on the internet, including:
+
+- [Internet Archive](https://archive.org/details/audio)
+- [Freesound.org](https://freesound.org/)
+- [MusicNet](https://homes.cs.washington.edu/~thickstn/musicnet.html)
+- [Phat Drum Loops](http://www.phatdrumloops.com/beats.php)
+
+I didn't have a principled reason for doing this in the context of the project, 
+but I did want some practice collecting audio and related metadata from some 
+disparate sources on the internet.
+
 ## Training
 
-Once we've got all of this ironed out, training the network is fairly 
-straightforward, and follows this procedure:
+At this point, training the network is fairly straightforward, and follows this 
+procedure:
  
 1. choose a minibatch of **anchor** examples
 1. either apply a deformation (e.g., time stretch, pitch shift, etc.) or 
@@ -220,31 +257,32 @@ anchor, positive, and negative examples
 1. perform within-batch semi-hard negative mining, re-assigning some or all of 
 the negative embeddings to make each example in the batch "harder", i.e., the 
 loss greater
-1. compute triplet loss, compute gradients via backprop, and update our network's 
-weights    
+1. compute triplet loss, calculate gradients via backpropagation, and update 
+our network's weights    
 
 ## Building an Index with Random Projections
 
 Now, if we'd like to use our new embedding space to support query-by-example, it
 means computing the distance between a query embedding and *every other segment
-in our database!*  A brute-force linear-time distance computation over every 
-embedding obviously won't scale well, but thanfully there are plenty of 
-techniques for performing approximate K-nearest neighbors search over 
+in our database!*  A brute-force distance computation over every embedding 
+obviously won't scale well, but thankfully there are plenty of techniques 
+available for performing approximate K-nearest neighbors search over 
 high-dimensional data in sub-linear time.  
 
 One such approach that gets us log-ish retrieval times builds a tree from every 
 example in our space by choosing a random hyperplane for each node in the tree 
 and bisecting that node's data based on which side of the hyperplane each data 
-point lies.  Some folks from spotify took this approach, along with some cool 
-modifications and open-sourced their work as a library called 
-[Annoy (Approximate Nearest Neighbors Oh Yeah)](https://github.com/spotify/annoy).
+point lies.  [Erik Bernhardsson](https://github.com/erikbern) took this basic 
+approach while working on music recommendations at Spotify, along with some 
+clever tricks to improve accuracy, and open-sourced his work as a library 
+called [Annoy (Approximate Nearest Neighbors Oh Yeah)](https://github.com/spotify/annoy).
 
 Here's a visualization of a single hyperplane tree built from our learned 
 embeddings:
 
 ![hyperplane tree](https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/tree.gv.svg)
 
-The first trick they introduce is simply to search both of a node's subtrees 
+The first trick introduced is simply to search both of a node's subtrees 
 when a query vector lies sufficiently close to that node's hyperplane.  The 
 intuition here is that good candidate vectors that lie just on the other side 
 of the hyperplane "fence" would be missed, despite the fact that they're nearby.
@@ -261,22 +299,26 @@ Finally, we perform a brute-force distance search over our pool of candidates,
 which is typically orders of magnitude smaller than our total index size.
 
 In the graph below, you can look at the speed/accuracy tradeoffs we can make 
-for our search using from one to 64 trees.  Accuracy here (ranging from 0 to 
-one) on the x-axis is defined as the overlap with results from our 
-brute force source-of-truth search.  There are other parameters that can be 
-tweaked, such as our threshold for searching both paths for a given node, and 
-the size of the candidate pool over which we'll perform our final brute-force 
-search, but this holds those parameters constant, only varying the number of 
-trees we're using.
+for our search using from one to 64 trees.  Accuracy here (ranging from 0-1) 
+on the x-axis is defined as the overlap with results from our brute-force 
+source-of-truth search.  There are other parameters that can be tweaked, such 
+as our threshold for searching both paths for a given node, and the size of the 
+candidate pool over which we'll perform our final brute-force search, but this 
+holds those parameters constant, only varying the number of trees we're using.
 
 
 ![search comparison](https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/search_times.png)
 
-## Future Directions
+It's worth noting that these timings are based on [a pure-Python/Numpy implementation 
+of the algorithm that I wrote for learning purposes](https://github.com/JohnVinyard/experiments/blob/master/unsupervised-semantic-audio-embeddings/search.py#L108); 
+timings from Annoy's C++ implementation would likely look better.
 
-## Notes
+## Resources
 - [You can find slides from the original talk here](https://docs.google.com/presentation/d/1EB-B7WI42gOEKozXIkDvNUWaVjKQb_bqk5M_mUiueS0/edit?usp=sharing), 
 and watch a [video here](https://www.youtube.com/watch?v=hKYuEZ0dEu0&feature=youtu.be).
+- [All the code for this experiment is here](https://github.com/JohnVinyard/experiments/tree/master/unsupervised-semantic-audio-embeddings)
+- [Unsupervised Learning of Semantic Audio Representations](https://arxiv.org/abs/1711.02209) 
+is the paper on which this experiment is based
 - There's a good blog post where Annoy's author explains it in detail 
 [here](https://erikbern.com/2015/10/01/nearest-neighbors-and-vector-models-part-2-how-to-search-in-high-dimensional-spaces.html)
 and an [attendant talk](https://www.youtube.com/watch?v=QkCCyLW0ehU).
