@@ -173,8 +173,14 @@ mostly to convince myself that all of them continued to sound plausible.  I also
 opted to compute the time-frequency representation using a bank of log-spaced 
 morlet wavelets, so that perceptually-inspired frequency spacing and 
 time-frequency resolution trade-offs could be accounted for from the outset, 
-instead of being something of an afterthought.  Our bank of filters will look 
-something like this:
+instead of being something of an afterthought.  A subset of our bank of filters 
+will look something like this:
+
+![filter bank with log-space frequencies](https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/filter_bank2.png)
+
+This filter bank can be thought of as a 1D convolutional layer with frozen 
+parameters.  Visualizing all the channels and weights of our convolutional filter
+bank at once yields something like this:
 
 ![filter bank with log-space frequencies](https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/filter_bank.png)
  
