@@ -242,7 +242,7 @@ modifications and open-sourced their work as a library called
 Here's a visualization of a single hyperplane tree built from our learned 
 embeddings:
 
-![hyperplane tree](https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/tree.png)
+![hyperplane tree](https://s3-us-west-1.amazonaws.com/unsupervised-audio-embeddings-talk/tree.gv.svg)
 
 The first trick they introduce is simply to search both of a node's subtrees 
 when a query vector lies sufficiently close to that node's hyperplane.  The 
