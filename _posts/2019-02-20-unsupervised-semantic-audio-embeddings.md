@@ -120,7 +120,7 @@ $$x_a^{(i)}, x_p^{(i)}, x_n^{(i)} \in \mathbb{R}^{F \times T}  $$
 Each $x_a$ represents an *anchor* audio segment, each $x_p$ represents a 
 *positive* example, i.e., the anchor with one of our audio deformations applied, 
 or another audio segment that occurs near in time to the anchor, and each $x_n$ 
-represents a negative example, which we'll choose by picking any other audio 
+represents a *negative* example, which we'll choose by picking any other audio 
 segment from our dataset at random.  Given a large enough  dataset, our 
 random strategy for choosing the negative example is probably fairly safe, 
 but we will take some care  to not accidentally choose negative examples that 
