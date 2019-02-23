@@ -9,9 +9,9 @@ published: true
 A couple of months ago, I gave a talk at the 
 [Austin Deep Learning Meetup](https://www.meetup.com/Austin-Deep-Learning/events/256293686/) 
 about building [Cochlea](https://cochlea.xyz/sounds?query=flute), a prototype audio 
-similarity search I recently built.  There was a lot to cover in an hour, some 
-details were glossed over, and I've learned a few things since the talk, so I 
-decided to write a blog post covering the process in a little more detail.
+similarity search engine.  There was a lot to cover in an hour, some details 
+were glossed over, and I've learned a few things since the talk, so I decided 
+to write a blog post covering the process in a little more detail.
 
 ## Motivations and First Steps
 There are countless hours of audio out there on the internet, and much of it is
