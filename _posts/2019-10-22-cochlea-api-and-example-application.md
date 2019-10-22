@@ -1,13 +1,13 @@
 ---
 layout: post
-title:  "Cochlea: A REST-ful API for Annotating Audio"
+title:  "Cochlea: A RESTful API for Annotating Audio"
 date:   2019-10-22 07:00:00 -0500
 categories: api search annotation
 published: true
 ---
 
 [Cochlea](https://github.com/JohnVinyard/annotate-api) is an early-stage, 
-REST-ful API that allows users to annotate audio files on the internet.  
+RESTful API that allows users to annotate audio files on the internet.  
 Segments or time intervals can be annotated with text tags or other arbitrary 
 data.  This may not sound very exciting on its own, but I believe that these 
 simple primitives, sounds and annotations, make possible incredibly diverse 
@@ -37,7 +37,7 @@ features, like allowing users to add text descriptions or tags to a sound and
 making that text searchable.
 
 The common theme in all these ventures has been a lack of flexibility and the 
-very simple REST-ful resource I've described above is one possible answer to the 
+very simple RESTful resource I've described above is one possible answer to the 
 problem.
 
 # API Details
