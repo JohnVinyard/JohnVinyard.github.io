@@ -46,7 +46,7 @@ The experimental Cochlea API consists of just three simple resources:
 
 ## Sounds
 
-![Audio](https://cdn.imgbin.com/16/20/16/imgbin-digital-audio-waveform-sound-wave-black-sound-wave-illustration-Veke7w2q2UtXG36spNkmAWxB6.jpg)
+![Sound](http://clipart-library.com/new_gallery/1052151_soundwaves-png.png)
 
 `sound` resources are really just pointers to audio that's hosted somewhere out 
 there on the internet.  While it's not totally necessary, ideally the servers 
@@ -63,7 +63,7 @@ and `aggregator` users in a bit.
 
 ## Annotations
 
-![Annotations]https://cochlea-example-app-images.s3.amazonaws.com/annotation-tags.png
+![Annotations](https://cochlea-example-app-images.s3.amazonaws.com/annotation-tags.png)
 
 `annotations` describe all or part of a sound using text tags or any other 
 arbitrary piece of data.  The Cochlea API natively supports the creation 
