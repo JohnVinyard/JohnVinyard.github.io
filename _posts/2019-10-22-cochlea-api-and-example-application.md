@@ -12,6 +12,7 @@ Segments or time intervals can be annotated with text tags or other arbitrary
 data.  This may not sound very exciting on its own, but I believe that these 
 simple primitives, sounds and annotations, make possible incredibly diverse 
 applications tailored to the needs of electronic musicians and sound designers.  
+
 Before starting to dream aloud about the endless possibilities, a little about 
 how I arrived here...
 
@@ -19,28 +20,32 @@ how I arrived here...
 
 I'm interested in building tools that allow musicians, sound designers 
 and machine learning researchers to explore libraries of audio samples in new 
-and intuitive ways that go beyond traditional tag-based text searches.  Text 
+and intuitive ways that go far beyond traditional tag-based text searches.  Text 
 can be a great starting point, but indexes based on perceptual audio similarity 
-or other features such as pitch or timbre hold a lot of promise.  Whereas 
-text-based approaches require painstaking manual tagging of vast quantities of 
-audio, indexes that organize sound based on features derived directly from the 
-audio samples themselves make it feasible to imagine the entire internet as your 
-sample library!
+or other features such as pitch, timbre or other features offer much more 
+exciting possibilities.  Whereas text-based approaches require painstaking 
+manual tagging of vast quantities of audio, indexes that organize sound based 
+on features derived directly from the audio samples themselves make it 
+feasible to imagine the entire internet as your sample library!
 
 With this ideal in mind, I've started and discarded several audio similarity 
 search applications due to overly-rigid approaches.  I've often settled on a 
 single feature or similarity metric I think will work well and based the 
-entire application on it.  Inevitably, the search works well in some contexts 
+entire application around it.  Inevitably, the search works well in some contexts 
 and not so well in others.  In addition, I've failed time and again to make 
-adding _new_ sounds to these indexes painless and I've eschewed more basic 
-features, like allowing users to add text descriptions or tags to a sound and 
-making that text searchable.
+indexing _new_ sounds painless and I've eschewed more basic, but necessary 
+features, like allowing users to add text descriptions or tags and making that 
+text searchable.
 
-The common theme in all these ventures has been a lack of flexibility and the 
-very simple RESTful resource I've described above is one possible answer to the 
-problem.
+The common theme in all these ventures has been a lack of flexibility due to 
+assumptions I'ved baked in much too early.  The RESTful API I introduced above 
+is one possible answer to this problem, providing a simple platform on which 
+all sorts of diverse applications might be built.
 
-# API Details
+Now, to dig in to the details...
+
+
+# API Resources
 
 The experimental Cochlea API consists of just three simple resources:
 
@@ -52,10 +57,13 @@ The experimental Cochlea API consists of just three simple resources:
 there on the internet.  While it's not totally necessary, ideally the servers 
 hosting the audio content will conform to a basic interface:
 
-- The servers should support byte range requests, making partial downloads 
-of the files possible
-- The servers should support CORS, making it possible for front-end 
-applications to download the audio and use it from the [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API)
+- The servers should support 
+[byte range requests](https://developer.mozilla.org/en-US/docs/Web/HTTP/Range_requests), 
+making partial downloads of the files possible
+- The servers should allow for cross-origin requests by setting appropriate 
+[CORS headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS), making 
+it possible for front-end applications to request the audio and play it using 
+the [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API)
 
 It's also worth noting that `sound` identifiers are ordered according to the 
 time they were created, which will come in handy when we discuss `featurebot` 
