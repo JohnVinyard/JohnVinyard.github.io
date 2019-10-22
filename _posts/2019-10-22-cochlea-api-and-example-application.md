@@ -46,7 +46,7 @@ The experimental Cochlea API consists of just three simple resources:
 
 ## Sounds
 
-![Sound](http://clipart-library.com/new_gallery/1052151_soundwaves-png.png)
+![Sound](https://cochlea-example-app-images.s3.amazonaws.com/waveform.png)
 
 `sound` resources are really just pointers to audio that's hosted somewhere out 
 there on the internet.  While it's not totally necessary, ideally the servers 
