@@ -22,11 +22,11 @@ I'm interested in building tools that allow musicians, sound designers
 and machine learning researchers to explore libraries of audio samples in new 
 and intuitive ways that go far beyond traditional tag-based text searches.  Text 
 can be a great starting point, but indexes based on perceptual audio similarity 
-or other features such as pitch, timbre or other features offer much more 
-exciting possibilities.  Whereas text-based approaches require painstaking 
-manual tagging of vast quantities of audio, indexes that organize sound based 
-on features derived directly from the audio samples themselves make it 
-feasible to imagine the entire internet as your sample library!
+or other features such as pitch or timbre offer much more exciting possibilities.  
+Whereas text-based approaches require painstaking manual tagging of vast 
+quantities of audio, indexes that organize sound based on features derived 
+directly from the audio samples themselves make it feasible to imagine the 
+entire internet as your sample library!
 
 With this ideal in mind, I've started and discarded several audio similarity 
 search applications due to overly-rigid approaches.  I've often settled on a 
@@ -38,11 +38,11 @@ features, like allowing users to add text descriptions or tags and making that
 text searchable.
 
 The common theme in all these ventures has been a lack of flexibility due to 
-assumptions I'ved baked in much too early.  The RESTful API I introduced above 
+assumptions I've baked in much too early.  The RESTful API I introduced above 
 is one possible answer to this problem, providing a simple platform on which 
 all sorts of diverse applications might be built.
 
-Now, to dig in to the details...
+Now, to dig into the details...
 
 
 # API Resources
@@ -58,7 +58,7 @@ there on the internet.  While it's not totally necessary, ideally the servers
 hosting the audio content will conform to a basic interface:
 
 - The servers should support 
-[byte range requests](https://developer.mozilla.org/en-US/docs/Web/HTTP/Range_requests), 
+[byte-range requests](https://developer.mozilla.org/en-US/docs/Web/HTTP/Range_requests), 
 making partial downloads of the files possible
 - The servers should allow for cross-origin requests by setting appropriate 
 [CORS headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS), making 
@@ -79,13 +79,13 @@ and storage of text tags, but any other arbitrary data can be hosted elsewhere.
 We might create annotations tagging a segment of audio as containing 
 female speech or create an annotation that highlights an interesting segment of 
 a longer audio sequence.  Finally, we might compute dense numerical features 
-from the raw audio samples (such as short-time fourier transform data, chroma, 
+from the raw audio samples (such as short-time Fourier transform data, chroma, 
 or MFCC data) and store them as NumPy arrays in an S3 bucket.
 
 In this way, annotations again become pointers to arbitrary data hosted on the 
 internet, just as `sound` resources are.  Just as servers hosting audio data 
 should conform to a particular interface, servers hosting dense features or 
-other arbitrary annotation data would ideally support byte range and 
+other arbitrary annotation data would ideally support byte-range and 
 CORS requests.
 
 `annotation` identifiers are also ordered according to the time they were 
@@ -100,7 +100,7 @@ really starts to get interesting.
 
 ### Humans
 
-Human-beings are the first and most obvious user type.  These users can read 
+Humans are the first and most obvious user type.  These users can read 
 `sound` and `annotation` resources and can create `annotation` resources of 
 their own, usually using textual tags added using some graphical user interface.
 
@@ -133,8 +133,8 @@ example applications might include:
 - a bot that computes onset times using 
 [`librosa`'s](https://librosa.github.io/librosa/generated/librosa.onset.onset_detect.html) 
 onset detection functionality
-- a bot that computes short-time fourier transform data for each sound
-- a bot that listens for annotations from the short-time fourier transform bot 
+- a bot that computes short-time Fourier transform data for each sound
+- a bot that listens for annotations from the short-time Fourier transform bot 
 and computes [chroma](https://en.wikipedia.org/wiki/Chroma_feature) or 
 [MFCC](https://en.wikipedia.org/wiki/Mel-frequency_cepstrum) data, 
 thus beginning to form a distributed computation graph that transforms the raw
@@ -186,7 +186,7 @@ including [short-time fourier transforms](https://en.wikipedia.org/wiki/Short-ti
 three-dimensional sphere based on perceptual similarity, allowing users to 
 navigate sound "space" using a Google Maps-like interface.
 
-The API and web app are invite only (for now), 
+The API and web app are invite-only (for now), 
 [but please reach out](mailto:john.vinyard@gmail.com) if you're interested in 
 giving them a spin (in exchange for some feedback, of course)!
 
