@@ -75,12 +75,13 @@ and `aggregator` users in a bit.
 
 `annotations` describe all or part of a sound using text tags or any other 
 arbitrary piece of data.  The Cochlea API natively supports the creation 
-and storage of text tags, but any other arbitrary data can be hosted elsewhere.  
-We might create annotations tagging a segment of audio as containing 
-female speech or create an annotation that highlights an interesting segment of 
-a longer audio sequence.  Finally, we might compute dense numerical features 
-from the raw audio samples (such as short-time Fourier transform data, chroma, 
-or MFCC data) and store them as NumPy arrays in an S3 bucket.
+and storage of text tags, but other arbitrary data describing sound segments can 
+be hosted elsewhere.  We might create annotations tagging a segment of audio 
+as containing female speech or create an annotation that highlights an 
+interesting segment of a longer audio sequence.  Finally, we might compute 
+dense numerical features from the raw audio samples (such as short-time 
+Fourier transform data, chroma, or MFCC data) and store them as NumPy arrays 
+in an S3 bucket.
 
 In this way, annotations again become pointers to arbitrary data hosted on the 
 internet, just as `sound` resources are.  Just as servers hosting audio data 
