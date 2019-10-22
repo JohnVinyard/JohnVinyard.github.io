@@ -10,8 +10,9 @@ published: true
 RESTful API that allows users to annotate audio files on the internet.  
 Segments or time intervals can be annotated with text tags or other arbitrary 
 data.  This may not sound very exciting on its own, but I believe that these 
-simple primitives, sounds and annotations, make possible incredibly diverse 
-applications tailored to the needs of electronic musicians and sound designers.  
+simple primitives, make possible incredibly diverse applications tailored to 
+the needs of electronic musicians, sound designers and other folks interested 
+in playing with sound.  
 
 Before starting to dream aloud about the endless possibilities, a little about 
 how I arrived here...
@@ -33,14 +34,13 @@ search applications due to overly-rigid approaches.  I've often settled on a
 single feature or similarity metric I think will work well and based the 
 entire application around it.  Inevitably, the search works well in some contexts 
 and not so well in others.  In addition, I've failed time and again to make 
-indexing _new_ sounds painless and I've eschewed more basic, but necessary 
-features, like allowing users to add text descriptions or tags and making that 
-text searchable.
+indexing _new_ sounds painless and I've eschewed more basic but necessary 
+features, like allowing users to tag audio and search across those tags.
 
 The common theme in all these ventures has been a lack of flexibility due to 
-assumptions I've baked in much too early.  The RESTful API I introduced above 
-is one possible answer to this problem, providing a simple platform on which 
-all sorts of diverse applications might be built.
+assumptions I've baked in much too early in the process.  The RESTful API I 
+introduced above is one possible answer to this problem, providing a simple 
+platform on which all sorts of diverse applications might be built.
 
 Now, to dig into the details...
 
@@ -49,7 +49,7 @@ Now, to dig into the details...
 
 The experimental Cochlea API consists of just three simple resources:
 
-## Sounds
+## `/sounds`
 
 ![Sound](https://cochlea-example-app-images.s3.amazonaws.com/waveform.png)
 
@@ -69,7 +69,7 @@ It's also worth noting that `sound` identifiers are ordered according to the
 time they were created, which will come in handy when we discuss `featurebot` 
 and `aggregator` users in a bit.
 
-## Annotations
+## `/annotations`
 
 ![Annotations](https://cochlea-example-app-images.s3.amazonaws.com/annotation-tags.png)
 
@@ -92,7 +92,7 @@ CORS requests.
 created, which will again come into play when we discuss `featurebot` and 
 `aggregator` users a little later.
 
-## Users
+## `/users`
 
 The third and final resource type we'll discuss is the `user` type.  There are 
 a few different types to cover, and I think that this is where the platform 
