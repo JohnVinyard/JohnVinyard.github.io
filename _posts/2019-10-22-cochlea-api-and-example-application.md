@@ -10,7 +10,7 @@ published: true
 RESTful API that allows users to annotate audio files on the internet.  
 Segments or time intervals can be annotated with text tags or other arbitrary 
 data.  This may not sound very exciting on its own, but I believe that these 
-simple primitives, make possible incredibly diverse applications tailored to 
+simple primitives make possible incredibly diverse applications tailored to 
 the needs of electronic musicians, sound designers and other folks interested 
 in playing with sound.  
 
@@ -26,8 +26,8 @@ can be a great starting point, but indexes based on perceptual audio similarity
 or other features such as pitch or timbre offer much more exciting possibilities.  
 Whereas text-based approaches require painstaking manual tagging of vast 
 quantities of audio, indexes that organize sound based on features derived 
-directly from the audio samples themselves make it feasible to imagine the 
-entire internet as your sample library!
+directly from audio samples make it feasible to imagine the entire internet as 
+your sample library!
 
 With this ideal in mind, I've started and discarded several audio similarity 
 search applications due to overly-rigid approaches.  I've often settled on a 
@@ -78,32 +78,32 @@ arbitrary piece of data.  The Cochlea API natively supports the creation
 and storage of text tags, but other arbitrary data describing sound segments can 
 be hosted elsewhere.  We might create annotations tagging a segment of audio 
 as containing female speech or create an annotation that highlights an 
-interesting segment of a longer audio sequence.  Finally, we might compute 
+interesting segment of a longer audio sequence.  We might also compute 
 dense numerical features from the raw audio samples (such as short-time 
 Fourier transform data, chroma, or MFCC data) and store them as NumPy arrays 
 in an S3 bucket.
 
-In this way, annotations again become pointers to arbitrary data hosted on the 
-internet, just as `sound` resources are.  Just as servers hosting audio data 
-should conform to a particular interface, servers hosting dense features or 
-other arbitrary annotation data would ideally support byte-range and 
-CORS requests.
+Just as servers hosting audio data should conform to a particular interface, 
+servers hosting dense features or other arbitrary annotation data should ideally 
+support byte-range and CORS requests.
 
-`annotation` identifiers are also ordered according to the time they were 
-created, which will again come into play when we discuss `featurebot` and 
-`aggregator` users a little later.
+Like `sound` identifiers, `annotation` identifiers are ordered according to the 
+time they were created, which will again come into play when we discuss 
+`featurebot` and `aggregator` users a little later.
 
 ## `/users`
 
 The third and final resource type we'll discuss is the `user` type.  There are 
 a few different types to cover, and I think that this is where the platform 
-really starts to get interesting.
+_really_ starts to get interesting.
 
 ### Humans
 
 Humans are the first and most obvious user type.  These users can read 
 `sound` and `annotation` resources and can create `annotation` resources of 
 their own, usually using textual tags added using some graphical user interface.
+
+![Creating an Annotation](https://cochlea-example-app-images.s3.amazonaws.com/create-annotation.png)
 
 ### Datasets
 
@@ -123,12 +123,11 @@ The NSynth dataset tags each note with certain characteristics such as
 
 ![Chroma](https://cochlea-example-app-images.s3.amazonaws.com/chroma_bot.png)
 
-`featurebot` users can listen to some or all `sound` or `annotation` resources, 
-optionally filtering by the user that created the resource or tags applied to it, 
-and can compute features, such as onset times, 
-[chroma](https://en.wikipedia.org/wiki/Chroma_feature) or 
-[MFCC](https://en.wikipedia.org/wiki/Mel-frequency_cepstrum) features and can 
-point to the computed/derived data using new `annotation` resources.  A few 
+`featurebot` users listen to some or all `sound` or `annotation` resources, 
+optionally filtering by the user that created the resource, and compute features, 
+such as onset times, [chroma](https://en.wikipedia.org/wiki/Chroma_feature) or 
+[MFCC](https://en.wikipedia.org/wiki/Mel-frequency_cepstrum) features and create 
+pointers to the computed/derived data using new `annotation` resources.  A few 
 example applications might include:
 
 - a bot that computes onset times using 
@@ -158,7 +157,7 @@ making them searchable in novel ways.  A few example applications might include:
 full-featured text search including fuzzy matching or using sound/music-related 
 word embeddings for high-quality semantic searches
 - a bot that computes low-dimensional embeddings (using a technique 
-[similar to this](http://johnvinyard.github.io/zounds/search/embeddings/neural-networks/pytorch/2019/02/22/unsupervised-semantic-audio-embeddings.html)) 
+[similar to one I covered in an earlier post](http://johnvinyard.github.io/zounds/search/embeddings/neural-networks/pytorch/2019/02/22/unsupervised-semantic-audio-embeddings.html)) 
 from audio or other derived features, making visual exploration possible in a 
 user interface
 
@@ -186,6 +185,9 @@ including [short-time fourier transforms](https://en.wikipedia.org/wiki/Short-ti
 - an `aggregator` user that embeds short segments of audio onto a 
 three-dimensional sphere based on perceptual similarity, allowing users to 
 navigate sound "space" using a Google Maps-like interface.
+
+The user interface is a static, Vue.js application that communicates with the 
+Cochlea API as well as the search API hosted by the `aggregator` user.
 
 The API and web app are invite-only (for now), 
 [but please reach out](mailto:john.vinyard@gmail.com) if you're interested in 
