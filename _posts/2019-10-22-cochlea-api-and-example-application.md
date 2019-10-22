@@ -186,8 +186,9 @@ including [short-time fourier transforms](https://en.wikipedia.org/wiki/Short-ti
 three-dimensional sphere based on perceptual similarity, allowing users to 
 navigate sound "space" using a Google Maps-like interface.
 
-The user interface is a static, Vue.js application that communicates with the 
-Cochlea API as well as the search API hosted by the `aggregator` user.
+The user interface is a single-page Vue.js application hosted using Amazon S3 
+and Cloudfront. It communicates with the Cochlea API as well as the search 
+API hosted by the `aggregator` user.
 
 The API and web app are invite-only (for now), 
 [but please reach out](mailto:john.vinyard@gmail.com) if you're interested in 
