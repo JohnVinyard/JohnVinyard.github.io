@@ -6,8 +6,6 @@ categories: api search annotation
 published: true
 ---
 
-# Cochlea API
-
 [Cochlea](https://github.com/JohnVinyard/annotate-api) is an early-stage, 
 REST-ful API that allows users to annotate audio files on the internet.  
 Segments or time intervals can be annotated with text tags or other arbitrary 
@@ -17,7 +15,7 @@ applications tailored to the needs of electronic musicians and sound designers.
 Before starting to dream aloud about the endless possibilities, a little about 
 how I arrived here...
 
-## False Starts
+# False Starts
 
 I'm interested in building tools that allow musicians, sound designers 
 and machine learning researchers to explore libraries of audio samples in new 
@@ -42,11 +40,11 @@ The common theme in all these ventures has been a lack of flexibility and the
 very simple REST-ful resource I've described above is one possible answer to the 
 problem.
 
-## API Details
+# API Details
 
 The experimental Cochlea API consists of just three simple resources:
 
-### Sounds
+## Sounds
 
 ![Audio](https://cdn.imgbin.com/16/20/16/imgbin-digital-audio-waveform-sound-wave-black-sound-wave-illustration-Veke7w2q2UtXG36spNkmAWxB6.jpg)
 
@@ -63,7 +61,7 @@ It's also worth noting that `sound` identifiers are ordered according to the
 time they were created, which will come in handy when we discuss `featurebot` 
 and `aggregator` users in a bit.
 
-### Annotations
+## Annotations
 
 ![Annotations]https://cochlea-example-app-images.s3.amazonaws.com/annotation-tags.png
 
@@ -86,13 +84,13 @@ CORS requests.
 created, which will again come into play when we discuss `featurebot` and 
 `aggregator` users a little later.
 
-### Users
+## Users
 
 The third and final resource type we'll discuss is the `user` type.  There are 
 a few different types to cover, and I think that this is where the platform 
 really starts to get interesting.
 
-#### Humans
+### Humans
 
 Human-beings are the first and most obvious user type.  These users can read 
 `sound` and `annotation` resources and can create `annotation` resources of 
