@@ -45,15 +45,58 @@ simplest, two trained networks would be required:
 
 I chose to use 256-bin Mel-frequency spectrograms as my low-frequency
 conditioning feature.  So, to get a little more specific, I'd be performing an
-experiment in two phases, using the [MusicNet](https://homes.cs.washington.edu/~thickstn/musicnet.html) dataset initially.
+experiment in two phases, training against the [MusicNet](https://homes.cs.washington.edu/~thickstn/musicnet.html) dataset initially.
 
-1. Train a generator to produce 11025hz audio from spectrograms of real
+1. Train a generator to produce 11025hz audio conditioned on spectrograms of real
 classical music pieces.
+2. Train a second generator to produce unconditioned, novel spectrograms
 
-# Phase One: Adapting the MelGAN Paper to my Needs
+# Phase One: Adapting the MelGAN Paper
+
+The MelGAN paper uses a single generator that makes use of dilated convolutions
+to greatly expand the receptive field of its layers, as well as multiple discriminators that operate at a few different
+time scales/sampling rates.  They use the hinge loss version of the GAN training
+objective, which I also adopted.
+
+TODO: HINGE LOSS FORMULA HERE
+
+They use an additional feature matching objective for the generator, where the
+generator gets to peek inside the discriminator's inner feature maps and tries
+to match the internal feature maps it produces to those of real examples.
+
+TODO: FEATURE MATCHING FORMULA HERE
+
+## Generating Audio at Sampling Rates Appropriate to the Frequency Band
+
+I diverged from the generator and discriminator architectures in the MelGAN
+paper, however, as I saw an opportunity to try an idea for multi-resolution
+analysis and synthesis idea that mirrors multi-resolution wavelet transforms or
+the [Non-stationary Gabor Transform](https://grrrr.org/research/software/nsgt/).
+
+In most raw audio-producing neural network architectures I've encountered thus far, all audio and thus all frequency bands are produced at the same sampling rate.  I wanted to try an architecture where groups of frequency
+bands were produced at an appropriate sampling rate, such that low frequency
+bands could be faithfully rendered with significantly fewer samples and only up-sampled at the last possible moment.
+
+More concretely, for audio at 11025 hertz, the Nyquist frequency, or the highest
+frequency we can accurately render would be 5512 hertz.
+
+- One second of audio for frequencies from 2756 hertz to 5512 hertz would require 11025 samples
+- One second of audio for frequencies from 1378 hertz to 2756 hertz would require
+5512 samples
+- One second of audio for frequencies from 689 hertz to 1378 hertz would require
+2756 samples
+- One second of audio for frequencies from 344 hertz to 689 hertz would require
+1378 samples
+- One second of audio for frequencies from 0 hertz to 344 hertz would require 689 samples
+
+TODO: Schematic of multi-scale resolution
 
 ## Conditioned Audio Examples
 
 # Phase Two: An Unconditioned GAN for Spectrogram Production
 
 ## Unconditioned Music Generation Examples
+
+# Benefits of the Two-Stage Approach
+
+# Other Datasets
