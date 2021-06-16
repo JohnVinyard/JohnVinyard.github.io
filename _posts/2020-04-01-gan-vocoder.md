@@ -157,7 +157,7 @@ performed one.
 
 While one of the promises of deep learning is models that learn from scratch, 
 there may be cases where aspects of human perception are difficult or impossible 
-to learn without some strong guidance.  With that in my mind, and in hopes of 
+to learn without some strong guidance.  With that in mind, and in hopes of 
 accelerating training, my generator and discriminator architectures have in-built 
 priors based on two facts:
 
