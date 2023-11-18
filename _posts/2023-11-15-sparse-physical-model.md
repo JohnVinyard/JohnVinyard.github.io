@@ -297,7 +297,7 @@ If you'd like to cite this article
 ```
 @misc{vinyard2023audio,
   author = {Vinyard, John},
-  title = {Diffusion language models},
+  title = {Sparse Interpretable Audio},
   url = {https://JohnVinyard.github.io/machine-learning/2023/11/15/sparse-physical-model.html},
   year = {2023}
 }
