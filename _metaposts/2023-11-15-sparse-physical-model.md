@@ -80,8 +80,8 @@ def get_audio(identifier):
     bio = audio.encode()
     return bio.read()
 
-example_6 = get_audio('example_7')
-_ = get_audio.meta('example_7')
+example_6 = get_audio('example_7c')
+_ = get_audio.meta('example_7c')
 ```
 
 You can click on the waveform to play the sound.
@@ -120,8 +120,8 @@ def get_encoding(identifier):
     encoded = encoded[0].T
     return encoded.data.cpu().numpy()
 
-encoding_1 = get_encoding('example_7')
-_ = get_encoding.meta('example_7')
+encoding_1 = get_encoding('example_7c')
+_ = get_encoding.meta('example_7c')
 ```
 
 The dark-blue portions represent zeros, and the yellow-orange portions represent events.
@@ -146,15 +146,15 @@ def reconstruct_audio(identifier):
     bio = BytesIO(get_audio(identifier))
     chunk = torch.from_numpy(zounds.AudioSamples.from_file(bio)).float()
     chunk = chunk[...,:n_samples].view(1, 1, n_samples)
-    recon, _ = model.forward(chunk)
+    recon, _, _ = model.forward(chunk)
     recon = torch.sum(recon, dim=1, keepdim=True)
     recon = max_norm(recon)
     recon = playable(recon, zounds.SR22050())
     encoded = recon.encode()
     return encoded.read()
 
-result = reconstruct_audio('example_7')
-_ = reconstruct_audio.meta('example_7')
+result = reconstruct_audio('example_7c')
+_ = reconstruct_audio.meta('example_7c')
 ```
 
 ### Another Reconstruction Example
@@ -162,15 +162,15 @@ _ = reconstruct_audio.meta('example_7')
 original:
 
 ```python:
-result = get_audio('example_8')
-_ = get_audio.meta('example_8')
+result = get_audio('example_8c')
+_ = get_audio.meta('example_8c')
 ```
 
 reconstruction:
 
 ```python:
-result = reconstruct_audio('example_8')
-_ = reconstruct_audio.meta('example_8')
+result = reconstruct_audio('example_8c')
+_ = reconstruct_audio.meta('example_8c')
 ```
 
 ## Model and Training Details
@@ -227,6 +227,8 @@ Finally, we can understand the model a little better (and have some fun) by gene
 ```python:
 from conjure import audio_conjure
 
+encoding_1 = get_encoding('example_7c')
+
 @audio_conjure(conjure_storage)
 def random_generation(identifier):
     import torch
@@ -237,23 +239,23 @@ def random_generation(identifier):
     from torch.nn import functional as F
 
     n_samples = 2**15
-    encoding = torch.zeros(1, 4096, 128).uniform_(0, 3)
+    encoding = torch.zeros(1, 4096, 128).normal_(encoding_1.mean(), encoding_1.std())
     encoded, packed, one_hot = sparsify2(encoding, n_to_keep=64)
-    audio = model.generate(encoded, one_hot, packed)
+    audio, _ = model.generate(encoded, one_hot, packed)
     audio = torch.sum(audio, dim=1, keepdim=True)
     audio = playable(audio, zounds.SR22050())[..., :n_samples]
     bio = audio.encode()
     return bio.read()
 
-result = random_generation('random_1')
-_ = random_generation.meta('random_1')
+result = random_generation('random_1d')
+_ = random_generation.meta('random_1d')
 ```
 
 Another random generation result:
 
 ```python:
-result = random_generation('random_3')
-_ = random_generation.meta('random_3')
+result = random_generation('random_3d')
+_ = random_generation.meta('random_3d')
 ```
 
 ## Next Steps
