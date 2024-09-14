@@ -5,6 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Accelerometer Test</title>
+    <style>
+        #x:before {
+            content: 'x:';
+        }
+
+        #y:before {
+            content: 'y:';
+        }
+
+        #z:before {
+            content: 'z:';
+        }
+    </style>
     <script type="text/javascript">
       const context = new window.AudioContext();
 
@@ -54,40 +67,64 @@
         );
       };
 
+      const useAcc = () => {
+        if (
+          DeviceMotionEvent &&
+          typeof DeviceMotionEvent.requestPermission === "function"
+        ) {
+          DeviceMotionEvent.requestPermission();
+          window.addEventListener(
+            "devicemotion",
+            (event) => {
+              console.log(event);
+              const xField = document.getElementById("x");
+              const yField = document.getElementById("y");
+              const zField = document.getElementById("z");
+
+              xField.innerText = event.acceleration.x;
+              yField.innerText = event.acceleration.y;
+              zField.innerText = event.acceleration.z;
+
+              if (
+                event.acceleration.x > 10 ||
+                event.acceleration.y > 10 ||
+                event.acceleration > 10
+              ) {
+                playGong();
+              }
+            },
+            true
+          );
+        } else {
+          console.log("Device motion not supported");
+          alert("device motion not supported");
+        }
+      };
+
       document.addEventListener("DOMContentLoaded", async (event) => {
         const btn = document.getElementById("player");
         btn.addEventListener("click", () => {
           playGong();
         });
-      });
 
-      if (
-        DeviceMotionEvent &&
-        typeof DeviceMotionEvent.requestPermission === "function"
-      ) {
-        DeviceMotionEvent.requestPermission();
-        window.addEventListener(
-          "devicemotion",
-          (event) => {
-            console.log(event);
-            if (
-              event.acceleration.x > 10 ||
-              event.acceleration.y > 10 ||
-              event.acceleration > 10
-            ) {
-              playGong();
-            }
-          },
-          true
-        );
-      } else {
-        console.log("Device motion not supported");
-      }
+        const start = document.getElementById("start-demo");
+        start.addEventListener("click", () => {
+          useAcc();
+        });
+      });
     </script>
   </head>
   <body>
     <div>
+      <button id="start-demo">Start Demo</button>
+    </div>
+    <div>
       <button id="player">Push Me</button>
+    </div>
+    <div>
+      <div id="x"></div>
+      <div id="y"></div>
+      <div id="z"></div>
     </div>
   </body>
 </html>
