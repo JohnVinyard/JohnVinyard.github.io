@@ -6,17 +6,17 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Accelerometer Test</title>
     <style>
-        #x:before {
-            content: 'x:';
-        }
+      #x:before {
+        content: "x:";
+      }
 
-        #y:before {
-            content: 'y:';
-        }
+      #y:before {
+        content: "y:";
+      }
 
-        #z:before {
-            content: 'z:';
-        }
+      #z:before {
+        content: "z:";
+      }
     </style>
     <script type="text/javascript">
       const context = new window.AudioContext();
@@ -68,11 +68,11 @@
       };
 
       const useAcc = () => {
-        if (
-          DeviceMotionEvent &&
-          typeof DeviceMotionEvent.requestPermission === "function"
-        ) {
-          DeviceMotionEvent.requestPermission();
+        if (DeviceMotionEvent) {
+          if (typeof DeviceMotionEvent.requestPermission === "function") {
+            DeviceMotionEvent.requestPermission();
+          }
+
           window.addEventListener(
             "devicemotion",
             (event) => {
