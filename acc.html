@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Accelerometer Test</title>
+    <script type="text/javascript">
+      const context = new window.AudioContext();
+
+      const fetchBinary = async (url) => {
+        const resp = await fetch(url);
+        return resp.arrayBuffer();
+      };
+
+      const audioCache = {};
+
+      const fetchAudio = async (url, context) => {
+        const cached = audioCache[url];
+        if (cached !== undefined) {
+          return cached;
+        }
+
+        const audioBufferPromise = fetchBinary(url).then(function (data) {
+          return new Promise(function (resolve, reject) {
+            context.decodeAudioData(
+              data,
+              (buffer) => resolve(buffer),
+              (error) => reject(error)
+            );
+          });
+        });
+        audioCache[url] = audioBufferPromise;
+        return audioBufferPromise;
+      };
+
+      export const playAudio = async (url, context, start, duration) => {
+        const audioBuffer = await fetchAudio(url, context);
+        /* console.log(audioBuffer) */
+        const source = context.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(context.destination);
+        source.start();
+        return source;
+      };
+
+      const playGong = () => {
+        console.log("playing gong");
+        playAudio(
+          "https://one-laptop-per-child.s3.amazonaws.com/Berklee44v12/hit+1.wav",
+          context,
+          0,
+          10
+        );
+      };
+
+      document.addEventListener("DOMContentLoaded", async (event) => {
+        const btn = document.getElementById("player");
+        btn.addEventListener("click", () => {
+          playGong();
+        });
+      });
+
+      if (
+        DeviceMotionEvent &&
+        typeof DeviceMotionEvent.requestPermission === "function"
+      ) {
+        DeviceMotionEvent.requestPermission();
+        window.addEventListener(
+          "devicemotion",
+          (event) => {
+            console.log(event);
+            if (
+              event.acceleration.x > 10 ||
+              event.acceleration.y > 10 ||
+              event.acceleration > 10
+            ) {
+              playGong();
+            }
+          },
+          true
+        );
+      } else {
+        console.log("Device motion not supported");
+      }
+    </script>
+  </head>
+  <body>
+    <div>
+      <button id="player">Push Me</button>
+    </div>
+  </body>
+</html>
