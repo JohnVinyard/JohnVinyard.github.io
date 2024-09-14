@@ -34,7 +34,7 @@
         return audioBufferPromise;
       };
 
-      export const playAudio = async (url, context, start, duration) => {
+      const playAudio = async (url, context, start, duration) => {
         const audioBuffer = await fetchAudio(url, context);
         /* console.log(audioBuffer) */
         const source = context.createBufferSource();
