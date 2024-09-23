@@ -5,5 +5,9 @@ permalink: /about/
 ---
 
 My name is John Vinyard, and my goal is to develop a sparse, interpretable, and easy-to-manipulate 
-representation of audio.  Image an audio codec that you can view and edit in a way that "fits" your
-perception of said audio;  a collection of sources or events in a shared space.
+representation of audio.  Ideally, this is also a perceptually lossless and compressive representation, 
+i.e. an audio codec.  Image a codec that you can view and edit in a way that "fits" your
+perception of audio in the world;  a collection of sources or events in a shared space.  
+
+When your internet connection briefly goes kaput, maybe your meeting partner's voice can decay naturally in the space 
+they occupy, rather than repeating the last vowel they uttered until the connection returns!
