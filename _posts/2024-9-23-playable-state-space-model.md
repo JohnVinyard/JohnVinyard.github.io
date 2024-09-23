@@ -15,4 +15,4 @@ instruments or physical objects in the world) audio by decomposing it into two d
 The control signal can be thought of as roughly corresponding to a musical score, and the state-space model
 can be thought of as the dynamics/resonances of the musical instrument and the room in which it was played.
 
-You can (read more and listen to a demo here!)[/ssm.html]
+You can (read more and listen to a demo here)[/ssm.html]
