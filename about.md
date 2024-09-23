@@ -4,6 +4,6 @@ title: About
 permalink: /about/
 ---
 
-My name is John Vinyard, and this blog will follow the development of [`zounds`](https://github.com/JohnVinyard/zounds),
-a python library that aims to make it fast and cheap to prototype audio feature extraction pipelines,
-searches, and novel synthesis techniques.
+My name is John Vinyard, and my goal is to develop a sparse, interpretable, and easy-to-manipulate 
+representation of audio.  Image an audio codec that you can view and edit in a way that "fits" your
+perception of said audio;  a collection of sources or events in a shared space.
