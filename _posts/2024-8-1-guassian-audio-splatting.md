@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Gaussian/Gamma Splatting for Music"
-date: 2024-9-23 07:00:00 -0500
+date: 2024-8-1 07:00:00 -0500
 categories: machine-learning
 published: true
 ---
