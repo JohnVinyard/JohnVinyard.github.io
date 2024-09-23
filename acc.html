@@ -67,6 +67,13 @@
         );
       };
 
+      const acc = new Accelerometer({ frequency: 1 });
+      console.log(acc);
+      acc.addEventListener("reading", (event) => {
+        console.log(acc);
+      });
+      acc.start();
+
       const useAcc = () => {
         if (DeviceMotionEvent) {
           if (typeof DeviceMotionEvent.requestPermission === "function") {
