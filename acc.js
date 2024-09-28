@@ -6,7 +6,7 @@ class Interval {
   }
 
   toRatio(value) {
-    const ratio = (value - this.start) / this.range;
+    return (value - this.start) / this.range;
   }
 
   fromRatio(value) {
@@ -130,7 +130,7 @@ document.addEventListener("DOMContentLoaded", async (event) => {
       const gainNode = context.createGain();
       const conv = context.createConvolver();
       const filter = context.createBiquadFilter();
-      filter.type = 'lowpass';
+      filter.type = "lowpass";
       filter.frequency.setValueAtTime(500, context.currentTime);
       conv.buffer = await fetchAudio(
         "https://nsynth.s3.amazonaws.com/bass_electronic_018-036-100",
