@@ -1,6 +1,32 @@
+class Interval {
+  constructor(start, end) {
+    this.start = start;
+    this.end = end;
+    this.range = end - start;
+  }
+
+  toRatio(value) {
+    const ratio = (value - this.start) / this.range;
+  }
+
+  fromRatio(value) {
+    return this.start + value * this.range;
+  }
+
+  translateTo(value, otherInterval) {
+    const r = this.toRatio(value);
+    const v = otherInterval.fromRatio(value);
+    return v;
+  }
+}
+
+const filterCutoff = Interval(100, 1000);
+const alpha = new Interval(0, 360);
+const beta = new Interval(-180, 180);
+const gamma = new Interval(-90, 90);
+
 document.addEventListener("DOMContentLoaded", async (event) => {
   const start = document.getElementById("start-demo");
-  // const karplus = document.getElementById("karplus");
   const tester = document.getElementById("test");
   const recorder = document.getElementById("recorder");
 
@@ -92,6 +118,7 @@ document.addEventListener("DOMContentLoaded", async (event) => {
   class ConvUnit {
     initialized = false;
     gain = null;
+    filt = null;
 
     constructor() {}
 
@@ -102,6 +129,9 @@ document.addEventListener("DOMContentLoaded", async (event) => {
       const scriptNode = context.createScriptProcessor(512, 1, 1);
       const gainNode = context.createGain();
       const conv = context.createConvolver();
+      const filter = context.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(500, context.currentTime);
       conv.buffer = await fetchAudio(
         "https://nsynth.s3.amazonaws.com/bass_electronic_018-036-100",
         context
@@ -127,10 +157,16 @@ document.addEventListener("DOMContentLoaded", async (event) => {
       osc.connect(scriptNode);
       scriptNode.connect(gainNode);
       gainNode.connect(conv);
-      conv.connect(context.destination);
+      conv.connect(filter);
+      filter.connect(context.destination);
       osc.start();
 
       this.gain = gainNode;
+      this.filt = filter;
+    }
+
+    updateCutoff(hz) {
+      this.filt.frequency.setValueAtTime(hz, context.currentTime);
     }
 
     async trigger(amplitude) {
@@ -180,11 +216,14 @@ document.addEventListener("DOMContentLoaded", async (event) => {
       // TODO: orientation should determine the mix between three different room sounds
       const orientationFields = ["alpha", "gamma", "beta"];
 
-      window.addEventListener("deviceorientation", (event) => {
+      window.addEventListener("deviceorientationabsolute", (event) => {
         orientationFields.forEach((field) => {
           const el = document.getElementById(field);
           el.innerText = event[field];
         });
+
+        const hz = gamma.translateTo(event.gamma, filterCutoff);
+        unit.updateCutoff(hz);
       });
 
       window.addEventListener(
