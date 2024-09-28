@@ -20,7 +20,9 @@ class Interval {
   }
 }
 
-const filterCutoff = new Interval(30, 15000);
+const debug = false;
+
+const filterCutoff = new Interval(120, 22050);
 const alpha = new Interval(0, 360);
 const beta = new Interval(-180, 180);
 const gamma = new Interval(-90, 90);
@@ -140,7 +142,7 @@ document.addEventListener("DOMContentLoaded", async (event) => {
       filter.frequency.setValueAtTime(500, context.currentTime);
 
       conv.buffer = await fetchAudio(
-        "https://nsynth.s3.amazonaws.com/guitar_acoustic_010-053-050",
+        "https://nsynth.s3.amazonaws.com/bass_electronic_018-036-100",
         context
       );
 
@@ -212,13 +214,15 @@ document.addEventListener("DOMContentLoaded", async (event) => {
 
         if (Math.abs(movementX) > 10 || Math.abs(movementY) > 10) {
           unit.trigger(1);
-          recorder.innerText += ".";
+          if (debug) {
+            recorder.innerText += ".";
+          }
         }
 
         const u = vertical.translateTo(clientY, unitInterval);
         const hz = unitInterval.translateTo(u ** 2, filterCutoff);
         unit.updateCutoff(hz);
-        filterReadout.innerText = hz;
+        filterReadout.innerText = hz.toFixed(1);
       }
     );
   };
@@ -233,22 +237,15 @@ document.addEventListener("DOMContentLoaded", async (event) => {
       const orientationFields = ["alpha", "gamma", "beta"];
 
       window.addEventListener("deviceorientationabsolute", (event) => {
-        // filterReadout.innerText = 'Updating orientation readout';
-
         orientationFields.forEach((field) => {
           const el = document.getElementById(field);
           el.innerText = event[field];
-          filterReadout.innerText = event[field];
         });
 
-        // filterReadout.innerText = 'computing hz';
         const u = gamma.translateTo(event.gamma, unitInterval);
-        const hz = unitInterval.translateTo(u ** 2, filterCutoff);
-        filterReadout.innerText += `         ${hz}`;
-        // filterReadout.innerText = 'updating cutoff';
+        const hz = unitInterval.translateTo(u ** 4, filterCutoff);
+        filterReadout.innerText = hz.toFixed(1);
         unit.updateCutoff(hz);
-        // filterReadout.innerText = 'updating hz readout';
-        // filterReadout.innerText = `${Math.random().toFixed(3)}___${hz}`;
       });
 
       const motionFieldIds = ["x", "y", "z"];
@@ -271,7 +268,9 @@ document.addEventListener("DOMContentLoaded", async (event) => {
                 event.acceleration.y ** 2 +
                 event.acceleration.z ** 2
             );
-            recorder.innerText += ".";
+            if (debug) {
+              recorder.innerText += ".";
+            }
             unit.trigger(norm * 0.5);
             // playRoomSound();
           }
