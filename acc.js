@@ -20,7 +20,7 @@ class Interval {
   }
 }
 
-const filterCutoff = new Interval(100, 1000);
+const filterCutoff = new Interval(100, 10000);
 const alpha = new Interval(0, 360);
 const beta = new Interval(-180, 180);
 const gamma = new Interval(-90, 90);
@@ -240,9 +240,9 @@ document.addEventListener("DOMContentLoaded", async (event) => {
           });
 
           if (
-            Math.abs(event.acceleration.x) > 1 ||
-            Math.abs(event.acceleration.y) > 1 ||
-            Math.abs(event.acceleration.z) > 1
+            Math.abs(event.acceleration.x) > 2 ||
+            Math.abs(event.acceleration.y) > 2 ||
+            Math.abs(event.acceleration.z) > 2
           ) {
             const norm = Math.sqrt(
               event.acceleration.x ** 2 +
