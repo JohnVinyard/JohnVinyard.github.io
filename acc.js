@@ -223,19 +223,21 @@ document.addEventListener("DOMContentLoaded", async (event) => {
       const orientationFields = ["alpha", "gamma", "beta"];
 
       window.addEventListener("deviceorientationabsolute", (event) => {
-        filterReadout.innerText = 'Updating orientation readout';
+        // filterReadout.innerText = 'Updating orientation readout';
 
         orientationFields.forEach((field) => {
           const el = document.getElementById(field);
           el.innerText = event[field];
+          filterReadout.innerText = event[field];
         });
 
-        filterReadout.innerText = 'computing hz';
+        // filterReadout.innerText = 'computing hz';
         const hz = gamma.translateTo(event.gamma, filterCutoff);
-        filterReadout.innerText = 'updating cutoff';
+        filterReadout.innerText += `         ${hz}`;
+        // filterReadout.innerText = 'updating cutoff';
         unit.updateCutoff(hz);
-        filterReadout.innerText = 'updating hz readout';
-        filterReadout.innerText = `${Math.random().toFixed(3)}___${hz}`;
+        // filterReadout.innerText = 'updating hz readout';
+        // filterReadout.innerText = `${Math.random().toFixed(3)}___${hz}`;
       });
 
       const motionFieldIds = ["x", "y", "z"];
