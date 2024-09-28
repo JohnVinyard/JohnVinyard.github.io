@@ -1,6 +1,7 @@
 document.addEventListener("DOMContentLoaded", async (event) => {
   const start = document.getElementById("start-demo");
   // const karplus = document.getElementById("karplus");
+  const tester = document.getElementById("test");
 
   const context = new AudioContext();
 
@@ -137,8 +138,6 @@ document.addEventListener("DOMContentLoaded", async (event) => {
         await this.initialize();
       }
 
-      console.log("triggering!", this.gain);
-
       this.gain.gain.exponentialRampToValueAtTime(
         1,
         context.currentTime + 0.001
@@ -214,5 +213,9 @@ document.addEventListener("DOMContentLoaded", async (event) => {
   start.addEventListener("click", async () => {
     useAcc();
     useMouse();
+  });
+
+  tester.addEventListener("click", async () => {
+    unit.trigger();
   });
 });
