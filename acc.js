@@ -196,9 +196,9 @@ document.addEventListener("DOMContentLoaded", async (event) => {
           });
 
           if (
-            Math.abs(event.acceleration.x) > 5 ||
-            Math.abs(event.acceleration.y) > 5 ||
-            Math.abs(event.acceleration.z) > 5
+            Math.abs(event.acceleration.x) > 1 ||
+            Math.abs(event.acceleration.y) > 1 ||
+            Math.abs(event.acceleration.z) > 1
           ) {
             const norm = Math.sqrt(
               event.acceleration.x ** 2 +
@@ -206,7 +206,7 @@ document.addEventListener("DOMContentLoaded", async (event) => {
                 event.acceleration.z ** 2
             );
             recorder.innerText += ".";
-            unit.trigger(norm);
+            unit.trigger(norm * 0.5);
             // playRoomSound();
           }
         },
