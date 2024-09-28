@@ -2,6 +2,7 @@ document.addEventListener("DOMContentLoaded", async (event) => {
   const start = document.getElementById("start-demo");
   // const karplus = document.getElementById("karplus");
   const tester = document.getElementById("test");
+  const recorder = document.getElementById("recorder");
 
   const context = new AudioContext();
 
@@ -163,6 +164,7 @@ document.addEventListener("DOMContentLoaded", async (event) => {
 
       if (Math.abs(movementX) > 10 || Math.abs(movementY) > 10) {
         unit.trigger(1);
+        recorder.innerText += ".";
       }
     });
   };
@@ -194,11 +196,12 @@ document.addEventListener("DOMContentLoaded", async (event) => {
           });
 
           if (
-            Math.abs(event.acceleration.x) > 0.5 ||
-            Math.abs(event.acceleration.y) > 0.5 ||
-            Math.abs(event.acceleration.z) > 0.5
+            Math.abs(event.acceleration.x) > 5 ||
+            Math.abs(event.acceleration.y) > 5 ||
+            Math.abs(event.acceleration.z) > 5
           ) {
             unit.trigger(1);
+            recorder.innerText += ".";
             // playRoomSound();
           }
         },
