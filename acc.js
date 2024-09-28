@@ -20,7 +20,7 @@ class Interval {
   }
 }
 
-const filterCutoff = Interval(100, 1000);
+const filterCutoff = new Interval(100, 1000);
 const alpha = new Interval(0, 360);
 const beta = new Interval(-180, 180);
 const gamma = new Interval(-90, 90);
