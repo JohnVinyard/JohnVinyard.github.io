@@ -29,6 +29,7 @@ document.addEventListener("DOMContentLoaded", async (event) => {
   const start = document.getElementById("start-demo");
   const tester = document.getElementById("test");
   const recorder = document.getElementById("recorder");
+  const filterReadout = document.getElementById("filter");
 
   const context = new AudioContext();
 
@@ -166,7 +167,10 @@ document.addEventListener("DOMContentLoaded", async (event) => {
     }
 
     updateCutoff(hz) {
-      this.filt.frequency.setValueAtTime(hz, context.currentTime);
+      this.filt.frequency.exponentialRampToValueAtTime(
+        hz,
+        cont.currentTime + 0.05
+      );
     }
 
     async trigger(amplitude) {
@@ -224,6 +228,7 @@ document.addEventListener("DOMContentLoaded", async (event) => {
 
         const hz = gamma.translateTo(event.gamma, filterCutoff);
         unit.updateCutoff(hz);
+        filterReadout.innerText = hz.toFixed(3);
       });
 
       window.addEventListener(
