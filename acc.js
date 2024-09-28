@@ -20,10 +20,12 @@ class Interval {
   }
 }
 
-const filterCutoff = new Interval(100, 10000);
+const filterCutoff = new Interval(30, 15000);
 const alpha = new Interval(0, 360);
 const beta = new Interval(-180, 180);
 const gamma = new Interval(-90, 90);
+const vertical = new Interval(0, window.innerHeight);
+const unitInterval = new Interval(0, 1);
 
 document.addEventListener("DOMContentLoaded", async (event) => {
   const start = document.getElementById("start-demo");
@@ -197,20 +199,28 @@ document.addEventListener("DOMContentLoaded", async (event) => {
   const unit = new ConvUnit();
 
   const useMouse = () => {
-    document.addEventListener("mousemove", ({ movementX, movementY }) => {
-      // console.log(event);
+    document.addEventListener(
+      "mousemove",
+      ({ movementX, movementY, clientX, clientY }) => {
+        // console.log(event);
 
-      const x = document.getElementById("mousex");
-      x.innerText = movementX;
+        const x = document.getElementById("mousex");
+        x.innerText = movementX;
 
-      const y = document.getElementById("mousey");
-      y.innerText = movementY;
+        const y = document.getElementById("mousey");
+        y.innerText = movementY;
 
-      if (Math.abs(movementX) > 10 || Math.abs(movementY) > 10) {
-        unit.trigger(1);
-        recorder.innerText += ".";
+        if (Math.abs(movementX) > 10 || Math.abs(movementY) > 10) {
+          unit.trigger(1);
+          recorder.innerText += ".";
+        }
+
+        const u = vertical.translateTo(clientY, unitInterval);
+        const hz = unitInterval.translateTo(u ** 2, filterCutoff);
+        unit.updateCutoff(hz);
+        filterReadout.innerText = hz;
       }
-    });
+    );
   };
 
   const useAcc = () => {
@@ -232,7 +242,8 @@ document.addEventListener("DOMContentLoaded", async (event) => {
         });
 
         // filterReadout.innerText = 'computing hz';
-        const hz = gamma.translateTo(event.gamma, filterCutoff);
+        const u = gamma.translateTo(event.gamma, unitInterval);
+        const hz = unitInterval.translateTo(u ** 2, filterCutoff);
         filterReadout.innerText += `         ${hz}`;
         // filterReadout.innerText = 'updating cutoff';
         unit.updateCutoff(hz);
