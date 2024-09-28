@@ -194,11 +194,10 @@ document.addEventListener("DOMContentLoaded", async (event) => {
           });
 
           if (
-            event.acceleration.x > 1 ||
-            event.acceleration.y > 1 ||
-            event.acceleration.z > 1
+            Math.abs(event.acceleration.x) > 0.5 ||
+            Math.abs(event.acceleration.y) > 0.5 ||
+            Math.abs(event.acceleration.z) > 0.5
           ) {
-            
             unit.trigger(1);
             // playRoomSound();
           }
