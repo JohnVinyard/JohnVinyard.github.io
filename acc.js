@@ -162,8 +162,7 @@ document.addEventListener("DOMContentLoaded", async (event) => {
       y.innerText = movementY;
 
       if (Math.abs(movementX) > 10 || Math.abs(movementY) > 10) {
-        const norm = (movementX ** 2 + movementY ** 2) / 2;
-        unit.trigger(norm * 0.001);
+        unit.trigger(1);
       }
     });
   };
@@ -195,17 +194,12 @@ document.addEventListener("DOMContentLoaded", async (event) => {
           });
 
           if (
-            event.acceleration.x > 0.1 ||
-            event.acceleration.y > 0.1 ||
-            event.acceleration.z > 0.1
+            event.acceleration.x > 1 ||
+            event.acceleration.y > 1 ||
+            event.acceleration.z > 1
           ) {
-            const norm =
-              (event.acceleration.x ** 2 +
-                event.acceleration.y ** 2 +
-                event.acceleration.z ** 2) /
-              3;
-
-            unit.trigger(norm * 0.01);
+            
+            unit.trigger(1);
             // playRoomSound();
           }
         },
