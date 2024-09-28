@@ -173,7 +173,7 @@ document.addEventListener("DOMContentLoaded", async (event) => {
     updateCutoff(hz) {
       this.filt.frequency.exponentialRampToValueAtTime(
         hz,
-        cont.currentTime + 0.05
+        context.currentTime + 0.05
       );
     }
 
@@ -223,13 +223,18 @@ document.addEventListener("DOMContentLoaded", async (event) => {
       const orientationFields = ["alpha", "gamma", "beta"];
 
       window.addEventListener("deviceorientationabsolute", (event) => {
+        filterReadout.innerText = 'Updating orientation readout';
+
         orientationFields.forEach((field) => {
           const el = document.getElementById(field);
           el.innerText = event[field];
         });
 
+        filterReadout.innerText = 'computing hz';
         const hz = gamma.translateTo(event.gamma, filterCutoff);
+        filterReadout.innerText = 'updating cutoff';
         unit.updateCutoff(hz);
+        filterReadout.innerText = 'updating hz readout';
         filterReadout.innerText = `${Math.random().toFixed(3)}___${hz}`;
       });
 
