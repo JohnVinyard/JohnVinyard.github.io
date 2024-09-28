@@ -15,7 +15,7 @@ class Interval {
 
   translateTo(value, otherInterval) {
     const r = this.toRatio(value);
-    const v = otherInterval.fromRatio(value);
+    const v = otherInterval.fromRatio(r);
     return v;
   }
 }
@@ -31,6 +31,7 @@ document.addEventListener("DOMContentLoaded", async (event) => {
   const recorder = document.getElementById("recorder");
   const filterReadout = document.getElementById("filter");
   filterReadout.style.backgroundColor = "#eee";
+  filterReadout.innerText = 500;
 
   const context = new AudioContext();
 
@@ -131,11 +132,13 @@ document.addEventListener("DOMContentLoaded", async (event) => {
       const scriptNode = context.createScriptProcessor(512, 1, 1);
       const gainNode = context.createGain();
       const conv = context.createConvolver();
+
       const filter = context.createBiquadFilter();
       filter.type = "lowpass";
       filter.frequency.setValueAtTime(500, context.currentTime);
+
       conv.buffer = await fetchAudio(
-        "https://nsynth.s3.amazonaws.com/bass_electronic_018-036-100",
+        "https://nsynth.s3.amazonaws.com/guitar_acoustic_010-053-050",
         context
       );
 
@@ -216,8 +219,6 @@ document.addEventListener("DOMContentLoaded", async (event) => {
         DeviceMotionEvent.requestPermission();
       }
 
-      const motionFieldIds = ["x", "y", "z"];
-
       // TODO: orientation should determine the mix between three different room sounds
       const orientationFields = ["alpha", "gamma", "beta"];
 
@@ -231,6 +232,8 @@ document.addEventListener("DOMContentLoaded", async (event) => {
         unit.updateCutoff(hz);
         filterReadout.innerText = `${Math.random().toFixed(3)}___${hz}`;
       });
+
+      const motionFieldIds = ["x", "y", "z"];
 
       window.addEventListener(
         "devicemotion",
