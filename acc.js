@@ -199,7 +199,8 @@ document.addEventListener("DOMContentLoaded", async (event) => {
             event.acceleration.y > 10 ||
             event.acceleration > 10
           ) {
-            playRoomSound();
+            unit.trigger();
+            // playRoomSound();
           }
         },
         true
