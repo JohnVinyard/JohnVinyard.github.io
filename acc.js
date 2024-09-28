@@ -258,7 +258,7 @@ document.addEventListener("DOMContentLoaded", async (event) => {
             el.innerText = event.acceleration[field];
           });
 
-          const threshold = 4;
+          const threshold = 3;
 
           // TODO: maybe this trigger condition should be the norm as well?
           if (
@@ -274,7 +274,7 @@ document.addEventListener("DOMContentLoaded", async (event) => {
             if (debug) {
               recorder.innerText += ".";
             }
-            unit.trigger(norm * 0.3);
+            unit.trigger(norm * 0.2);
             // playRoomSound();
           }
         },
