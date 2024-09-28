@@ -22,7 +22,7 @@ class Interval {
 
 const debug = false;
 
-const filterCutoff = new Interval(120, 22050);
+const filterCutoff = new Interval(500, 22050);
 const alpha = new Interval(0, 360);
 const beta = new Interval(-180, 180);
 const gamma = new Interval(-90, 90);
@@ -142,7 +142,7 @@ document.addEventListener("DOMContentLoaded", async (event) => {
       filter.frequency.setValueAtTime(500, context.currentTime);
 
       conv.buffer = await fetchAudio(
-        "https://nsynth.s3.amazonaws.com/bass_electronic_018-036-100",
+        "https://nsynth.s3.amazonaws.com/bass_electronic_025-063-050",
         context
       );
 
@@ -258,10 +258,13 @@ document.addEventListener("DOMContentLoaded", async (event) => {
             el.innerText = event.acceleration[field];
           });
 
+          const threshold = 4;
+
+          // TODO: maybe this trigger condition should be the norm as well?
           if (
-            Math.abs(event.acceleration.x) > 2 ||
-            Math.abs(event.acceleration.y) > 2 ||
-            Math.abs(event.acceleration.z) > 2
+            Math.abs(event.acceleration.x) > threshold ||
+            Math.abs(event.acceleration.y) > threshold ||
+            Math.abs(event.acceleration.z) > threshold
           ) {
             const norm = Math.sqrt(
               event.acceleration.x ** 2 +
@@ -271,7 +274,7 @@ document.addEventListener("DOMContentLoaded", async (event) => {
             if (debug) {
               recorder.innerText += ".";
             }
-            unit.trigger(norm * 0.5);
+            unit.trigger(norm * 0.3);
             // playRoomSound();
           }
         },
