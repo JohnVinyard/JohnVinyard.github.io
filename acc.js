@@ -30,6 +30,7 @@ document.addEventListener("DOMContentLoaded", async (event) => {
   const tester = document.getElementById("test");
   const recorder = document.getElementById("recorder");
   const filterReadout = document.getElementById("filter");
+  filterReadout.style.backgroundColor = "#eee";
 
   const context = new AudioContext();
 
@@ -228,7 +229,7 @@ document.addEventListener("DOMContentLoaded", async (event) => {
 
         const hz = gamma.translateTo(event.gamma, filterCutoff);
         unit.updateCutoff(hz);
-        filterReadout.innerText = hz.toFixed(3);
+        filterReadout.innerText = `${Math.random().toFixed(3)}___${hz}`;
       });
 
       window.addEventListener(
