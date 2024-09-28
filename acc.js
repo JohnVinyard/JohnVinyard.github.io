@@ -132,14 +132,14 @@ document.addEventListener("DOMContentLoaded", async (event) => {
       this.gain = gainNode;
     }
 
-    async trigger() {
+    async trigger(amplitude) {
       if (!this.initialized) {
         console.log("Initializing");
         await this.initialize();
       }
 
       this.gain.gain.exponentialRampToValueAtTime(
-        1,
+        amplitude,
         context.currentTime + 0.001
       );
       this.gain.gain.exponentialRampToValueAtTime(
@@ -162,7 +162,7 @@ document.addEventListener("DOMContentLoaded", async (event) => {
       y.innerText = movementY;
 
       if (Math.abs(movementX) > 10 || Math.abs(movementY) > 10) {
-        unit.trigger();
+        unit.trigger(Math.abs(movementX) * 0.1);
       }
     });
   };
@@ -194,11 +194,11 @@ document.addEventListener("DOMContentLoaded", async (event) => {
           });
 
           if (
-            event.acceleration.x > 10 ||
-            event.acceleration.y > 10 ||
-            event.acceleration > 10
+            event.acceleration.x > 1 ||
+            event.acceleration.y > 1 ||
+            event.acceleration > 1
           ) {
-            unit.trigger();
+            unit.trigger(event.acceleration.x * 0.1);
             // playRoomSound();
           }
         },
