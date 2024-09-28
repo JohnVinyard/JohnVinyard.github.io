@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", async (event) => {
   const start = document.getElementById("start-demo");
-  const karplus = document.getElementById("karplus");
+  // const karplus = document.getElementById("karplus");
 
   const context = new AudioContext();
 
@@ -30,107 +30,143 @@ document.addEventListener("DOMContentLoaded", async (event) => {
     return audioBufferPromise;
   };
 
-  karplus.addEventListener("click", async () => {
-    const osc = context.createOscillator();
+  // karplus.addEventListener("click", async () => {
+  //   const osc = context.createOscillator();
 
-    const scriptNode = context.createScriptProcessor(512);
+  //   const scriptNode = context.createScriptProcessor(512);
 
-    const mainGain = context.createGain();
-    const delayGain = context.createGain();
-    delayGain.gain.setValueAtTime(0.75, context.currentTime);
+  //   const mainGain = context.createGain();
+  //   const delayGain = context.createGain();
+  //   delayGain.gain.setValueAtTime(0.75, context.currentTime);
 
-    const delay = context.createDelay(1);
-    delay.delayTime.setValueAtTime(0.015, context.currentTime);
+  //   const delay = context.createDelay(1);
+  //   delay.delayTime.setValueAtTime(0.015, context.currentTime);
 
-    const filter = context.createBiquadFilter();
-    filter.type = "lowpass";
-    filter.frequency.setValueAtTime(800, context.currentTime);
+  //   const filter = context.createBiquadFilter();
+  //   filter.type = "lowpass";
+  //   filter.frequency.setValueAtTime(800, context.currentTime);
 
-    osc.connect(scriptNode);
-    scriptNode.connect(mainGain);
-    mainGain.connect(context.destination);
+  //   osc.connect(scriptNode);
+  //   scriptNode.connect(mainGain);
+  //   mainGain.connect(context.destination);
 
-    mainGain.connect(delay);
-    delay.connect(delayGain);
-    delayGain.connect(filter);
-    filter.connect(delay);
+  //   mainGain.connect(delay);
+  //   delay.connect(delayGain);
+  //   delayGain.connect(filter);
+  //   filter.connect(delay);
 
-    filter.connect(context.destination);
+  //   filter.connect(context.destination);
 
-    mainGain.gain.exponentialRampToValueAtTime(1, context.currentTime + 0.001);
-    mainGain.gain.exponentialRampToValueAtTime(
-      0.000001,
-      context.currentTime + 0.2
-    );
+  //   mainGain.gain.exponentialRampToValueAtTime(1, context.currentTime + 0.001);
+  //   mainGain.gain.exponentialRampToValueAtTime(
+  //     0.000001,
+  //     context.currentTime + 0.2
+  //   );
 
-    scriptNode.addEventListener(
-      "audioprocess",
-      ({ inputBuffer, outputBuffer }) => {
-        const output = outputBuffer.getChannelData(0);
+  //   scriptNode.addEventListener(
+  //     "audioprocess",
+  //     ({ inputBuffer, outputBuffer }) => {
+  //       const output = outputBuffer.getChannelData(0);
 
-        for (let i = 0; i < output.length; i++) {
-          output[i] = Math.random() * 2 - 1;
+  //       for (let i = 0; i < output.length; i++) {
+  //         output[i] = Math.random() * 2 - 1;
+  //       }
+  //     }
+  //   );
+
+  //   osc.start();
+
+  //   setTimeout(() => {
+  //     osc.disconnect(mainGain);
+  //     mainGain.disconnect(scriptNode);
+  //     scriptNode.disconnect(context.destination);
+  //     scriptNode.disconnect(delay);
+  //     delay.disconnect(context.destination);
+  //     delay.disconnect(filter);
+  //     filter.disconnect(scriptNode);
+  //   }, 30000);
+  // });
+
+  class ConvUnit {
+    initialized = false;
+    gain = null;
+
+    constructor() {}
+
+    async initialize() {
+      this.initialized = true;
+
+      const osc = context.createOscillator();
+      const scriptNode = context.createScriptProcessor(512, 1, 1);
+      const gainNode = context.createGain();
+      const conv = context.createConvolver();
+      conv.buffer = await fetchAudio(
+        "https://nsynth.s3.amazonaws.com/bass_electronic_018-036-100",
+        context
+      );
+
+      // gainNode.gain.exponentialRampToValueAtTime(1, context.currentTime + 0.001);
+      // gainNode.gain.exponentialRampToValueAtTime(
+      //   0.000001,
+      //   context.currentTime + 0.2
+      // );
+
+      scriptNode.addEventListener(
+        "audioprocess",
+        ({ inputBuffer, outputBuffer }) => {
+          const output = outputBuffer.getChannelData(0);
+
+          for (let i = 0; i < output.length; i++) {
+            output[i] = Math.random() * 2 - 1;
+          }
         }
+      );
+
+      osc.connect(scriptNode);
+      scriptNode.connect(gainNode);
+      gainNode.connect(conv);
+      conv.connect(context.destination);
+      osc.start();
+
+      this.gain = gainNode;
+    }
+
+    async trigger() {
+      if (!this.initialized) {
+        console.log("Initializing");
+        await this.initialize();
       }
-    );
 
-    osc.start();
+      console.log("triggering!", this.gain);
 
-    setTimeout(() => {
-      osc.disconnect(mainGain);
-      mainGain.disconnect(scriptNode);
-      scriptNode.disconnect(context.destination);
-      scriptNode.disconnect(delay);
-      delay.disconnect(context.destination);
-      delay.disconnect(filter);
-      filter.disconnect(scriptNode);
-    }, 30000);
-  });
+      this.gain.gain.exponentialRampToValueAtTime(
+        1,
+        context.currentTime + 0.001
+      );
+      this.gain.gain.exponentialRampToValueAtTime(
+        0.000001,
+        context.currentTime + 0.2
+      );
+    }
+  }
 
-  const playRoomSound = async () => {
-    const osc = context.createOscillator();
-    const scriptNode = context.createScriptProcessor(512, 1, 1);
-    const gainNode = context.createGain();
-    const conv = context.createConvolver();
-    conv.buffer = await fetchAudio(
-      "https://matching-pursuit-reverbs.s3.amazonaws.com/Narrow+Bumpy+Space.wav",
-      context
-    );
+  const unit = new ConvUnit();
 
-    gainNode.gain.exponentialRampToValueAtTime(1, context.currentTime + 0.001);
-    gainNode.gain.exponentialRampToValueAtTime(
-      0.000001,
-      context.currentTime + 0.2
-    );
+  const useMouse = () => {
+    document.addEventListener("mousemove", ({ movementX, movementY }) => {
+      // console.log(event);
 
-    scriptNode.addEventListener(
-      "audioprocess",
-      ({ inputBuffer, outputBuffer }) => {
-        const output = outputBuffer.getChannelData(0);
+      const x = document.getElementById("mousex");
+      x.innerText = movementX;
 
-        for (let i = 0; i < output.length; i++) {
-          output[i] = Math.random() * 2 - 1;
-        }
+      const y = document.getElementById("mousey");
+      y.innerText = movementY;
+
+      if (Math.abs(movementX) > 10 || Math.abs(movementY) > 10) {
+        unit.trigger();
       }
-    );
-
-    osc.connect(scriptNode);
-    scriptNode.connect(gainNode);
-    gainNode.connect(conv);
-    conv.connect(context.destination);
-    osc.start();
-
-    setTimeout(() => {
-      osc.disconnect(scriptNode);
-      scriptNode.disconnect(gainNode);
-      gainNode.disconnect(conv);
-      conv.disconnect(context.destination);
-    }, 10000);
+    });
   };
-
-  start.addEventListener("click", async () => {
-    playRoomSound();
-  });
 
   const useAcc = () => {
     if (DeviceMotionEvent) {
@@ -174,5 +210,8 @@ document.addEventListener("DOMContentLoaded", async (event) => {
     }
   };
 
-  useAcc();
+  start.addEventListener("click", async () => {
+    useAcc();
+    useMouse();
+  });
 });
