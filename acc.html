@@ -17,114 +17,22 @@
       #z:before {
         content: "z:";
       }
+
+      div {
+        margin: 10px;
+      }
     </style>
-    <script type="text/javascript">
-      const context = new window.AudioContext();
-
-      const fetchBinary = async (url) => {
-        const resp = await fetch(url);
-        return resp.arrayBuffer();
-      };
-
-      const audioCache = {};
-
-      const fetchAudio = async (url, context) => {
-        const cached = audioCache[url];
-        if (cached !== undefined) {
-          return cached;
-        }
-
-        const audioBufferPromise = fetchBinary(url).then(function (data) {
-          return new Promise(function (resolve, reject) {
-            context.decodeAudioData(
-              data,
-              (buffer) => resolve(buffer),
-              (error) => reject(error)
-            );
-          });
-        });
-        audioCache[url] = audioBufferPromise;
-        return audioBufferPromise;
-      };
-
-      const playAudio = async (url, context, start, duration) => {
-        const audioBuffer = await fetchAudio(url, context);
-        /* console.log(audioBuffer) */
-        const source = context.createBufferSource();
-        source.buffer = audioBuffer;
-        source.connect(context.destination);
-        source.start();
-        return source;
-      };
-
-      const playGong = () => {
-        console.log("playing gong");
-        playAudio(
-          "https://one-laptop-per-child.s3.amazonaws.com/Berklee44v12/hit+1.wav",
-          context,
-          0,
-          10
-        );
-      };
-
-      const acc = new Accelerometer({ frequency: 1 });
-      console.log(acc);
-      acc.addEventListener("reading", (event) => {
-        console.log(acc);
-      });
-      acc.start();
-
-      const useAcc = () => {
-        if (DeviceMotionEvent) {
-          if (typeof DeviceMotionEvent.requestPermission === "function") {
-            DeviceMotionEvent.requestPermission();
-          }
-
-          window.addEventListener(
-            "devicemotion",
-            (event) => {
-              console.log(event);
-              const xField = document.getElementById("x");
-              const yField = document.getElementById("y");
-              const zField = document.getElementById("z");
-
-              xField.innerText = event.acceleration.x;
-              yField.innerText = event.acceleration.y;
-              zField.innerText = event.acceleration.z;
-
-              if (
-                event.acceleration.x > 10 ||
-                event.acceleration.y > 10 ||
-                event.acceleration > 10
-              ) {
-                playGong();
-              }
-            },
-            true
-          );
-        } else {
-          console.log("Device motion not supported");
-          alert("device motion not supported");
-        }
-      };
-
-      document.addEventListener("DOMContentLoaded", async (event) => {
-        const btn = document.getElementById("player");
-        btn.addEventListener("click", () => {
-          playGong();
-        });
-
-        const start = document.getElementById("start-demo");
-        start.addEventListener("click", () => {
-          useAcc();
-        });
-      });
-    </script>
+    <script src="acc.js"></script>
   </head>
   <body>
     <div>
       <button id="start-demo">Start Demo</button>
     </div>
+
+    <div>
+      <button id="karplus">Karplus</button>
+    </div>
+
     <div>
       <button id="player">Push Me</button>
     </div>
@@ -132,6 +40,12 @@
       <div id="x"></div>
       <div id="y"></div>
       <div id="z"></div>
+    </div>
+
+    <div>
+      <div id="alpha"></div>
+      <div id="gamma"></div>
+      <div id="beta"></div>
     </div>
   </body>
 </html>
