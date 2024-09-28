@@ -200,8 +200,13 @@ document.addEventListener("DOMContentLoaded", async (event) => {
             Math.abs(event.acceleration.y) > 5 ||
             Math.abs(event.acceleration.z) > 5
           ) {
+            const norm = Math.sqrt(
+              event.acceleration.x ** 2 +
+                event.acceleration.y ** 2 +
+                event.acceleration.z ** 2
+            );
             recorder.innerText += ".";
-            unit.trigger(1);
+            unit.trigger(norm);
             // playRoomSound();
           }
         },
