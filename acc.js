@@ -136,13 +136,18 @@ document.addEventListener("DOMContentLoaded", async (event) => {
       const scriptNode = context.createScriptProcessor(512, 1, 1);
       const gainNode = context.createGain();
       const conv = context.createConvolver();
+      const conv2 = context.createConvolver();
 
       const filter = context.createBiquadFilter();
       filter.type = "lowpass";
       filter.frequency.setValueAtTime(500, context.currentTime);
 
       conv.buffer = await fetchAudio(
-        "https://nsynth.s3.amazonaws.com/bass_electronic_025-063-050",
+        "https://nsynth.s3.amazonaws.com/bass_electronic_018-036-100",
+        context
+      );
+      conv2.buffer = await fetchAudio(
+        "https://nsynth.s3.amazonaws.com/bass_electronic_018-043-100",
         context
       );
 
@@ -165,8 +170,13 @@ document.addEventListener("DOMContentLoaded", async (event) => {
 
       osc.connect(scriptNode);
       scriptNode.connect(gainNode);
+
       gainNode.connect(conv);
+      gainNode.connect(conv2);
+
+      conv2.connect(filter);
       conv.connect(filter);
+
       filter.connect(context.destination);
       osc.start();
 
