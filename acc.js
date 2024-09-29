@@ -268,7 +268,7 @@ document.addEventListener("DOMContentLoaded", async (event) => {
             el.innerText = event.acceleration[field];
           });
 
-          const threshold = 3;
+          const threshold = 4;
 
           // TODO: maybe this trigger condition should be the norm as well?
           if (
