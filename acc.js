@@ -31,11 +31,11 @@ const unitInterval = new Interval(0, 1);
 
 document.addEventListener("DOMContentLoaded", async (event) => {
   const start = document.getElementById("start-demo");
-  const tester = document.getElementById("test");
-  const recorder = document.getElementById("recorder");
-  const filterReadout = document.getElementById("filter");
-  filterReadout.style.backgroundColor = "#eee";
-  filterReadout.innerText = 500;
+  // const tester = document.getElementById("test");
+  // const recorder = document.getElementById("recorder");
+  // const filterReadout = document.getElementById("filter");
+  // filterReadout.style.backgroundColor = "#eee";
+  // filterReadout.innerText = 500;
 
   const context = new AudioContext();
 
@@ -127,7 +127,9 @@ document.addEventListener("DOMContentLoaded", async (event) => {
     gain = null;
     filt = null;
 
-    constructor() {}
+    constructor(url) {
+      this.url = url;
+    }
 
     async initialize() {
       this.initialized = true;
@@ -136,18 +138,14 @@ document.addEventListener("DOMContentLoaded", async (event) => {
       const scriptNode = context.createScriptProcessor(512, 1, 1);
       const gainNode = context.createGain();
       const conv = context.createConvolver();
-      const conv2 = context.createConvolver();
 
       const filter = context.createBiquadFilter();
       filter.type = "lowpass";
       filter.frequency.setValueAtTime(500, context.currentTime);
 
       conv.buffer = await fetchAudio(
-        "https://nsynth.s3.amazonaws.com/bass_electronic_018-036-100",
-        context
-      );
-      conv2.buffer = await fetchAudio(
-        "https://nsynth.s3.amazonaws.com/bass_electronic_018-043-100",
+        this.url,
+        // "https://nsynth.s3.amazonaws.com/bass_electronic_018-036-100",
         context
       );
 
@@ -170,16 +168,10 @@ document.addEventListener("DOMContentLoaded", async (event) => {
 
       osc.connect(scriptNode);
       scriptNode.connect(gainNode);
-
       gainNode.connect(conv);
-      gainNode.connect(conv2);
-
-      conv2.connect(filter);
       conv.connect(filter);
-
       filter.connect(context.destination);
       osc.start();
-
       this.gain = gainNode;
       this.filt = filter;
     }
@@ -208,7 +200,56 @@ document.addEventListener("DOMContentLoaded", async (event) => {
     }
   }
 
-  const unit = new ConvUnit();
+  class Controller {
+    constructor(urls) {
+      // this.units = urls.map(url => new ConvUnit(url));
+      this.units = urls.reduce((accum, url) => {
+        accum[url] = new ConvUnit(url);
+        return accum;
+      }, {});
+    }
+
+    updateCutoff(hz) {
+      for (const key in this.units) {
+        const u = this.units[key];
+        u.updateCutoff(hz);
+      }
+    }
+
+    async trigger(urls, amplitude) {
+      urls.forEach((url) => {
+        this.units[url].trigger(amplitude);
+      });
+    }
+  }
+
+  const activeNotes = new Set(["C"]);
+
+  // const unit = new ConvUnit();
+
+  const notes = {
+    C: "https://nsynth.s3.amazonaws.com/bass_electronic_018-036-100",
+    E: "https://nsynth.s3.amazonaws.com/bass_electronic_018-040-127",
+    G: "https://nsynth.s3.amazonaws.com/bass_electronic_018-043-100",
+    B: "https://nsynth.s3.amazonaws.com/bass_electronic_018-047-100",
+  };
+
+  const unit = new Controller(Object.values(notes));
+
+  const buttons = document.querySelectorAll(".big-button");
+  buttons.forEach((button) => {
+    button.addEventListener("click", (event) => {
+      const id = event.target.id;
+      console.log(activeNotes);
+      if (activeNotes.has(id)) {
+        activeNotes.delete(id);
+        button.classList.remove("selected");
+      } else {
+        activeNotes.add(id);
+        button.classList.add("selected");
+      }
+    });
+  });
 
   const useMouse = () => {
     document.addEventListener(
@@ -216,23 +257,28 @@ document.addEventListener("DOMContentLoaded", async (event) => {
       ({ movementX, movementY, clientX, clientY }) => {
         // console.log(event);
 
-        const x = document.getElementById("mousex");
-        x.innerText = movementX;
+        // const x = document.getElementById("mousex");
+        // x.innerText = movementX;
 
-        const y = document.getElementById("mousey");
-        y.innerText = movementY;
+        // const y = document.getElementById("mousey");
+        // y.innerText = movementY;
 
         if (Math.abs(movementX) > 10 || Math.abs(movementY) > 10) {
-          unit.trigger(1);
-          if (debug) {
-            recorder.innerText += ".";
-          }
+          // unit.trigger(1);
+          unit.trigger(
+            Array.from(activeNotes).map((an) => notes[an]),
+            1
+          );
+
+          // if (debug) {
+          //   recorder.innerText += ".";
+          // }
         }
 
         const u = vertical.translateTo(clientY, unitInterval);
         const hz = unitInterval.translateTo(u ** 2, filterCutoff);
         unit.updateCutoff(hz);
-        filterReadout.innerText = hz.toFixed(1);
+        // filterReadout.innerText = hz.toFixed(1);
       }
     );
   };
@@ -281,10 +327,17 @@ document.addEventListener("DOMContentLoaded", async (event) => {
                 event.acceleration.y ** 2 +
                 event.acceleration.z ** 2
             );
+
             if (debug) {
               recorder.innerText += ".";
             }
-            unit.trigger(norm * 0.2);
+
+            unit.trigger(
+              Array.from(activeNotes).map((an) => notes[an]),
+              norm * 0.2
+            );
+
+            // unit.trigger(norm * 0.2);
             // playRoomSound();
           }
         },
@@ -301,7 +354,7 @@ document.addEventListener("DOMContentLoaded", async (event) => {
     useMouse();
   });
 
-  tester.addEventListener("click", async () => {
-    unit.trigger();
-  });
+  // tester.addEventListener("click", async () => {
+  //   unit.trigger();
+  // });
 });

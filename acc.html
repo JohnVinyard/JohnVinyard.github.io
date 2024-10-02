@@ -45,6 +45,21 @@
       div {
         margin: 10px;
       }
+
+      .big-button {
+        width: 95vw;
+        height: 20vh;
+        margin: 0.1em;
+        padding: 0.1em;
+        font-size: 2em;
+        font-weight: bold;
+        text-align: center;
+        cursor: pointer;
+      }
+
+      .selected {
+        background-color: #eee;
+      }
     </style>
     <script src="acc.js"></script>
   </head>
@@ -56,9 +71,14 @@
       <button id="start-demo">Start Demo</button>
     </div>
 
-    <div>
+    <div class="big-button selected" id="C">C</div>
+    <div class="big-button" id="E">E</div>
+    <div class="big-button" id="G">G</div>
+    <div class="big-button" id="B">B</div>
+
+    <!-- <div>
       <button id="test">Test Sound</button>
-    </div>
+    </div> -->
 
     <!-- <div>
       <button id="karplus">Karplus</button>
@@ -68,7 +88,7 @@
       <button id="player">Push Me</button>
     </div> -->
 
-    <div>
+    <!-- <div>
       <hr />
     </div>
 
@@ -99,11 +119,11 @@
     <div>
       <div id="mousex"></div>
       <div id="mousey"></div>
-    </div>
+    </div> -->
 
-    <div
+    <!-- <div
       id="recorder"
       style="background-color: red; width: 400px; overflow-wrap: break-word"
-    ></div>
+    ></div> -->
   </body>
 </html>
