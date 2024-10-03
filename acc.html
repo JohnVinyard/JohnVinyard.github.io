@@ -55,6 +55,10 @@
         font-weight: bold;
         text-align: center;
         cursor: pointer;
+        }
+
+      .note-name {
+        vertical-align: middle;
       }
 
       .selected {
@@ -71,10 +75,12 @@
       <button id="start-demo">Start Demo</button>
     </div>
 
-    <div class="big-button selected" id="C">C</div>
-    <div class="big-button" id="E">E</div>
-    <div class="big-button" id="G">G</div>
-    <div class="big-button" id="B">B</div>
+    <div class="big-button selected" id="C">
+      <span class="note-name">C</span>
+    </div>
+    <div class="big-button" id="E"><span class="note-name">E</span></div>
+    <div class="big-button" id="G"><span class="note-name">G</span></div>
+    <div class="big-button" id="B"><span class="note-name">B</span></div>
 
     <!-- <div>
       <button id="test">Test Sound</button>
