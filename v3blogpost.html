@@ -1,0 +1,2043 @@
+
+        <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <meta http-equiv="X-UA-Compatible" content="ie=edge">
+                <title>Iterative Decomposition Model V3</title>
+                <link rel="preconnect" href="https://fonts.googleapis.com">
+                <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+                <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet">
+                <script src="https://cdn.jsdelivr.net/gh/JohnVinyard/web-components@v0.0.12/build/components/bundle.js"></script>
+                <style>
+                    body {
+                        font-family: "Gowun Batang", serif;
+                        margin: 5vh 5vw;
+                        color: #333;
+                        background-color: #f0f0f0;
+                        font-size: 1.1em;
+                    }
+                    .back-to-top {
+                        position: fixed;
+                        bottom: 20px;
+                        right: 20px;
+                        background-color: #333;
+                        color: #f0f0f0;
+                        padding: 10px;
+                        font-size: 0.9em;
+                    }
+                    img {
+                        width: 100%;
+                    }
+                    ul {
+                        list-style-type: none;
+                        padding-inline-start: 20px;
+                        font-size: 20px;
+                    }
+                    a {
+                        color: #660000;
+                    }
+                    a:visited {
+                        color: #000066;
+                    }
+                    caption {
+                        text-decoration: underline;
+                        font-size: 0.6em;
+                    }
+                    blockquote {
+                        background-color: #d5d5d5;
+                        padding: 2px 10px;
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>Iterative Decomposition Model V3</h1>
+<p><caption>Table of Contents</caption></p>
+<ul>
+<li><a href="#Iterative Decomposition V3 Model">Iterative Decomposition V3 Model</h1></a><ul>
+<li><a href="#The Algorithm">The Algorithm</h2></a></li>
+<li><a href="#The Training Process">The Training Process</h2></a></li>
+<li><a href="#Improvements over the Previous Model">Improvements over the Previous Model</h2></a></li>
+</ul>
+</li>
+<li><a href="#Future Work">Future Work</h1></a><ul>
+<li><a href="#Model Size, Training Time and Dataset">Model Size, Training Time and Dataset</h2></a></li>
+<li><a href="#Streaming and/or Arbitrary Lengths">Streaming and/or Arbitrary Lengths</h2></a></li>
+<li><a href="#A Better Sparsity Loss">A Better Sparsity Loss</h2></a></li>
+<li><a href="#Different Event Generator Variants">Different Event Generator Variants</h2></a></li>
+</ul>
+</li>
+<li><a href="#Cite this Article">Cite this Article</h1></a></li>
+<li><a href="#Sponsor this Work">Sponsor this Work</h1></a></li>
+<li><a href="#Examples">Examples</h1></a><ul>
+<li><a href="#Example 1">Example 1</h2></a></li>
+<li><a href="#Example 2">Example 2</h2></a></li>
+<li><a href="#Example 3">Example 3</h2></a></li>
+<li><a href="#Example 4">Example 4</h2></a></li>
+<li><a href="#Example 5">Example 5</h2></a></li>
+</ul>
+</li>
+<li><a href="#Notes">Notes</h1></a></li>
+</ul>
+                
+
+<a id="Iterative Decomposition V3 Model"></a>
+<h1>Iterative Decomposition V3 Model</h1>
+<p>This article covers the continuation of work I've been pursuing in the area of sparse, interpretable audio models.</p>
+<p>Some previous iterations of this work:</p>
+<ul>
+<li><a href="https://blog.cochlea.xyz/siam.html">Iterative Decomposition Model V2</a></li>
+<li><a href="https://blog.cochlea.xyz/gamma-audio-splat.html">Gaussian/Gamma Splatting for Audio</a></li>
+</ul>
+<p>All training and model code can be
+<a href="https://github.com/JohnVinyard/matching-pursuit/blob/main/iterativedecomposition.py">found here</a>.</p>
+<p>Our goal is to decompose a musical audio signal into a small number of "events", roughly analogous to a musical score,
+but carrying information about the resonant characteristics of the instrument being played, and the room it is being
+played in.  Each event is represented by a low-dimensional (16, in this case) vector and a time at which the event
+occurs in the "score".</p>
+<p>We seek to achieve this goal by iteratively guessing at the next-most informative event, removing it from the original
+signal, and repeating the process, until no informative/interesting signal is remaining.</p>
+<p>This is very similar to the <a href="https://en.wikipedia.org/wiki/Matching_pursuit">matching pursuit</a> algorithm, where we
+repeatedly convolve an audio signal with a dictionary of audio atoms, picking the most highly-correlated atom at each
+step, removing it, and the repeating the process until the norm of the original signal reaches some acceptable
+threshold.</p>
+
+<a id="The Algorithm"></a>
+<h2>The Algorithm</h2>
+<p>In this work, we replace the convolution of a large dictionary of audio "atoms" with analysis via a "deep" neural
+network, which uses an STFT transform followed by
+<a href="https://github.com/JohnVinyard/matching-pursuit/blob/main/iterativedecomposition.py#L86">cascading dilated convolutions</a>
+to efficiently analyze relatively long audio segments.  At each iteration, it proposes an <strong>event vector</strong> and a
+<strong>time-of-occurrence</strong>.  This event is then rendered by an event-generator network and scheduled, by convolving the
+rendered event with a dirac function (unit-valued spike) at the desired time.  It is subtracted from the original audio
+spectrogram[^1], and the process is repeated.  During training, this process runs for a fixed number of steps, but it's possible
+to imagine a modification whereby some other stopping condition is observed to improve efficiency.</p>
+<p>The decoder makes some simple physics-based assumptions about the underlying signal, and uses convolutions with long
+kernels to model the transfer functions of the instruments and the rooms in which they are performed.</p>
+
+<a id="The Training Process"></a>
+<h2>The Training Process</h2>
+<p>We train the model on ~three-second segments of audio from the
+<a href="https://zenodo.org/records/5120004#.Yhxr0-jMJBA">MusicNet dataset</a>, which represents approximately 33 hours of
+public-domain classical music.  We optimize the model via gradient descent using the following training objectives:</p>
+<ol>
+<li>An iterative reconstruction loss, which asks the model to maximize the energy it removes from the signal at each step</li>
+<li>A sparsity loss, which asks the model to minimize the l1 norm of the event vectors, ideally leading to a sparse (few event) solution</li>
+<li>An adversarial loss, which masks about 50% of events and asks a discriminator network (trained in parallel) to
+   judge them;  this is intended to encourage the events to be independent and stand on their own as believable, musical
+   events.</li>
+</ol>
+
+<a id="Improvements over the Previous Model"></a>
+<h2>Improvements over the Previous Model</h2>
+<p>While the previous model only operated on around 1.5 seconds of audio, this model doubles that window, ultimately
+driving toward a fully streaming algorithm that can handle signals of arbitrary length.  It also makes progress toward
+a much simpler decoder, which generates each event as a linear combination of lookup tables for the following elements:</p>
+<ul>
+<li>a noisy impulse, or injection of energy into the system</li>
+<li>some number of resonances, built by combining sine, sawtooth, triangle, and square waves</li>
+<li>an interpolation between the resonances, representing the deformation of the system/instrument being played (e.g, the bending of a violin string as vibrato)</li>
+<li>a pre-baked room impulse response, which is, in fact, <em>just another transfer function</em>, this time for the entire room or space in which the piece is played</li>
+</ul>
+
+<a id="Future Work"></a>
+<h1>Future Work</h1>
+
+<a id="Model Size, Training Time and Dataset"></a>
+<h2>Model Size, Training Time and Dataset</h2>
+<p>Firstly, this model is relatively small, weighing in at 18M parameters (82 MB on disk) and has only been trained for
+around 24 hours, so it seems there is a lot of space to increase the model size, dataset size and training time to
+further improve.  The reconstruction quality of the examples on this page is not amazing, certainly not good enough
+even for a lossy audio codec, but the structure the model extracts seems like it could be used for many interesting
+applications.</p>
+
+<a id="Streaming and/or Arbitrary Lengths"></a>
+<h2>Streaming and/or Arbitrary Lengths</h2>
+<p>Ultimately, the model should be able to handle audio segments of arbitrary lengths, adhering to some event "budget" to
+find the sparsest-possible explanation of the audio segment.</p>
+
+<a id="A Better Sparsity Loss"></a>
+<h2>A Better Sparsity Loss</h2>
+<p>Some of the examples lead me to believe that my current sparsity loss is too aggressive;  the model sometimes prefers
+to leave events out entirely rather than get the "win" of reducing overall signal energy.  Using the l1 norm penalty
+seems like a sledgehammer, and a more nuanced loss would probably do better.</p>
+
+<a id="Different Event Generator Variants"></a>
+<h2>Different Event Generator Variants</h2>
+<p>The decoder side of the model is very interesting, and all sorts of physical modelling-like approaches could yield
+better, more realistic, and sparser renderings of the audio.</p>
+
+
+<a id="Cite this Article"></a>
+<h1>Cite this Article</h1>
+<p>If you'd like to cite this article, you can use the following <a href="https://bibtex.org/">BibTeX block</a>.</p>
+
+<citation-block
+            tag="johnvinyarditerativedecompositionv3"
+            author="Vinyard, John"
+            url="https://blog.cochlea.xyz/iterative-decomposition-v3.html"
+            header="Iterative Decomposition V3"
+            year="2024">
+        </citation-block>
+
+
+<a id="Sponsor this Work"></a>
+<h1>Sponsor this Work</h1>
+<p>If this work seems interesting and worthwhile, and you want to see where it leads, 
+<a href="https://github.com/sponsors/JohnVinyard">sponsor me</a> on GitHub and I'll keep chasing this down.</p>
+
+
+<a id="Examples"></a>
+<h1>Examples</h1>
+
+
+<a id="Example 1"></a>
+<h2>Example 1</h2>
+
+
+<a id="Original Audio"></a>
+<h3>Original Audio</h3>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/original_1125604a1da82106aeccc770f58ea08a213732e9"
+            height="200"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Reconstruction"></a>
+<h3>Reconstruction</h3>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/reconstruction_6517f87e79ce918436d04ad76b502fcaeaedf0c0"
+            height="200"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Event Vectors"></a>
+<h3>Event Vectors</h3>
+<p>Notice the blocks of silent event vectors.</p>
+
+<img src="https://iterative-decomposition-v3.s3.amazonaws.com/latents_31069a01b09833963add7299ca792097309eb910" height="200"></img>
+
+
+<a id="Individual Audio Events"></a>
+<h3>Individual Audio Events</h3>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event0_13259ef93dafc380be80e4b6e9533c3f8b8eeedb"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event1_0067e7e8beac60a933a6719fba5f7c709b2929ef"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event2_22aaf61d254938933630976c70c2e5c81aa14274"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event3_41e6a011c3b2b05f6b8d0819b26c848cd7c5dc95"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event4_08955c14da887d769a22c3f8df200c929ec4d931"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event5_260c6da2f5e22a771d0f625cd05ff08e03f5249e"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event6_165d6d0af79a0089bcd5657e6e621124ddb766b8"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event7_63e4f1faa62490f531b35c398e34318d5224bcfe"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event8_1de143df45ddd5e9334c5b02016f533a197ad667"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event9_c99059ac49bc58dfb012d566bac1937e4695138c"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event10_3eb896494102171b522ce76c8aeda7aad5df2a93"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event11_1c19b3bb719982b78c27c23cd7749d7e10b5a5d3"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event12_cd839d000641b5a14d0fd1cb7fad55becba8597c"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event13_33641b25e4ff3f406d504f338caa99b5e211a57d"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event14_d58d14931ae99800fed38fa5b4cf9678b239522e"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event15_4031382f711c97910f6495937e332f31795ddbd0"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event16_67c0787a5b0b69b08167e6d78a93ea46d567ad6d"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event17_ce38b024207e79b25b6457506077f9dc5e401fbf"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event18_a37928daa5a1c2139ee70bfb80d8a2e7b8e40107"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event19_4c2bc5ff0f1b74408e16150179d575f1cd4591a1"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event20_c6061e94c9a2a6629ff43348d49551b47fddab2c"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event21_d2464035e76e2c41b3e3bc71da2bd05df98acd46"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event22_c55bd2ae8e590787c230f910797deb7d325c74ee"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event23_5cd935b55b0a57a17b103b9af564b17b33e9736a"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event24_f2d5ba9f6b2070cf3666cbde0bdc2ac1d2a2fed2"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event25_dea53d13a9a7826ed3763dbad0fbeff63c0f8e89"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event26_4433c855d431bff96d3ea96155fc2c3a2b0b7e48"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event27_aa40e7f6c19ce67be77d5b4937c51c13876c7ebc"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event28_fb4bfa2d1cabc65c1b664040c08f294634be94dd"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event29_dbd09a90815344e584fc047a1f2833ddc8d97598"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event30_b6ad9c610748f56fa37d13ea1b950c6d33e6126f"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event31_e525ed4e303c9cb4fe7e9c732087be90dd1ab5a1"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+
+<a id="Example 2"></a>
+<h2>Example 2</h2>
+
+
+<a id="Original Audio"></a>
+<h3>Original Audio</h3>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/original_a75a70508a75e49ab2af0047d3624b9c2bdfa3d6"
+            height="200"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Reconstruction"></a>
+<h3>Reconstruction</h3>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/reconstruction_206465e1daaabbf4b16414a2d3f0613817487e47"
+            height="200"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Event Vectors"></a>
+<h3>Event Vectors</h3>
+<p>Notice the blocks of silent event vectors.</p>
+
+<img src="https://iterative-decomposition-v3.s3.amazonaws.com/latents_1826926dc9691a1a6699c1c1edafe8a21abf1418" height="200"></img>
+
+
+<a id="Individual Audio Events"></a>
+<h3>Individual Audio Events</h3>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event0_bc74cd04a45154172ced43ed1d214fb98b896683"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event1_88c6a9b1314241b6fc7cee655e525b1367545c9c"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event2_b1616e9a8bf507d065002b7d2f590f0a4517838a"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event3_fd2e19c5a61846340a54d83e1c21315394ec3d67"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event4_9444bee856ea1f9aa620c69710ada7b793c4258e"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event5_e09c0ad6b5d51b8bbe1f6f86532717c98ee3b628"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event6_5f726c09206ccdeee3572b1844424846a613a3f4"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event7_ba4b453242d60205903aae8ec493c14dc5a3319e"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event8_aba7a30a2b1bee8a0a84a7e596dec9cf9c37da50"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event9_999d958de52c7f5b54021f7d30192d48cc16604f"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event10_3aa41f850541e3ee3ea5d10a05274b14749f3ad0"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event11_c508e4218b3af42f6c872f992d6bb4247746d818"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event12_b188f3fd52c2ba9a86f07fee01223dff7dc51d70"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event13_b77c9950c7c73c205fddda5fb10ca787d389e819"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event14_5daaf45890ff2dc45389d3fc95ad7b2219d86211"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event15_7690b4544cdaa3b0880dbaded7a536b7ef711338"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event16_dcb9559a3861f1e9d2f28217d66950bf11a19a46"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event17_f754bdf60b9b2c745095c0bb7f78f68f3379298b"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event18_ef1f01f3de02b747ffa250bb231eb5161cfa5229"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event19_aeabd6537946a428f1c9477178d74534d1bd7b3d"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event20_b41fe37ae055bef2d27d57e27f2127063e0aeb12"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event21_8bef2fa425619df8d9edcb5426eee807c7b235d9"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event22_a00167448853cb4c265035303dcfaaf502688ae7"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event23_db62a68a5c51410d02ba6085251468665472d1f6"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event24_c62aa08abdc125bf6b1395abf69277912d23a8eb"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event25_9e82499bc2a3e32f8ea5ee464a3bb0e46b08bcef"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event26_3d998b385551713210a03fd1b3455ad5aa65e265"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event27_61746b6baac8540d0d92d1c6405132bcc5cc31d6"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event28_f83fee1d823ab2e9457803987c9f31684ef9bf59"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event29_2d6674ffbaa8bb360056678f3af594ad641c50ff"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event30_41d9aaf15853e37319efc071aa14cdf7aff96f81"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event31_c86f563ebdc7c89e5564c5fee6aafc02c4d0e6a9"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+
+<a id="Example 3"></a>
+<h2>Example 3</h2>
+
+
+<a id="Original Audio"></a>
+<h3>Original Audio</h3>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/original_4a60b51885670d73afb4f93eca9f333c72c931ce"
+            height="200"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Reconstruction"></a>
+<h3>Reconstruction</h3>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/reconstruction_3e7acfc63e1d4646a759c5625f6024f5379279b6"
+            height="200"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Event Vectors"></a>
+<h3>Event Vectors</h3>
+<p>Notice the blocks of silent event vectors.</p>
+
+<img src="https://iterative-decomposition-v3.s3.amazonaws.com/latents_508cd57ff4f0ab8205e72d92addcc4a948e6efa8" height="200"></img>
+
+
+<a id="Individual Audio Events"></a>
+<h3>Individual Audio Events</h3>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event0_3f7977ef7eb9f4345ba51ea46ebe944b08c27c0e"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event1_2080d558b8df11595ee7b9f881d046b959f37895"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event2_b06f01b43e4d048b752ab2b5ecbca549480f3b82"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event3_f5c1b824153d8073605d408309fc4e3df73c4330"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event4_50a6e2ed9359169bb1532a39f4906216918c4139"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event5_55dda672e1381fa97eaa559a3c78cfbb10d6a9c0"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event6_f9cbe15cbef36fb8a4119cd598f6b69cda364163"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event7_bb36aaa5f89388a682d67228812b7f24b6c24b78"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event8_e72976b75bfec2f5a08f4ab78609b9944f1bec5d"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event9_87894ed7c6b227cc2f178a45e782802a569cf5a6"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event10_e54fe13b343d18a4440ec2d825b26f2b0b123de0"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event11_52cfede79f208acbba1e1370e355d0f27c264592"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event12_0489bd5478c0a265794369a0a7c1bc4d480b4bbf"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event13_aa1a52d6baaa280a0f7deab24622a18b6b7eeed8"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event14_a22ca1030fb1a355d6a2ecbd71a8bb713244e6ba"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event15_c8520d95a1cef42ab7d977a949ee20e49022c54c"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event16_4515ffcb38ea36744612155e2f7bb8143622e5b8"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event17_9207f0b098bff70212ac51d5b451babba739f160"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event18_01329500cb46036f0a3bec43673a8013c5ae6282"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event19_593361ab4ef4e19e6ad67d23233eb86c48c1ce5c"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event20_43cdc91fb2d5c5ea3e8a8bb3248b408b77712339"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event21_ffcce77ee6e50a333d359469ea5a6a192f6319dd"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event22_231dd35fa8ce29f71696fba980b44dfbb0268c94"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event23_c2f3dcc7ee65190b612a274ded40d88142102e43"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event24_4ccefe068d06719c34ef66e1f699cb1c2f5f1aaf"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event25_4e459ebba889c97264c54935d9a48deade8853c1"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event26_baf6b3601ce2bf527e43bed6cb9a6639045561c2"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event27_5a4e4d203b3ee08e75e6523018d9c01e061b6e5b"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event28_ec079beb88ff7465a9eb9e753db13ef3a11e56ae"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event29_759120dba072cbe5405a01d58a6febba30ed068d"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event30_f56bce1d8b09499757accf5e1d105caacf53b46c"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event31_298bd1c647d943903f92d4a06ed90b86d4fa352c"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+
+<a id="Example 4"></a>
+<h2>Example 4</h2>
+
+
+<a id="Original Audio"></a>
+<h3>Original Audio</h3>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/original_00f5ffbdd9ac83a3eed257d88ce14a2593baedcb"
+            height="200"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Reconstruction"></a>
+<h3>Reconstruction</h3>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/reconstruction_580192d7922966f16e3fe8572cd4d933d6f0c017"
+            height="200"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Event Vectors"></a>
+<h3>Event Vectors</h3>
+<p>Notice the blocks of silent event vectors.</p>
+
+<img src="https://iterative-decomposition-v3.s3.amazonaws.com/latents_c2d9ef0c0bdbb099ca0d0795a8edceabcbe47fd8" height="200"></img>
+
+
+<a id="Individual Audio Events"></a>
+<h3>Individual Audio Events</h3>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event0_a2f34d4eb8cbe726cc203730c74a6065f12fd1d8"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event1_46bed289b9f4712e00d942e03581aa592106a142"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event2_e873658e5919b99f38e263908495a902ecfe6307"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event3_282b885ff0acd07d5bfc72cae325dab17a5d2f11"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event4_ea3638afa09095cde645d4aeadf80e83877482dc"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event5_130e4cd6c40754bd320e2ae2f57cacf70f22a1b0"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event6_c046f0ef06608afe1c39128667fa93980323a8da"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event7_af91c2fc5632fc24cdc04a073aa150b337a983cb"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event8_8d4c497bbe8fb4ad803d02c1d25b2011ff5ba7fa"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event9_61bec98528f0da06faa53a64bd5765c3a0b35d25"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event10_133599ab7cadecd3cd81a38acf8ec902e8c3f204"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event11_3256115847199fbded957d37dee9700c7c00b6c5"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event12_167d76d6eb1a12845be74ddc8709fc7a65d10c5f"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event13_3e521a08c36a60d79bd36acaab7f3a10e196ca88"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event14_012fd0db0bae50a4a1ad7762738ab4c401f3a783"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event15_ae814b4e2951bba530984cb19657aa3be0b7f741"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event16_7986ff30b009708d76bfdd220348b49559728f05"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event17_8d9703e57eee65c5614e9014630318917e1719ab"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event18_6d0698141949c13f7c77fdf4a21048687fc3a2e7"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event19_9a8f3ad0004a3454b0d906b847d40131882c4dee"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event20_ceba59132bd8a8a70f3e68d909f9ab9f19ac7c4a"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event21_037cf2cee60688f2e5f606d641112152b6c4d785"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event22_3d714b117deec87efd23e3b97812d8d31a50502c"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event23_a7df3a43dc3dd0f48b4260a613ee443b62cbb110"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event24_d63244e4a16c487851208a64f4716d897e2a6104"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event25_76c453cd869e5462d3cd4cd0f200d50ed3535e77"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event26_43775c93c842952a42afb74fbedf6fd7a86b7d6a"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event27_7340fd392a35aa6f077379aba178b81cdc4f8658"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event28_909656a35e281ff5916dae8973965183ac6ce613"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event29_4235340b91e9386902adf2ae5504fbea79a5686f"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event30_7db78a46ec2c35fdc05dc16bab8960e53e14e13b"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event31_a1db968435bbdcd061cde2af591cb297c33e8b15"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+
+<a id="Example 5"></a>
+<h2>Example 5</h2>
+
+
+<a id="Original Audio"></a>
+<h3>Original Audio</h3>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/original_2127a92bf735a231663ce1bf2446d4129a977126"
+            height="200"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Reconstruction"></a>
+<h3>Reconstruction</h3>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/reconstruction_419b9a2d24e2a0893f9a451ea9815a50f9226c55"
+            height="200"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Event Vectors"></a>
+<h3>Event Vectors</h3>
+<p>Notice the blocks of silent event vectors.</p>
+
+<img src="https://iterative-decomposition-v3.s3.amazonaws.com/latents_3c4e799883512ee650e86b9e468ef8e0834c3c4e" height="200"></img>
+
+
+<a id="Individual Audio Events"></a>
+<h3>Individual Audio Events</h3>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event0_8067e52d595345ae3a15cd927bb51da30b9719e5"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event1_374cf8a29ef9904101d9ab36bce5431a7b4e6b69"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event2_f3a5b9267b4513edb5038be1b81acb59170394b2"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event3_f855505aa0bb0f05b3ccdf49aa568564297c86d1"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event4_4515abb4c6af5c32a5bd0c506f809b72ad1c8d0b"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event5_2abaca1d7dbcfd698249a40266ae78043f0a2e1e"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event6_867a1a55215d299cfbd11b7ab0f0d88114b3672d"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event7_a4475ce54a289ff6c716521cc18a9669b67905ea"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event8_440e3f437ea42188154431ddcbf1c5ee0457a8ee"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event9_c394edefd9edf8bd213978a38435dad1241cbc30"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event10_b1dca179ef4e29adc763c646b73c77b679345982"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event11_157e261e644065caad912f522a87fdf574d82e88"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event12_1e621cf44f5efab70cf7828a0f8a532e6dc6ef42"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event13_5629fa0853a9559846a99933f075d63b416aeb3a"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event14_6e0df58f0960d86969afc7868d3ab7445575c7cd"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event15_0b3f843e58afd7522df1a42a6448f565d87cbee9"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event16_fdd0e065d998e699ae07fcafa7c770b7c1292614"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event17_cb073278b085117b593f96b2c8f6ca3ab5e5f886"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event18_094daf5d767835a5d5871262cf322a446e6af120"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event19_50914e862895161196cde2fda38dc5057dbae043"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event20_fbc8d5520d76790b98f3003e3415d6c80d36a104"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event21_63a965692e57cef72072f2f73a8fccb291cce90b"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event22_ea5acda6ee3f5be45c6626667c8cc81d4f36c67c"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event23_37e450ce418abb6fb2c5cd05c210c36087f67530"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event24_7466f89ae8f66090fab54a92bac54904521afa57"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event25_06c7617cf7d17b48c9c5cdb4f855309cbe780167"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event26_f2be44414dc43761b794ce428613273d6fd1aeea"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event27_59f7e3932b47d8ef767fcfc52d7b2a62ec72af11"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event28_3ed74cdd2f6beea9044f2cb82b6369755844063d"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event29_176235a561c350ad2afb904b570cc5223f4baa45"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event30_d5af8edb1c70b404883ba8ef19365a46665c64b9"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event31_8334bb9a8e17963f5b78e17674fd5392f2c40e4a"
+            height="35"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<code-block language="python"># the size, in samples of the audio segment we'll overfit
+
+n_samples = 2 ** 16
+
+samples_per_event = 2048
+
+n_events = n_samples // samples_per_event
+
+
+
+context_dim = 16
+
+
+
+# the samplerate, in hz, of the audio signal
+
+samplerate = 22050
+
+
+
+# derived, the total number of seconds of audio
+
+n_seconds = n_samples / samplerate
+
+
+
+transform_window_size = 2048
+
+transform_step_size = 256
+
+
+
+n_frames = n_samples // transform_step_size
+
+
+
+
+
+from typing import Dict
+
+from modules.eventgenerators.overfitresonance import OverfitResonanceModel
+
+import numpy as np
+
+import torch
+
+from data import get_one_audio_segment, get_audio_segment
+
+from conjure import S3Collection, \
+
+    conjure_article, CitationComponent, numpy_conjure, AudioComponent, ImageComponent, \
+
+    CompositeComponent, Logger
+
+from argparse import ArgumentParser
+
+from iterativedecomposition import Model as IterativeDecompositionModel
+
+
+
+
+
+remote_collection_name = 'iterative-decomposition-v3'
+
+
+
+
+
+def to_numpy(x: torch.Tensor):
+
+    return x.data.cpu().numpy()
+
+
+
+# thanks to https://discuss.pytorch.org/t/how-do-i-check-the-number-of-parameters-of-a-model/4325/9
+
+def count_parameters(model):
+
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+
+
+
+
+def reconstruction_section(logger: Logger) -> CompositeComponent:
+
+    hidden_channels = 512
+
+
+
+    model = IterativeDecompositionModel(
+
+        in_channels=1024,
+
+        hidden_channels=hidden_channels,
+
+        resonance_model=OverfitResonanceModel(
+
+                n_noise_filters=32,
+
+                noise_expressivity=8,
+
+                noise_filter_samples=128,
+
+                noise_deformations=16,
+
+                instr_expressivity=8,
+
+                n_events=1,
+
+                n_resonances=2048,
+
+                n_envelopes=128,
+
+                n_decays=32,
+
+                n_deformations=32,
+
+                n_samples=n_samples,
+
+                n_frames=n_frames,
+
+                samplerate=samplerate,
+
+                hidden_channels=hidden_channels,
+
+                wavetable_device='cpu'
+
+            ))
+
+
+
+    with open('iterativedecomposition.dat', 'rb') as f:
+
+        model.load_state_dict(torch.load(f, map_location=lambda storage, loc: storage))
+
+
+
+    print('Total parameters', count_parameters(model))
+
+    print('Encoder parameters', count_parameters(model.encoder))
+
+    print('Decoder parameters', count_parameters(model.resonance))
+
+
+
+    # get a random audio segment
+
+    samples = get_one_audio_segment(n_samples, samplerate, device='cpu').view(1, 1, n_samples)
+
+    events, vectors, times = model.iterative(samples)
+
+    print(events.shape)
+
+
+
+    # sum together all events
+
+    summed = torch.sum(events, dim=1, keepdim=True)
+
+
+
+    _, original = logger.log_sound(f'original', samples)
+
+    _, reconstruction = logger.log_sound(f'reconstruction', summed)
+
+
+
+    orig_audio_component = AudioComponent(original.public_uri, height=200)
+
+    recon_audio_component = AudioComponent(reconstruction.public_uri, height=200)
+
+
+
+
+
+    events = {f'event{i}': events[:, i: i + 1, :] for i in range(events.shape[1])}
+
+
+
+    event_components = {}
+
+    for k, v in events.items():
+
+        _, e = logger.log_sound(k, v)
+
+        event_components[k] = AudioComponent(e.public_uri, height=35, controls=False)
+
+
+
+    _, event_vectors = logger.log_matrix('latents', vectors[0].T)
+
+    latents = ImageComponent(event_vectors.public_uri, height=200, title='latent event vectors')
+
+
+
+    composite = CompositeComponent(
+
+        orig_audio=orig_audio_component,
+
+        recon_audio=recon_audio_component,
+
+        latents=latents,
+
+        **event_components
+
+    )
+
+    return composite</code-block>
+
+
+<a id="Notes"></a>
+<h1>Notes</h1>
+<p>This blog post is generated from a
+<a href="https://github.com/JohnVinyard/matching-pursuit/blob/main/v3blogpost.py">Python script</a> using
+<a href="https://github.com/JohnVinyard/conjure">conjure</a>.</p>
+<p>[^1]:  While the STFT (short-time fourier transform) doesn't capture <em>everything</em> of perceptual import, it does a fairly
+good job, better than the "raw", time-domain audio signal, at least.  In the time domain, we get into trouble when we
+begin to try to represent and remove the noisier parts of the signal;  here the statistics and relationships between
+different auditory bandpass filters become more important than the precise amplitude values.  </p>
+
+<code-block language="python">def demo_page_dict() -> Dict[str, any]:
+
+    print(f'Generating article...')
+
+
+
+
+
+    remote = S3Collection(
+
+        remote_collection_name, is_public=True, cors_enabled=True)
+
+
+
+    logger = Logger(remote)
+
+
+
+    example_1 = reconstruction_section(logger)
+
+    example_2 = reconstruction_section(logger)
+
+    example_3 = reconstruction_section(logger)
+
+    example_4 = reconstruction_section(logger)
+
+    example_5 = reconstruction_section(logger)
+
+
+
+    @numpy_conjure(remote)
+
+    def fetch_audio(url: str, start_sample: int) -> np.ndarray:
+
+        return get_audio_segment(
+
+            url,
+
+            target_samplerate=samplerate,
+
+            start_sample=start_sample,
+
+            duration_samples=n_samples)
+
+
+
+    citation = CitationComponent(
+
+        tag='johnvinyarditerativedecompositionv3',
+
+        author='Vinyard, John',
+
+        url='https://blog.cochlea.xyz/iterative-decomposition-v3.html',
+
+        header='Iterative Decomposition V3',
+
+        year='2024'
+
+    )
+
+
+
+    return dict(
+
+        example_1=example_1,
+
+        example_2=example_2,
+
+        example_3=example_3,
+
+        example_4=example_4,
+
+        example_5=example_5,
+
+        citation=citation
+
+    )
+
+
+
+
+
+def generate_demo_page():
+
+    display = demo_page_dict()
+
+    conjure_article(
+
+        __file__,
+
+        'html',
+
+        title='Iterative Decomposition Model V3',
+
+        **display)
+
+
+
+
+
+if __name__ == '__main__':
+
+    parser = ArgumentParser()
+
+
+
+    parser.add_argument('--clear', action='store_true')
+
+    parser.add_argument('--list', action='store_true')
+
+
+
+    args = parser.parse_args()
+
+
+
+    if args.list:
+
+        remote = S3Collection(
+
+            remote_collection_name, is_public=True, cors_enabled=True)
+
+        print(remote)
+
+        print('Listing stored keys')
+
+        for key in remote.iter_prefix(start_key=b'', prefix=b''):
+
+            print(key)
+
+
+
+    if args.clear:
+
+        remote = S3Collection(
+
+            remote_collection_name, is_public=True, cors_enabled=True)
+
+        remote.destroy(prefix=b'')
+
+
+
+    generate_demo_page()</code-block>
+
+
+                <a href="#">
+                    <div class="back-to-top">
+                        Back to Top
+                    </div>
+                </a>
+
+            </body>
+            </html>
+    
