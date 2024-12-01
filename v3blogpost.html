@@ -9,7 +9,7 @@
                 <link rel="preconnect" href="https://fonts.googleapis.com">
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
                 <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet">
-                <script src="https://cdn.jsdelivr.net/gh/JohnVinyard/web-components@v0.0.12/build/components/bundle.js"></script>
+                <script src="https://cdn.jsdelivr.net/gh/JohnVinyard/web-components@v0.0.13/build/components/bundle.js"></script>
                 <style>
                     body {
                         font-family: "Gowun Batang", serif;
@@ -52,8 +52,13 @@
                 </style>
             </head>
             <body>
-                <h1>Iterative Decomposition Model V3</h1>
-<p><caption>Table of Contents</caption></p>
+                
+    <h1>Iterative Decomposition Model V3</h1>
+<details>
+    <summary>
+        <caption>Table of Contents</caption>
+    </summary>
+
 <ul>
 <li><a href="#Iterative Decomposition V3 Model">Iterative Decomposition V3 Model</h1></a><ul>
 <li><a href="#The Algorithm">The Algorithm</h2></a></li>
@@ -80,6 +85,7 @@
 </li>
 <li><a href="#Notes">Notes</h1></a></li>
 </ul>
+</details>
                 
 
 <a id="Iterative Decomposition V3 Model"></a>
@@ -146,7 +152,7 @@ a much simpler decoder, which generates each event as a linear combination of lo
 
 <a id="Model Size, Training Time and Dataset"></a>
 <h2>Model Size, Training Time and Dataset</h2>
-<p>Firstly, this model is relatively small, weighing in at 18M parameters (82 MB on disk) and has only been trained for
+<p>Firstly, this model is relatively small, weighing in at ~26M parameters (~117 MB on disk) and has only been trained for
 around 24 hours, so it seems there is a lot of space to increase the model size, dataset size and training time to
 further improve.  The reconstruction quality of the examples on this page is not amazing, certainly not good enough
 even for a lossy audio codec, but the structure the model extracts seems like it could be used for many interesting
@@ -200,7 +206,7 @@ better, more realistic, and sparser renderings of the audio.</p>
 <h3>Original Audio</h3>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/original_1125604a1da82106aeccc770f58ea08a213732e9"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/original_5bce6a13fce5877efbb11db375275aa58147c2bf"
             height="200"
             samples="256"
             scale="1"
@@ -212,7 +218,7 @@ better, more realistic, and sparser renderings of the audio.</p>
 <h3>Reconstruction</h3>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/reconstruction_6517f87e79ce918436d04ad76b502fcaeaedf0c0"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/reconstruction_400685c1888a46075c28b25c7f4627fab9702eeb"
             height="200"
             samples="256"
             scale="1"
@@ -222,16 +228,27 @@ better, more realistic, and sparser renderings of the audio.</p>
 
 <a id="Event Vectors"></a>
 <h3>Event Vectors</h3>
-<p>Notice the blocks of silent event vectors.</p>
 
-<img src="https://iterative-decomposition-v3.s3.amazonaws.com/latents_31069a01b09833963add7299ca792097309eb910" height="200"></img>
+<img src="https://iterative-decomposition-v3.s3.amazonaws.com/latents_8941fb97a50b4040dca4638c1a619920dc8a7f67" height="200"></img>
+
+
+<a id="Event Scatterplot"></a>
+<h3>Event Scatterplot</h3>
+<p>Events clustered using <a href="https://scikit-learn.org/stable/modules/generated/sklearn.manifold.TSNE.html">t-SNE</a></p>
+
+<scatter-plot 
+                width="300" 
+                height="300" 
+                radius="0.04" 
+                points='[{"x": 8.132183074951172, "y": -4.974040508270264, "startSeconds": 2.554194927215576, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event0_9745e53b21e3a5594f49ed0db1ff9d1399e3c102", "color": "rgb(10 111 214)"}, {"x": 8.045254707336426, "y": -4.473816394805908, "startSeconds": 0.6733786463737488, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event1_7bd0890d505c7beee56d99431e7b5638f0f84158", "color": "rgb(26 126 228)"}, {"x": 8.184333801269531, "y": -4.9462432861328125, "startSeconds": 2.554194927215576, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event2_4f8993c336b97c48dcd03c296d4893e554ce7dbd", "color": "rgb(11 113 217)"}, {"x": 8.108213424682617, "y": -4.502349853515625, "startSeconds": 0.6617686748504639, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event3_d745126996f0414bd392d391e74fe0ed8d94185b", "color": "rgb(25 127 229)"}, {"x": 8.43329906463623, "y": -5.222100257873535, "startSeconds": 0.9868480563163757, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event4_3ffa78dfd0aa11af39e68f17e42da16b81bed6d5", "color": "rgb(4 109 216)"}, {"x": 8.974281311035156, "y": -4.653521537780762, "startSeconds": 2.3336052894592285, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event5_cee2ed80c138cf0736800810de98fe8e914aef02", "color": "rgb(26 140 252)"}, {"x": 8.095040321350098, "y": -4.749103546142578, "startSeconds": 1.3467572927474976, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event6_3ee269630ad1a45c0fc2771bcadd019ca9e1c610", "color": "rgb(17 118 221)"}, {"x": 8.135814666748047, "y": -4.814606189727783, "startSeconds": 1.3235373497009277, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event7_a5b72be7e26cc6916f403b9ea91d9346565fc444", "color": "rgb(15 117 220)"}, {"x": 7.859992504119873, "y": -4.758122444152832, "startSeconds": 0.02321995422244072, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event8_baf2b4710e35d01aee6af233f0edcd9747119e57", "color": "rgb(15 113 213)"}, {"x": 8.124188423156738, "y": -4.906913757324219, "startSeconds": 2.565804958343506, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event9_4e81ee58833ec113bdbe6b199207b915195ec9f6", "color": "rgb(12 113 216)"}, {"x": 9.048100471496582, "y": -4.7920308113098145, "startSeconds": 1.9272562265396118, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event10_320fc11a767a2f2080c42393eb2c1815019a8c9f", "color": "rgb(23 137 250)"}, {"x": 8.15536117553711, "y": -4.515695095062256, "startSeconds": 0.6733786463737488, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event11_f82ea6193a2f00a74ab15a0412e656820a488d65", "color": "rgb(25 127 230)"}, {"x": 8.183756828308105, "y": -4.624396324157715, "startSeconds": 0.6617686748504639, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event12_64503f17ed53a0f094725f4833e28ab9f79eda01", "color": "rgb(22 124 228)"}, {"x": 8.527605056762695, "y": -4.205519676208496, "startSeconds": 0.4992290139198303, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event13_d6921607df6831060d337e675583fb15957a6355", "color": "rgb(38 146 252)"}, {"x": 8.716328620910645, "y": -4.329338550567627, "startSeconds": 0.3715192675590515, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event14_2db9139945ae724a2b9dc2eaee830bfb92a8e088", "color": "rgb(35 146 254)"}, {"x": 8.941367149353027, "y": -4.652828216552734, "startSeconds": 2.2755556106567383, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event15_e9e522c3c68cd6a4cdfef6caaac8852b4510107e", "color": "rgb(26 139 251)"}, {"x": 8.099130630493164, "y": -4.717010974884033, "startSeconds": 1.3119274377822876, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event16_42560b8b13efa527dd50246d3c4db31e32a8457c", "color": "rgb(18 119 222)"}, {"x": 8.973101615905762, "y": -4.666685104370117, "startSeconds": 2.2291154861450195, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event17_35654c38701affe26c19da74a3201abee083599a", "color": "rgb(26 139 252)"}, {"x": 9.039498329162598, "y": -4.764599800109863, "startSeconds": 1.9156461954116821, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event18_7ac07a86cf62e7d033557602583e934d492b6a09", "color": "rgb(23 137 251)"}, {"x": 7.963006973266602, "y": -4.7668585777282715, "startSeconds": 0.01160997711122036, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event19_3637a91400b05ee446d82d0b3246189fe1792c8a", "color": "rgb(16 115 216)"}, {"x": 8.918484687805176, "y": -4.679726600646973, "startSeconds": 1.6370067596435547, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event20_37d0d9bd8fe153fe0f8830505d2790d61e160efb", "color": "rgb(25 138 250)"}, {"x": 8.583782196044922, "y": -4.316502094268799, "startSeconds": 0.4992290139198303, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event21_2ce3d5688461ff3f4580031c5e812b1387caa863", "color": "rgb(34 143 251)"}, {"x": 8.897839546203613, "y": -4.797734260559082, "startSeconds": 1.9272562265396118, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event22_93942fac7f62dcf09d906d6ccc6092ee1f17b1be", "color": "rgb(21 133 245)"}, {"x": 8.561534881591797, "y": -5.400533676147461, "startSeconds": 2.8908843994140625, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event23_1cf99b06aff910d9244c33235f6b113d0e93ab07", "color": "rgb(0 105 215)"}, {"x": 8.4696044921875, "y": -4.346798419952393, "startSeconds": 0.8359183669090271, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event24_5d971f3d41c949ac7da086cdbf77fd272759195e", "color": "rgb(33 140 246)"}, {"x": 8.630115509033203, "y": -5.345947265625, "startSeconds": 2.879274368286133, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event25_f1314448c48ae9d76156d4d718e343fe7af4126c", "color": "rgb(2 109 219)"}, {"x": 8.602953910827637, "y": -4.462430953979492, "startSeconds": 0.3715192675590515, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event26_e6663afeff9efc0ceada546ea9f52428bb53ac89", "color": "rgb(30 139 246)"}, {"x": 8.3026704788208, "y": -4.961435794830322, "startSeconds": 0.01160997711122036, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event27_672886932bad45ea12cf89c34b1aa646ccf755e2", "color": "rgb(12 115 220)"}, {"x": 8.868019104003906, "y": -4.89940881729126, "startSeconds": 1.9504761695861816, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event28_e5d90f22c235dbe014299b740a6b5125c097ec4a", "color": "rgb(18 129 241)"}, {"x": 8.848777770996094, "y": -4.745971202850342, "startSeconds": 2.2291154861450195, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event29_7c8c5f5466ef66f64012edddecaf8235085e24a5", "color": "rgb(23 134 245)"}, {"x": 8.911877632141113, "y": -4.933719158172607, "startSeconds": 1.6253968477249146, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event30_d0a6608094b5eec7d4b8459e79d5d19a8f652357", "color": "rgb(17 129 241)"}, {"x": 8.380698204040527, "y": -4.955972194671631, "startSeconds": 1.277097463607788, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event31_5e6ceeb96bca7c121cb1e793ca9711ad2d5eedd5", "color": "rgb(12 117 223)"}]'>
+            </scatter-plot>
 
 
 <a id="Individual Audio Events"></a>
 <h3>Individual Audio Events</h3>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event0_13259ef93dafc380be80e4b6e9533c3f8b8eeedb"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event0_9745e53b21e3a5594f49ed0db1ff9d1399e3c102"
             height="35"
             samples="256"
             scale="1"
@@ -239,7 +256,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event1_0067e7e8beac60a933a6719fba5f7c709b2929ef"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event1_7bd0890d505c7beee56d99431e7b5638f0f84158"
             height="35"
             samples="256"
             scale="1"
@@ -247,7 +264,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event2_22aaf61d254938933630976c70c2e5c81aa14274"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event2_4f8993c336b97c48dcd03c296d4893e554ce7dbd"
             height="35"
             samples="256"
             scale="1"
@@ -255,7 +272,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event3_41e6a011c3b2b05f6b8d0819b26c848cd7c5dc95"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event3_d745126996f0414bd392d391e74fe0ed8d94185b"
             height="35"
             samples="256"
             scale="1"
@@ -263,7 +280,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event4_08955c14da887d769a22c3f8df200c929ec4d931"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event4_3ffa78dfd0aa11af39e68f17e42da16b81bed6d5"
             height="35"
             samples="256"
             scale="1"
@@ -271,7 +288,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event5_260c6da2f5e22a771d0f625cd05ff08e03f5249e"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event5_cee2ed80c138cf0736800810de98fe8e914aef02"
             height="35"
             samples="256"
             scale="1"
@@ -279,7 +296,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event6_165d6d0af79a0089bcd5657e6e621124ddb766b8"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event6_3ee269630ad1a45c0fc2771bcadd019ca9e1c610"
             height="35"
             samples="256"
             scale="1"
@@ -287,7 +304,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event7_63e4f1faa62490f531b35c398e34318d5224bcfe"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event7_a5b72be7e26cc6916f403b9ea91d9346565fc444"
             height="35"
             samples="256"
             scale="1"
@@ -295,7 +312,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event8_1de143df45ddd5e9334c5b02016f533a197ad667"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event8_baf2b4710e35d01aee6af233f0edcd9747119e57"
             height="35"
             samples="256"
             scale="1"
@@ -303,7 +320,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event9_c99059ac49bc58dfb012d566bac1937e4695138c"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event9_4e81ee58833ec113bdbe6b199207b915195ec9f6"
             height="35"
             samples="256"
             scale="1"
@@ -311,7 +328,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event10_3eb896494102171b522ce76c8aeda7aad5df2a93"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event10_320fc11a767a2f2080c42393eb2c1815019a8c9f"
             height="35"
             samples="256"
             scale="1"
@@ -319,7 +336,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event11_1c19b3bb719982b78c27c23cd7749d7e10b5a5d3"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event11_f82ea6193a2f00a74ab15a0412e656820a488d65"
             height="35"
             samples="256"
             scale="1"
@@ -327,7 +344,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event12_cd839d000641b5a14d0fd1cb7fad55becba8597c"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event12_64503f17ed53a0f094725f4833e28ab9f79eda01"
             height="35"
             samples="256"
             scale="1"
@@ -335,7 +352,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event13_33641b25e4ff3f406d504f338caa99b5e211a57d"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event13_d6921607df6831060d337e675583fb15957a6355"
             height="35"
             samples="256"
             scale="1"
@@ -343,7 +360,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event14_d58d14931ae99800fed38fa5b4cf9678b239522e"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event14_2db9139945ae724a2b9dc2eaee830bfb92a8e088"
             height="35"
             samples="256"
             scale="1"
@@ -351,7 +368,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event15_4031382f711c97910f6495937e332f31795ddbd0"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event15_e9e522c3c68cd6a4cdfef6caaac8852b4510107e"
             height="35"
             samples="256"
             scale="1"
@@ -359,7 +376,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event16_67c0787a5b0b69b08167e6d78a93ea46d567ad6d"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event16_42560b8b13efa527dd50246d3c4db31e32a8457c"
             height="35"
             samples="256"
             scale="1"
@@ -367,7 +384,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event17_ce38b024207e79b25b6457506077f9dc5e401fbf"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event17_35654c38701affe26c19da74a3201abee083599a"
             height="35"
             samples="256"
             scale="1"
@@ -375,7 +392,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event18_a37928daa5a1c2139ee70bfb80d8a2e7b8e40107"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event18_7ac07a86cf62e7d033557602583e934d492b6a09"
             height="35"
             samples="256"
             scale="1"
@@ -383,7 +400,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event19_4c2bc5ff0f1b74408e16150179d575f1cd4591a1"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event19_3637a91400b05ee446d82d0b3246189fe1792c8a"
             height="35"
             samples="256"
             scale="1"
@@ -391,7 +408,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event20_c6061e94c9a2a6629ff43348d49551b47fddab2c"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event20_37d0d9bd8fe153fe0f8830505d2790d61e160efb"
             height="35"
             samples="256"
             scale="1"
@@ -399,7 +416,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event21_d2464035e76e2c41b3e3bc71da2bd05df98acd46"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event21_2ce3d5688461ff3f4580031c5e812b1387caa863"
             height="35"
             samples="256"
             scale="1"
@@ -407,7 +424,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event22_c55bd2ae8e590787c230f910797deb7d325c74ee"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event22_93942fac7f62dcf09d906d6ccc6092ee1f17b1be"
             height="35"
             samples="256"
             scale="1"
@@ -415,7 +432,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event23_5cd935b55b0a57a17b103b9af564b17b33e9736a"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event23_1cf99b06aff910d9244c33235f6b113d0e93ab07"
             height="35"
             samples="256"
             scale="1"
@@ -423,7 +440,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event24_f2d5ba9f6b2070cf3666cbde0bdc2ac1d2a2fed2"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event24_5d971f3d41c949ac7da086cdbf77fd272759195e"
             height="35"
             samples="256"
             scale="1"
@@ -431,7 +448,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event25_dea53d13a9a7826ed3763dbad0fbeff63c0f8e89"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event25_f1314448c48ae9d76156d4d718e343fe7af4126c"
             height="35"
             samples="256"
             scale="1"
@@ -439,7 +456,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event26_4433c855d431bff96d3ea96155fc2c3a2b0b7e48"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event26_e6663afeff9efc0ceada546ea9f52428bb53ac89"
             height="35"
             samples="256"
             scale="1"
@@ -447,7 +464,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event27_aa40e7f6c19ce67be77d5b4937c51c13876c7ebc"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event27_672886932bad45ea12cf89c34b1aa646ccf755e2"
             height="35"
             samples="256"
             scale="1"
@@ -455,7 +472,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event28_fb4bfa2d1cabc65c1b664040c08f294634be94dd"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event28_e5d90f22c235dbe014299b740a6b5125c097ec4a"
             height="35"
             samples="256"
             scale="1"
@@ -463,7 +480,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event29_dbd09a90815344e584fc047a1f2833ddc8d97598"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event29_7c8c5f5466ef66f64012edddecaf8235085e24a5"
             height="35"
             samples="256"
             scale="1"
@@ -471,7 +488,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event30_b6ad9c610748f56fa37d13ea1b950c6d33e6126f"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event30_d0a6608094b5eec7d4b8459e79d5d19a8f652357"
             height="35"
             samples="256"
             scale="1"
@@ -479,7 +496,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event31_e525ed4e303c9cb4fe7e9c732087be90dd1ab5a1"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event31_5e6ceeb96bca7c121cb1e793ca9711ad2d5eedd5"
             height="35"
             samples="256"
             scale="1"
@@ -495,7 +512,7 @@ better, more realistic, and sparser renderings of the audio.</p>
 <h3>Original Audio</h3>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/original_a75a70508a75e49ab2af0047d3624b9c2bdfa3d6"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/original_ab873871fa14833cad7168b11133f8c133e8afe7"
             height="200"
             samples="256"
             scale="1"
@@ -507,7 +524,7 @@ better, more realistic, and sparser renderings of the audio.</p>
 <h3>Reconstruction</h3>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/reconstruction_206465e1daaabbf4b16414a2d3f0613817487e47"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/reconstruction_6a48e0008fb94180a742986bc3f9405fa8e46ec5"
             height="200"
             samples="256"
             scale="1"
@@ -517,16 +534,27 @@ better, more realistic, and sparser renderings of the audio.</p>
 
 <a id="Event Vectors"></a>
 <h3>Event Vectors</h3>
-<p>Notice the blocks of silent event vectors.</p>
 
-<img src="https://iterative-decomposition-v3.s3.amazonaws.com/latents_1826926dc9691a1a6699c1c1edafe8a21abf1418" height="200"></img>
+<img src="https://iterative-decomposition-v3.s3.amazonaws.com/latents_4650fb8dbed4ec9e50aacbd90c8bbbaea699ef23" height="200"></img>
+
+
+<a id="Event Scatterplot"></a>
+<h3>Event Scatterplot</h3>
+<p>Events clustered using <a href="https://scikit-learn.org/stable/modules/generated/sklearn.manifold.TSNE.html">t-SNE</a></p>
+
+<scatter-plot 
+                width="300" 
+                height="300" 
+                radius="0.04" 
+                points='[{"x": -7.02323579788208, "y": 8.875099182128906, "startSeconds": 2.554194927215576, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event0_0b2974f910925bec6ff6b3e35125bbe142c3413e", "color": "rgb(87 9 238)"}, {"x": -6.806683540344238, "y": 9.336716651916504, "startSeconds": 1.5789568424224854, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event1_c4afba9add4a515f721ce9546aa4f7035ba867d7", "color": "rgb(88 14 246)"}, {"x": -7.386543273925781, "y": 8.701762199401855, "startSeconds": 2.798004388809204, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event2_9b90258f15ec28dbfe31cc794d360e4e656577eb", "color": "rgb(85 3 235)"}, {"x": -7.374553680419922, "y": 8.790996551513672, "startSeconds": 0.9055781960487366, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event3_8bfc1bdc86a77cf26cc202d5478e42ed8b6aba18", "color": "rgb(86 4 236)"}, {"x": -7.040791988372803, "y": 8.923698425292969, "startSeconds": 2.5077550411224365, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event4_9a8506c3ad713483d700d317be118e7cddf68328", "color": "rgb(87 9 239)"}, {"x": -7.681427955627441, "y": 9.212888717651367, "startSeconds": 0.54566890001297, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event5_2e379216552c515286d023353a5d5d6f87b6714a", "color": "rgb(85 0 243)"}, {"x": -6.904448986053467, "y": 9.309395790100098, "startSeconds": 1.5789568424224854, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event6_279ab736d5a1dc4b0424d0f2db255427f39cdb2f", "color": "rgb(88 12 246)"}, {"x": -7.04920768737793, "y": 9.568486213684082, "startSeconds": 1.0681178569793701, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event7_0adba5a943a62553b4e99cf9e267f8253b511a55", "color": "rgb(87 11 250)"}, {"x": -7.232695579528809, "y": 9.204442977905273, "startSeconds": 1.2306575775146484, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event8_3c9f92401c84436c7b06084b020472a2741a5d77", "color": "rgb(86 7 243)"}, {"x": -7.563837051391602, "y": 9.617082595825195, "startSeconds": 1.8111563920974731, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event9_e1e64973ac6e0cc2bddb1abe498b8c43f69975e6", "color": "rgb(86 3 250)"}, {"x": -6.980245590209961, "y": 9.384427070617676, "startSeconds": 1.4396371841430664, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event10_316bb9f0ff3f74c5e338ee9b3ebfb013e934b2f5", "color": "rgb(87 11 247)"}, {"x": -7.613746643066406, "y": 9.589938163757324, "startSeconds": 0.30185940861701965, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event11_df31821081c8196bac0759d6600f6ecf1e2ee025", "color": "rgb(86 2 249)"}, {"x": -7.2803263664245605, "y": 9.284870147705078, "startSeconds": 1.2190475463867188, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event12_8703d35e9cd0927bdf6569616fbe64450c91a4f1", "color": "rgb(86 6 245)"}, {"x": -7.131269454956055, "y": 9.514836311340332, "startSeconds": 1.0681178569793701, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event13_1bf7b3c685c800549fde220c80df969a34427b37", "color": "rgb(87 9 249)"}, {"x": -7.3782734870910645, "y": 8.89637279510498, "startSeconds": 0.8126984238624573, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event14_7e806850aa941ecba8e03c468b8d7a92589d373d", "color": "rgb(86 4 238)"}, {"x": -7.624116897583008, "y": 9.241540908813477, "startSeconds": 2.043355941772461, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event15_4d30f3b0ac72e6928cdb1db1e00b43f309597218", "color": "rgb(85 1 243)"}, {"x": -7.42344856262207, "y": 8.733864784240723, "startSeconds": 2.705124616622925, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event16_b7dbf185f27e491a2bf8c4e6006c72832a14daaa", "color": "rgb(85 3 235)"}, {"x": -7.691306114196777, "y": 9.206347465515137, "startSeconds": 0.5340589284896851, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event17_f53da18557ebbd36c20d7abf619fb2030f2d8460", "color": "rgb(85 0 243)"}, {"x": -7.108558177947998, "y": 9.500531196594238, "startSeconds": 1.0100680589675903, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event18_b18115486e1008c94193662fbcda9c14e7bfd855", "color": "rgb(87 10 249)"}, {"x": -7.1726226806640625, "y": 9.469925880432129, "startSeconds": 0.9984580278396606, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event19_f76e8acda262b1a0c35d40c72e301383eb275ba5", "color": "rgb(87 8 248)"}, {"x": -7.147715091705322, "y": 9.442741394042969, "startSeconds": 0.9984580278396606, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event20_1b19ad9940190c5a97755f1dc6fc299d5530b85b", "color": "rgb(87 9 248)"}, {"x": -7.629043102264404, "y": 9.663270950317383, "startSeconds": 0.05804988741874695, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event21_ef8fa4dcd80935533131d97b33740412246c5a19", "color": "rgb(86 2 251)"}, {"x": -7.0804033279418945, "y": 8.921566009521484, "startSeconds": 2.565804958343506, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event22_b31c8409fb4f199b645040bb961644dfdbff1ab9", "color": "rgb(87 9 239)"}, {"x": -7.568653583526611, "y": 9.533681869506836, "startSeconds": 1.8227664232254028, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event23_3f3e59ef4f114e044299a41ec2a9de1a0428b6a0", "color": "rgb(86 2 248)"}, {"x": -7.570187568664551, "y": 9.545673370361328, "startSeconds": 1.7182766199111938, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event24_6f3dd9b6ba576a89a86bf9c89439b0daefd3823c", "color": "rgb(86 2 249)"}, {"x": -7.608778953552246, "y": 9.574880599975586, "startSeconds": 0.27863943576812744, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event25_de5d9207684bf321aa46663b65ea69409ac628c5", "color": "rgb(86 2 249)"}, {"x": -7.603974342346191, "y": 9.673233985900879, "startSeconds": 0.02321995422244072, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event26_cb12b6157a593d4825909cc7fe5cb729a25f9b50", "color": "rgb(86 2 251)"}, {"x": -7.57192325592041, "y": 9.48002815246582, "startSeconds": 1.7182766199111938, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event27_afdbb587e572eb2057efb7e09947aac51f78a455", "color": "rgb(86 2 248)"}, {"x": -6.826955795288086, "y": 9.82178020477295, "startSeconds": 2.879274368286133, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event28_fccfe35fca37c5c0231d8bc2957b98ce4d7bc492", "color": "rgb(88 15 254)"}, {"x": -7.112593650817871, "y": 9.480461120605469, "startSeconds": 1.369977355003357, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event29_911d590cfd6630c9dcdc3b21d38f28a89b2e8ff5", "color": "rgb(87 9 248)"}, {"x": -7.209924221038818, "y": 8.97138786315918, "startSeconds": 2.5077550411224365, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event30_9b20ae7426d11b70fadd31184a9ea14ae853d3bf", "color": "rgb(86 7 240)"}, {"x": -7.4305009841918945, "y": 8.705375671386719, "startSeconds": 2.3684353828430176, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event31_d73204afe639221bb65b58e47647ababee3a4d33", "color": "rgb(85 2 235)"}]'>
+            </scatter-plot>
 
 
 <a id="Individual Audio Events"></a>
 <h3>Individual Audio Events</h3>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event0_bc74cd04a45154172ced43ed1d214fb98b896683"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event0_0b2974f910925bec6ff6b3e35125bbe142c3413e"
             height="35"
             samples="256"
             scale="1"
@@ -534,7 +562,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event1_88c6a9b1314241b6fc7cee655e525b1367545c9c"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event1_c4afba9add4a515f721ce9546aa4f7035ba867d7"
             height="35"
             samples="256"
             scale="1"
@@ -542,7 +570,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event2_b1616e9a8bf507d065002b7d2f590f0a4517838a"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event2_9b90258f15ec28dbfe31cc794d360e4e656577eb"
             height="35"
             samples="256"
             scale="1"
@@ -550,7 +578,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event3_fd2e19c5a61846340a54d83e1c21315394ec3d67"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event3_8bfc1bdc86a77cf26cc202d5478e42ed8b6aba18"
             height="35"
             samples="256"
             scale="1"
@@ -558,7 +586,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event4_9444bee856ea1f9aa620c69710ada7b793c4258e"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event4_9a8506c3ad713483d700d317be118e7cddf68328"
             height="35"
             samples="256"
             scale="1"
@@ -566,7 +594,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event5_e09c0ad6b5d51b8bbe1f6f86532717c98ee3b628"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event5_2e379216552c515286d023353a5d5d6f87b6714a"
             height="35"
             samples="256"
             scale="1"
@@ -574,7 +602,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event6_5f726c09206ccdeee3572b1844424846a613a3f4"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event6_279ab736d5a1dc4b0424d0f2db255427f39cdb2f"
             height="35"
             samples="256"
             scale="1"
@@ -582,7 +610,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event7_ba4b453242d60205903aae8ec493c14dc5a3319e"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event7_0adba5a943a62553b4e99cf9e267f8253b511a55"
             height="35"
             samples="256"
             scale="1"
@@ -590,7 +618,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event8_aba7a30a2b1bee8a0a84a7e596dec9cf9c37da50"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event8_3c9f92401c84436c7b06084b020472a2741a5d77"
             height="35"
             samples="256"
             scale="1"
@@ -598,7 +626,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event9_999d958de52c7f5b54021f7d30192d48cc16604f"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event9_e1e64973ac6e0cc2bddb1abe498b8c43f69975e6"
             height="35"
             samples="256"
             scale="1"
@@ -606,7 +634,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event10_3aa41f850541e3ee3ea5d10a05274b14749f3ad0"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event10_316bb9f0ff3f74c5e338ee9b3ebfb013e934b2f5"
             height="35"
             samples="256"
             scale="1"
@@ -614,7 +642,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event11_c508e4218b3af42f6c872f992d6bb4247746d818"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event11_df31821081c8196bac0759d6600f6ecf1e2ee025"
             height="35"
             samples="256"
             scale="1"
@@ -622,7 +650,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event12_b188f3fd52c2ba9a86f07fee01223dff7dc51d70"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event12_8703d35e9cd0927bdf6569616fbe64450c91a4f1"
             height="35"
             samples="256"
             scale="1"
@@ -630,7 +658,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event13_b77c9950c7c73c205fddda5fb10ca787d389e819"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event13_1bf7b3c685c800549fde220c80df969a34427b37"
             height="35"
             samples="256"
             scale="1"
@@ -638,7 +666,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event14_5daaf45890ff2dc45389d3fc95ad7b2219d86211"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event14_7e806850aa941ecba8e03c468b8d7a92589d373d"
             height="35"
             samples="256"
             scale="1"
@@ -646,7 +674,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event15_7690b4544cdaa3b0880dbaded7a536b7ef711338"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event15_4d30f3b0ac72e6928cdb1db1e00b43f309597218"
             height="35"
             samples="256"
             scale="1"
@@ -654,7 +682,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event16_dcb9559a3861f1e9d2f28217d66950bf11a19a46"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event16_b7dbf185f27e491a2bf8c4e6006c72832a14daaa"
             height="35"
             samples="256"
             scale="1"
@@ -662,7 +690,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event17_f754bdf60b9b2c745095c0bb7f78f68f3379298b"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event17_f53da18557ebbd36c20d7abf619fb2030f2d8460"
             height="35"
             samples="256"
             scale="1"
@@ -670,7 +698,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event18_ef1f01f3de02b747ffa250bb231eb5161cfa5229"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event18_b18115486e1008c94193662fbcda9c14e7bfd855"
             height="35"
             samples="256"
             scale="1"
@@ -678,7 +706,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event19_aeabd6537946a428f1c9477178d74534d1bd7b3d"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event19_f76e8acda262b1a0c35d40c72e301383eb275ba5"
             height="35"
             samples="256"
             scale="1"
@@ -686,7 +714,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event20_b41fe37ae055bef2d27d57e27f2127063e0aeb12"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event20_1b19ad9940190c5a97755f1dc6fc299d5530b85b"
             height="35"
             samples="256"
             scale="1"
@@ -694,7 +722,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event21_8bef2fa425619df8d9edcb5426eee807c7b235d9"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event21_ef8fa4dcd80935533131d97b33740412246c5a19"
             height="35"
             samples="256"
             scale="1"
@@ -702,7 +730,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event22_a00167448853cb4c265035303dcfaaf502688ae7"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event22_b31c8409fb4f199b645040bb961644dfdbff1ab9"
             height="35"
             samples="256"
             scale="1"
@@ -710,7 +738,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event23_db62a68a5c51410d02ba6085251468665472d1f6"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event23_3f3e59ef4f114e044299a41ec2a9de1a0428b6a0"
             height="35"
             samples="256"
             scale="1"
@@ -718,7 +746,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event24_c62aa08abdc125bf6b1395abf69277912d23a8eb"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event24_6f3dd9b6ba576a89a86bf9c89439b0daefd3823c"
             height="35"
             samples="256"
             scale="1"
@@ -726,7 +754,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event25_9e82499bc2a3e32f8ea5ee464a3bb0e46b08bcef"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event25_de5d9207684bf321aa46663b65ea69409ac628c5"
             height="35"
             samples="256"
             scale="1"
@@ -734,7 +762,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event26_3d998b385551713210a03fd1b3455ad5aa65e265"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event26_cb12b6157a593d4825909cc7fe5cb729a25f9b50"
             height="35"
             samples="256"
             scale="1"
@@ -742,7 +770,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event27_61746b6baac8540d0d92d1c6405132bcc5cc31d6"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event27_afdbb587e572eb2057efb7e09947aac51f78a455"
             height="35"
             samples="256"
             scale="1"
@@ -750,7 +778,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event28_f83fee1d823ab2e9457803987c9f31684ef9bf59"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event28_fccfe35fca37c5c0231d8bc2957b98ce4d7bc492"
             height="35"
             samples="256"
             scale="1"
@@ -758,7 +786,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event29_2d6674ffbaa8bb360056678f3af594ad641c50ff"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event29_911d590cfd6630c9dcdc3b21d38f28a89b2e8ff5"
             height="35"
             samples="256"
             scale="1"
@@ -766,7 +794,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event30_41d9aaf15853e37319efc071aa14cdf7aff96f81"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event30_9b20ae7426d11b70fadd31184a9ea14ae853d3bf"
             height="35"
             samples="256"
             scale="1"
@@ -774,7 +802,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event31_c86f563ebdc7c89e5564c5fee6aafc02c4d0e6a9"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event31_d73204afe639221bb65b58e47647ababee3a4d33"
             height="35"
             samples="256"
             scale="1"
@@ -790,7 +818,7 @@ better, more realistic, and sparser renderings of the audio.</p>
 <h3>Original Audio</h3>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/original_4a60b51885670d73afb4f93eca9f333c72c931ce"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/original_92765f1ea6a62dfdeede545a21d0891b40e40e59"
             height="200"
             samples="256"
             scale="1"
@@ -802,7 +830,7 @@ better, more realistic, and sparser renderings of the audio.</p>
 <h3>Reconstruction</h3>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/reconstruction_3e7acfc63e1d4646a759c5625f6024f5379279b6"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/reconstruction_603ad3f853f40adcce2511f57b6b9544769bdf22"
             height="200"
             samples="256"
             scale="1"
@@ -812,16 +840,27 @@ better, more realistic, and sparser renderings of the audio.</p>
 
 <a id="Event Vectors"></a>
 <h3>Event Vectors</h3>
-<p>Notice the blocks of silent event vectors.</p>
 
-<img src="https://iterative-decomposition-v3.s3.amazonaws.com/latents_508cd57ff4f0ab8205e72d92addcc4a948e6efa8" height="200"></img>
+<img src="https://iterative-decomposition-v3.s3.amazonaws.com/latents_ea9d0895efa7005dc6add74292c71be66e6b283c" height="200"></img>
+
+
+<a id="Event Scatterplot"></a>
+<h3>Event Scatterplot</h3>
+<p>Events clustered using <a href="https://scikit-learn.org/stable/modules/generated/sklearn.manifold.TSNE.html">t-SNE</a></p>
+
+<scatter-plot 
+                width="300" 
+                height="300" 
+                radius="0.04" 
+                points='[{"x": 0.7551260590553284, "y": -5.776472568511963, "startSeconds": 1.1377778053283691, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event0_f3826f9c78cc862e327dc4102979b92bc05fa075", "color": "rgb(161 254 91)"}, {"x": 0.813802182674408, "y": -5.827823638916016, "startSeconds": 1.160997748374939, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event1_0bdd7ec3a5c3c6ae99d44503ecddecbb88b9ce06", "color": "rgb(163 253 89)"}, {"x": 1.4033986330032349, "y": -6.166991233825684, "startSeconds": 1.6834466457366943, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event2_5a6b7a4ff4cecb3ab3cc46f516188eeff4c30dab", "color": "rgb(200 246 93)"}, {"x": 0.8298531174659729, "y": -5.9381866455078125, "startSeconds": 1.0332880020141602, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event3_970352d4f38f90c9b9974f8273d663c63027d86d", "color": "rgb(156 247 81)"}, {"x": 1.4145524501800537, "y": -6.056732177734375, "startSeconds": 1.590566873550415, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event4_6fbc5bf941dae371ed4ebc7428f14ce8a12a1102", "color": "rgb(210 252 103)"}, {"x": 1.4201974868774414, "y": -6.072806358337402, "startSeconds": 1.6253968477249146, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event5_870df683c0d7671e477b91075ee7ab65e7937c4b", "color": "rgb(209 252 102)"}, {"x": 0.5355423092842102, "y": -6.623414516448975, "startSeconds": 2.1942856311798096, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event6_c44ab8f4110bddf7a5b9216007c372b2100f854c", "color": "rgb(67 204 3)"}, {"x": 0.5719760060310364, "y": -6.666066646575928, "startSeconds": 2.1246259212493896, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event7_0e1ac19294aeb9ac9239bc703e557f5c74b3c35b", "color": "rgb(68 202 2)"}, {"x": 0.6119794845581055, "y": -6.643176555633545, "startSeconds": 2.14784574508667, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event8_9525317a436a97247f6515fe2ed71d430d7c573d", "color": "rgb(74 204 6)"}, {"x": 1.5142511129379272, "y": -6.082676887512207, "startSeconds": 1.5092970132827759, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event9_27c484af4017599373d557bc7e08da15bc149b58", "color": "rgb(219 253 107)"}, {"x": 1.1201131343841553, "y": -6.424856662750244, "startSeconds": 1.7182766199111938, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event10_bb1362fe1fbb93ecb81aff0877b415a36dfbabe1", "color": "rgb(147 226 54)"}, {"x": 1.2252930402755737, "y": -6.180032253265381, "startSeconds": 1.3351473808288574, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event11_af9da08117bb3725a2f9aa8bb1136a6df71987ea", "color": "rgb(179 242 82)"}, {"x": 0.847809374332428, "y": -5.919528007507324, "startSeconds": 0.9055781960487366, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event12_558de11fe26715f095f68abfce2b9924cc6adecf", "color": "rgb(159 249 83)"}, {"x": 0.4748416841030121, "y": -6.595677375793457, "startSeconds": 1.904036283493042, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event13_0b158b4d7bbe2ca9cc0b06705c71bda6eaedf2b6", "color": "rgb(63 204 2)"}, {"x": 0.6042436361312866, "y": -6.276403427124023, "startSeconds": 2.832834482192993, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event14_83ad9eeca0a244941a6a740a902e94f07ee94d75", "color": "rgb(103 224 38)"}, {"x": 1.0572940111160278, "y": -6.128585338592529, "startSeconds": 0.0, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event15_9883b70b1c661f4864c29b2a5e5259dcf02ea46a", "color": "rgb(165 241 77)"}, {"x": 0.47092121839523315, "y": -6.464363098144531, "startSeconds": 2.252335548400879, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event16_1a51c0dd52415b358299e428acb228e322a9fbfc", "color": "rgb(73 211 14)"}, {"x": 0.6693436503410339, "y": -6.6840057373046875, "startSeconds": 1.9969160556793213, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event17_06749d06f886fcd63f2f950ad49edf6403b8f7e2", "color": "rgb(77 203 6)"}, {"x": 1.1567821502685547, "y": -6.400341510772705, "startSeconds": 1.6486167907714844, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event18_84721d8df50929de1e5de7ef5e9dd0d7e7c5b9b9", "color": "rgb(153 228 59)"}, {"x": 0.678354024887085, "y": -6.538449287414551, "startSeconds": 2.0549659729003906, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event19_bcf38f2278a20254f1a8c26548d0b317bafcdd00", "color": "rgb(90 211 19)"}, {"x": 1.2369531393051147, "y": -6.2160420417785645, "startSeconds": 0.41795918345451355, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event20_c6f34ebb24df95b82b92fb44ef71a1ccb2ee430d", "color": "rgb(177 240 79)"}, {"x": 1.0448386669158936, "y": -6.236883163452148, "startSeconds": 1.2190475463867188, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event21_8834383dfd9ca3e5d9005d3bcde0de338fc59176", "color": "rgb(155 235 67)"}, {"x": 1.2448984384536743, "y": -7.126976013183594, "startSeconds": 2.937324285507202, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event22_2935c892c490c22e0e44b13c29d21e03e56b8796", "color": "rgb(103 190 0)"}, {"x": 1.079028606414795, "y": -6.913496971130371, "startSeconds": 2.9257142543792725, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event23_8571daba90889e27838137e7d1e81a73c6147b35", "color": "rgb(102 199 9)"}, {"x": 1.2993111610412598, "y": -6.537294387817383, "startSeconds": 1.4396371841430664, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event24_8472c4e0f794e9348180f612529531377f7368e2", "color": "rgb(158 224 55)"}, {"x": 0.561347246170044, "y": -6.529144763946533, "startSeconds": 1.8227664232254028, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event25_d0a48108cbaeb7f9efe2f3c475ff052acbde7a1c", "color": "rgb(78 209 13)"}, {"x": 0.6503036022186279, "y": -6.400304317474365, "startSeconds": 2.693514585494995, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event26_38dec757675c65698752db593ae5bdf50f72ae11", "color": "rgb(98 218 30)"}, {"x": 1.1340116262435913, "y": -6.583906173706055, "startSeconds": 2.4729251861572266, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event27_327a59694a6cf5f4d0a5b5eb6055ffddc582d58f", "color": "rgb(136 218 41)"}, {"x": 0.9535443782806396, "y": -6.564976215362549, "startSeconds": 1.7763265371322632, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event28_47d9b05134ffd41304e8bc9d223c29950ff5dff9", "color": "rgb(118 215 32)"}, {"x": 1.183061122894287, "y": -6.526252269744873, "startSeconds": 0.847528338432312, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event29_93abc1e9cd398c7b228a86889ceb4d4462d22bec", "color": "rgb(146 222 49)"}, {"x": 1.3210070133209229, "y": -6.604155540466309, "startSeconds": 1.4280271530151367, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event30_42713528a7b94bfc6f60f3da0a58e262721b170a", "color": "rgb(154 220 50)"}, {"x": 1.2072440385818481, "y": -6.583083152770996, "startSeconds": 1.404807209968567, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event31_b35b407443e9de7a44bc0999e802e1a699ae5e8f", "color": "rgb(144 219 45)"}]'>
+            </scatter-plot>
 
 
 <a id="Individual Audio Events"></a>
 <h3>Individual Audio Events</h3>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event0_3f7977ef7eb9f4345ba51ea46ebe944b08c27c0e"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event0_f3826f9c78cc862e327dc4102979b92bc05fa075"
             height="35"
             samples="256"
             scale="1"
@@ -829,7 +868,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event1_2080d558b8df11595ee7b9f881d046b959f37895"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event1_0bdd7ec3a5c3c6ae99d44503ecddecbb88b9ce06"
             height="35"
             samples="256"
             scale="1"
@@ -837,7 +876,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event2_b06f01b43e4d048b752ab2b5ecbca549480f3b82"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event2_5a6b7a4ff4cecb3ab3cc46f516188eeff4c30dab"
             height="35"
             samples="256"
             scale="1"
@@ -845,7 +884,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event3_f5c1b824153d8073605d408309fc4e3df73c4330"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event3_970352d4f38f90c9b9974f8273d663c63027d86d"
             height="35"
             samples="256"
             scale="1"
@@ -853,7 +892,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event4_50a6e2ed9359169bb1532a39f4906216918c4139"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event4_6fbc5bf941dae371ed4ebc7428f14ce8a12a1102"
             height="35"
             samples="256"
             scale="1"
@@ -861,7 +900,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event5_55dda672e1381fa97eaa559a3c78cfbb10d6a9c0"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event5_870df683c0d7671e477b91075ee7ab65e7937c4b"
             height="35"
             samples="256"
             scale="1"
@@ -869,7 +908,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event6_f9cbe15cbef36fb8a4119cd598f6b69cda364163"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event6_c44ab8f4110bddf7a5b9216007c372b2100f854c"
             height="35"
             samples="256"
             scale="1"
@@ -877,7 +916,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event7_bb36aaa5f89388a682d67228812b7f24b6c24b78"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event7_0e1ac19294aeb9ac9239bc703e557f5c74b3c35b"
             height="35"
             samples="256"
             scale="1"
@@ -885,7 +924,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event8_e72976b75bfec2f5a08f4ab78609b9944f1bec5d"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event8_9525317a436a97247f6515fe2ed71d430d7c573d"
             height="35"
             samples="256"
             scale="1"
@@ -893,7 +932,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event9_87894ed7c6b227cc2f178a45e782802a569cf5a6"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event9_27c484af4017599373d557bc7e08da15bc149b58"
             height="35"
             samples="256"
             scale="1"
@@ -901,7 +940,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event10_e54fe13b343d18a4440ec2d825b26f2b0b123de0"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event10_bb1362fe1fbb93ecb81aff0877b415a36dfbabe1"
             height="35"
             samples="256"
             scale="1"
@@ -909,7 +948,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event11_52cfede79f208acbba1e1370e355d0f27c264592"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event11_af9da08117bb3725a2f9aa8bb1136a6df71987ea"
             height="35"
             samples="256"
             scale="1"
@@ -917,7 +956,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event12_0489bd5478c0a265794369a0a7c1bc4d480b4bbf"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event12_558de11fe26715f095f68abfce2b9924cc6adecf"
             height="35"
             samples="256"
             scale="1"
@@ -925,7 +964,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event13_aa1a52d6baaa280a0f7deab24622a18b6b7eeed8"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event13_0b158b4d7bbe2ca9cc0b06705c71bda6eaedf2b6"
             height="35"
             samples="256"
             scale="1"
@@ -933,7 +972,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event14_a22ca1030fb1a355d6a2ecbd71a8bb713244e6ba"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event14_83ad9eeca0a244941a6a740a902e94f07ee94d75"
             height="35"
             samples="256"
             scale="1"
@@ -941,7 +980,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event15_c8520d95a1cef42ab7d977a949ee20e49022c54c"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event15_9883b70b1c661f4864c29b2a5e5259dcf02ea46a"
             height="35"
             samples="256"
             scale="1"
@@ -949,7 +988,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event16_4515ffcb38ea36744612155e2f7bb8143622e5b8"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event16_1a51c0dd52415b358299e428acb228e322a9fbfc"
             height="35"
             samples="256"
             scale="1"
@@ -957,7 +996,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event17_9207f0b098bff70212ac51d5b451babba739f160"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event17_06749d06f886fcd63f2f950ad49edf6403b8f7e2"
             height="35"
             samples="256"
             scale="1"
@@ -965,7 +1004,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event18_01329500cb46036f0a3bec43673a8013c5ae6282"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event18_84721d8df50929de1e5de7ef5e9dd0d7e7c5b9b9"
             height="35"
             samples="256"
             scale="1"
@@ -973,7 +1012,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event19_593361ab4ef4e19e6ad67d23233eb86c48c1ce5c"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event19_bcf38f2278a20254f1a8c26548d0b317bafcdd00"
             height="35"
             samples="256"
             scale="1"
@@ -981,7 +1020,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event20_43cdc91fb2d5c5ea3e8a8bb3248b408b77712339"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event20_c6f34ebb24df95b82b92fb44ef71a1ccb2ee430d"
             height="35"
             samples="256"
             scale="1"
@@ -989,7 +1028,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event21_ffcce77ee6e50a333d359469ea5a6a192f6319dd"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event21_8834383dfd9ca3e5d9005d3bcde0de338fc59176"
             height="35"
             samples="256"
             scale="1"
@@ -997,7 +1036,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event22_231dd35fa8ce29f71696fba980b44dfbb0268c94"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event22_2935c892c490c22e0e44b13c29d21e03e56b8796"
             height="35"
             samples="256"
             scale="1"
@@ -1005,7 +1044,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event23_c2f3dcc7ee65190b612a274ded40d88142102e43"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event23_8571daba90889e27838137e7d1e81a73c6147b35"
             height="35"
             samples="256"
             scale="1"
@@ -1013,7 +1052,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event24_4ccefe068d06719c34ef66e1f699cb1c2f5f1aaf"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event24_8472c4e0f794e9348180f612529531377f7368e2"
             height="35"
             samples="256"
             scale="1"
@@ -1021,7 +1060,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event25_4e459ebba889c97264c54935d9a48deade8853c1"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event25_d0a48108cbaeb7f9efe2f3c475ff052acbde7a1c"
             height="35"
             samples="256"
             scale="1"
@@ -1029,7 +1068,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event26_baf6b3601ce2bf527e43bed6cb9a6639045561c2"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event26_38dec757675c65698752db593ae5bdf50f72ae11"
             height="35"
             samples="256"
             scale="1"
@@ -1037,7 +1076,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event27_5a4e4d203b3ee08e75e6523018d9c01e061b6e5b"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event27_327a59694a6cf5f4d0a5b5eb6055ffddc582d58f"
             height="35"
             samples="256"
             scale="1"
@@ -1045,7 +1084,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event28_ec079beb88ff7465a9eb9e753db13ef3a11e56ae"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event28_47d9b05134ffd41304e8bc9d223c29950ff5dff9"
             height="35"
             samples="256"
             scale="1"
@@ -1053,7 +1092,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event29_759120dba072cbe5405a01d58a6febba30ed068d"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event29_93abc1e9cd398c7b228a86889ceb4d4462d22bec"
             height="35"
             samples="256"
             scale="1"
@@ -1061,7 +1100,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event30_f56bce1d8b09499757accf5e1d105caacf53b46c"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event30_42713528a7b94bfc6f60f3da0a58e262721b170a"
             height="35"
             samples="256"
             scale="1"
@@ -1069,7 +1108,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event31_298bd1c647d943903f92d4a06ed90b86d4fa352c"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event31_b35b407443e9de7a44bc0999e802e1a699ae5e8f"
             height="35"
             samples="256"
             scale="1"
@@ -1085,7 +1124,7 @@ better, more realistic, and sparser renderings of the audio.</p>
 <h3>Original Audio</h3>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/original_00f5ffbdd9ac83a3eed257d88ce14a2593baedcb"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/original_3f4d34f6a909bd2246fc052672a0e58ddcbea535"
             height="200"
             samples="256"
             scale="1"
@@ -1097,7 +1136,7 @@ better, more realistic, and sparser renderings of the audio.</p>
 <h3>Reconstruction</h3>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/reconstruction_580192d7922966f16e3fe8572cd4d933d6f0c017"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/reconstruction_8c3019eadd73b3568192e260fe35bff9724d7fb2"
             height="200"
             samples="256"
             scale="1"
@@ -1107,16 +1146,27 @@ better, more realistic, and sparser renderings of the audio.</p>
 
 <a id="Event Vectors"></a>
 <h3>Event Vectors</h3>
-<p>Notice the blocks of silent event vectors.</p>
 
-<img src="https://iterative-decomposition-v3.s3.amazonaws.com/latents_c2d9ef0c0bdbb099ca0d0795a8edceabcbe47fd8" height="200"></img>
+<img src="https://iterative-decomposition-v3.s3.amazonaws.com/latents_2ea11ddc5b181c3c2683711c15ffda3e889bad0c" height="200"></img>
+
+
+<a id="Event Scatterplot"></a>
+<h3>Event Scatterplot</h3>
+<p>Events clustered using <a href="https://scikit-learn.org/stable/modules/generated/sklearn.manifold.TSNE.html">t-SNE</a></p>
+
+<scatter-plot 
+                width="300" 
+                height="300" 
+                radius="0.04" 
+                points='[{"x": -2.5532212257385254, "y": -2.410532236099243, "startSeconds": 2.554194927215576, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event0_c06ca1f2a42dd927270b266b0a00ae2642d1b02e", "color": "rgb(47 141 252)"}, {"x": -2.440814971923828, "y": -2.5519535541534424, "startSeconds": 1.381587266921997, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event1_8d705a16204b0f30864748008276cd99d4a6609c", "color": "rgb(45 146 253)"}, {"x": -2.579211711883545, "y": -2.3607497215270996, "startSeconds": 2.554194927215576, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event2_417ab3a17fb13e5606ffaaba69d685e54d98e4c6", "color": "rgb(48 139 252)"}, {"x": -2.4066383838653564, "y": -2.4111828804016113, "startSeconds": 1.6253968477249146, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event3_efc667f7f2fd5edec1c12bcf0609837d45964a81", "color": "rgb(54 148 254)"}, {"x": -2.519860029220581, "y": -2.414707660675049, "startSeconds": 2.4148752689361572, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event4_9a041946e75c1ef0ce5a24e7c78a11c6f9593728", "color": "rgb(48 142 252)"}, {"x": -3.2521755695343018, "y": -2.5706048011779785, "startSeconds": 0.3482993245124817, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event5_272c7879f5c4490c5c26f56829f04e4a04363a43", "color": "rgb(4 102 241)"}, {"x": -3.3845622539520264, "y": -2.5275537967681885, "startSeconds": 2.1362357139587402, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event6_9fbaa539b0cc0811278b77e64ff86d35a7bd3139", "color": "rgb(0 95 240)"}, {"x": -2.394360065460205, "y": -2.176480293273926, "startSeconds": 1.8575963973999023, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event7_18946907f9edaf243f9bde95a1c4caf2845ca9c1", "color": "rgb(66 150 254)"}, {"x": -3.101496458053589, "y": -1.6157660484313965, "startSeconds": 2.879274368286133, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event8_73a9665b5280a676b67476e1738da9ef09c667d6", "color": "rgb(58 116 245)"}, {"x": -3.057508707046509, "y": -2.018415927886963, "startSeconds": 1.6486167907714844, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event9_1e12422a6f80bd3b089e9776c2b02e6f27ce6f39", "color": "rgb(41 116 245)"}, {"x": -3.3490383625030518, "y": -1.9389535188674927, "startSeconds": 1.5325169563293457, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event10_114071784563d74a0e1726571998d7f9d7e965fe", "color": "rgb(30 100 241)"}, {"x": -2.68567156791687, "y": -2.2736752033233643, "startSeconds": 1.5325169563293457, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event11_3654a066a2fd23bf544629a3132d9dce48cd8eb1", "color": "rgb(47 134 250)"}, {"x": -3.026747941970825, "y": -2.73777174949646, "startSeconds": 0.650158703327179, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event12_56a390adc4aabd86bc9a61b0fca3f0c17e3d19dd", "color": "rgb(7 113 245)"}, {"x": -2.5756218433380127, "y": -2.377652883529663, "startSeconds": 2.287165403366089, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event13_2c4e31d6913f4173856647eb52eafcf40e03540b", "color": "rgb(47 140 252)"}, {"x": -3.2602577209472656, "y": -2.4232633113861084, "startSeconds": 0.3482993245124817, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event14_c3ac3d8ab9a78cb291d83678ecfdd162429c9bc4", "color": "rgb(11 102 242)"}, {"x": -3.231739044189453, "y": -2.617421865463257, "startSeconds": 0.29024943709373474, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event15_7e3955df20dac86e5f80b1f8431108d97afb6bf7", "color": "rgb(3 103 242)"}, {"x": -3.213146686553955, "y": -2.1183862686157227, "startSeconds": 1.5325169563293457, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event16_19b819ec39374672cdc09789ecbfe20ca6244ccc", "color": "rgb(28 107 243)"}, {"x": -3.0236330032348633, "y": -1.9334784746170044, "startSeconds": 2.554194927215576, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event17_52fba955d0ee89ec8be2477eb00b5d4964942b86", "color": "rgb(47 118 246)"}, {"x": -2.552661895751953, "y": -2.537153482437134, "startSeconds": 1.4396371841430664, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event18_2bcf2b5b73261308a87f441c12a340e07113ec93", "color": "rgb(41 140 252)"}, {"x": -2.8620994091033936, "y": -2.4062557220458984, "startSeconds": 2.3684353828430176, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event19_9bda8414c5414e7d3f15c3673b83f1f0a31f93ec", "color": "rgb(32 124 247)"}, {"x": -2.9287548065185547, "y": -2.5418875217437744, "startSeconds": 1.369977355003357, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event20_23760e7d9759433736f9454d2ee86b9b17e65d09", "color": "rgb(22 120 246)"}, {"x": -3.079235076904297, "y": -2.4102742671966553, "startSeconds": 1.1842176914215088, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event21_fc172b26503af7da5e0f769984cbbc5d109bdb00", "color": "rgb(20 112 244)"}, {"x": -3.1265430450439453, "y": -1.6895450353622437, "startSeconds": 2.879274368286133, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event22_df836db3861128a93c84dffa86ff0913311f3f17", "color": "rgb(53 114 244)"}, {"x": -3.0760889053344727, "y": -2.616342306137085, "startSeconds": 0.5688889026641846, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event23_1fb98bb16bb3c6ecbbbbac48c2e9f4aa2db7a448", "color": "rgb(11 111 244)"}, {"x": -2.5660104751586914, "y": -2.38342547416687, "startSeconds": 2.705124616622925, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event24_9a0c175e308dcbb147060e32ac5997fad98f25fa", "color": "rgb(47 140 252)"}, {"x": -3.3521549701690674, "y": -2.3359580039978027, "startSeconds": 0.01160997711122036, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event25_6d3a64cfe4b2086d02ec16aa415f6b9218d53882", "color": "rgb(11 98 240)"}, {"x": -2.6771416664123535, "y": -2.1957051753997803, "startSeconds": 2.287165403366089, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event26_81f77a58e487dcdaeec4f78eb65edffed91a86f6", "color": "rgb(51 135 250)"}, {"x": -2.9423012733459473, "y": -2.4565463066101074, "startSeconds": 1.1377778053283691, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event27_537289b5a722003e8ec8b50f43200cf82f1bacf1", "color": "rgb(25 119 246)"}, {"x": -3.0049731731414795, "y": -2.7467734813690186, "startSeconds": 0.8939682245254517, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event28_706814b7e8236e526ba293b15bdd93329b1b0575", "color": "rgb(8 114 245)"}, {"x": -2.772458791732788, "y": -2.7394754886627197, "startSeconds": 0.4527890980243683, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event29_e0460a590e0bbb61d13c69a07c3d646db23d8648", "color": "rgb(20 127 248)"}, {"x": -3.13626766204834, "y": -2.4684062004089355, "startSeconds": 0.0, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event30_2d9048650e738fe5d0d17bb3f45dd234f2117fd3", "color": "rgb(15 109 243)"}, {"x": -3.1535227298736572, "y": -1.6473064422607422, "startSeconds": 2.879274368286133, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event31_24ba0d32cdc2ed64f90e0dedce5f9403d64ed13f", "color": "rgb(54 113 244)"}]'>
+            </scatter-plot>
 
 
 <a id="Individual Audio Events"></a>
 <h3>Individual Audio Events</h3>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event0_a2f34d4eb8cbe726cc203730c74a6065f12fd1d8"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event0_c06ca1f2a42dd927270b266b0a00ae2642d1b02e"
             height="35"
             samples="256"
             scale="1"
@@ -1124,7 +1174,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event1_46bed289b9f4712e00d942e03581aa592106a142"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event1_8d705a16204b0f30864748008276cd99d4a6609c"
             height="35"
             samples="256"
             scale="1"
@@ -1132,7 +1182,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event2_e873658e5919b99f38e263908495a902ecfe6307"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event2_417ab3a17fb13e5606ffaaba69d685e54d98e4c6"
             height="35"
             samples="256"
             scale="1"
@@ -1140,7 +1190,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event3_282b885ff0acd07d5bfc72cae325dab17a5d2f11"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event3_efc667f7f2fd5edec1c12bcf0609837d45964a81"
             height="35"
             samples="256"
             scale="1"
@@ -1148,7 +1198,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event4_ea3638afa09095cde645d4aeadf80e83877482dc"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event4_9a041946e75c1ef0ce5a24e7c78a11c6f9593728"
             height="35"
             samples="256"
             scale="1"
@@ -1156,7 +1206,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event5_130e4cd6c40754bd320e2ae2f57cacf70f22a1b0"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event5_272c7879f5c4490c5c26f56829f04e4a04363a43"
             height="35"
             samples="256"
             scale="1"
@@ -1164,7 +1214,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event6_c046f0ef06608afe1c39128667fa93980323a8da"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event6_9fbaa539b0cc0811278b77e64ff86d35a7bd3139"
             height="35"
             samples="256"
             scale="1"
@@ -1172,7 +1222,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event7_af91c2fc5632fc24cdc04a073aa150b337a983cb"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event7_18946907f9edaf243f9bde95a1c4caf2845ca9c1"
             height="35"
             samples="256"
             scale="1"
@@ -1180,7 +1230,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event8_8d4c497bbe8fb4ad803d02c1d25b2011ff5ba7fa"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event8_73a9665b5280a676b67476e1738da9ef09c667d6"
             height="35"
             samples="256"
             scale="1"
@@ -1188,7 +1238,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event9_61bec98528f0da06faa53a64bd5765c3a0b35d25"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event9_1e12422a6f80bd3b089e9776c2b02e6f27ce6f39"
             height="35"
             samples="256"
             scale="1"
@@ -1196,7 +1246,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event10_133599ab7cadecd3cd81a38acf8ec902e8c3f204"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event10_114071784563d74a0e1726571998d7f9d7e965fe"
             height="35"
             samples="256"
             scale="1"
@@ -1204,7 +1254,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event11_3256115847199fbded957d37dee9700c7c00b6c5"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event11_3654a066a2fd23bf544629a3132d9dce48cd8eb1"
             height="35"
             samples="256"
             scale="1"
@@ -1212,7 +1262,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event12_167d76d6eb1a12845be74ddc8709fc7a65d10c5f"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event12_56a390adc4aabd86bc9a61b0fca3f0c17e3d19dd"
             height="35"
             samples="256"
             scale="1"
@@ -1220,7 +1270,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event13_3e521a08c36a60d79bd36acaab7f3a10e196ca88"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event13_2c4e31d6913f4173856647eb52eafcf40e03540b"
             height="35"
             samples="256"
             scale="1"
@@ -1228,7 +1278,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event14_012fd0db0bae50a4a1ad7762738ab4c401f3a783"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event14_c3ac3d8ab9a78cb291d83678ecfdd162429c9bc4"
             height="35"
             samples="256"
             scale="1"
@@ -1236,7 +1286,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event15_ae814b4e2951bba530984cb19657aa3be0b7f741"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event15_7e3955df20dac86e5f80b1f8431108d97afb6bf7"
             height="35"
             samples="256"
             scale="1"
@@ -1244,7 +1294,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event16_7986ff30b009708d76bfdd220348b49559728f05"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event16_19b819ec39374672cdc09789ecbfe20ca6244ccc"
             height="35"
             samples="256"
             scale="1"
@@ -1252,7 +1302,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event17_8d9703e57eee65c5614e9014630318917e1719ab"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event17_52fba955d0ee89ec8be2477eb00b5d4964942b86"
             height="35"
             samples="256"
             scale="1"
@@ -1260,7 +1310,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event18_6d0698141949c13f7c77fdf4a21048687fc3a2e7"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event18_2bcf2b5b73261308a87f441c12a340e07113ec93"
             height="35"
             samples="256"
             scale="1"
@@ -1268,7 +1318,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event19_9a8f3ad0004a3454b0d906b847d40131882c4dee"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event19_9bda8414c5414e7d3f15c3673b83f1f0a31f93ec"
             height="35"
             samples="256"
             scale="1"
@@ -1276,7 +1326,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event20_ceba59132bd8a8a70f3e68d909f9ab9f19ac7c4a"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event20_23760e7d9759433736f9454d2ee86b9b17e65d09"
             height="35"
             samples="256"
             scale="1"
@@ -1284,7 +1334,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event21_037cf2cee60688f2e5f606d641112152b6c4d785"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event21_fc172b26503af7da5e0f769984cbbc5d109bdb00"
             height="35"
             samples="256"
             scale="1"
@@ -1292,7 +1342,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event22_3d714b117deec87efd23e3b97812d8d31a50502c"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event22_df836db3861128a93c84dffa86ff0913311f3f17"
             height="35"
             samples="256"
             scale="1"
@@ -1300,7 +1350,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event23_a7df3a43dc3dd0f48b4260a613ee443b62cbb110"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event23_1fb98bb16bb3c6ecbbbbac48c2e9f4aa2db7a448"
             height="35"
             samples="256"
             scale="1"
@@ -1308,7 +1358,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event24_d63244e4a16c487851208a64f4716d897e2a6104"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event24_9a0c175e308dcbb147060e32ac5997fad98f25fa"
             height="35"
             samples="256"
             scale="1"
@@ -1316,7 +1366,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event25_76c453cd869e5462d3cd4cd0f200d50ed3535e77"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event25_6d3a64cfe4b2086d02ec16aa415f6b9218d53882"
             height="35"
             samples="256"
             scale="1"
@@ -1324,7 +1374,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event26_43775c93c842952a42afb74fbedf6fd7a86b7d6a"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event26_81f77a58e487dcdaeec4f78eb65edffed91a86f6"
             height="35"
             samples="256"
             scale="1"
@@ -1332,7 +1382,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event27_7340fd392a35aa6f077379aba178b81cdc4f8658"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event27_537289b5a722003e8ec8b50f43200cf82f1bacf1"
             height="35"
             samples="256"
             scale="1"
@@ -1340,7 +1390,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event28_909656a35e281ff5916dae8973965183ac6ce613"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event28_706814b7e8236e526ba293b15bdd93329b1b0575"
             height="35"
             samples="256"
             scale="1"
@@ -1348,7 +1398,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event29_4235340b91e9386902adf2ae5504fbea79a5686f"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event29_e0460a590e0bbb61d13c69a07c3d646db23d8648"
             height="35"
             samples="256"
             scale="1"
@@ -1356,7 +1406,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event30_7db78a46ec2c35fdc05dc16bab8960e53e14e13b"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event30_2d9048650e738fe5d0d17bb3f45dd234f2117fd3"
             height="35"
             samples="256"
             scale="1"
@@ -1364,7 +1414,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event31_a1db968435bbdcd061cde2af591cb297c33e8b15"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event31_24ba0d32cdc2ed64f90e0dedce5f9403d64ed13f"
             height="35"
             samples="256"
             scale="1"
@@ -1380,7 +1430,7 @@ better, more realistic, and sparser renderings of the audio.</p>
 <h3>Original Audio</h3>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/original_2127a92bf735a231663ce1bf2446d4129a977126"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/original_9ad6ed1c9bdbe7b0a2cf44a58c8ba49bc2755c89"
             height="200"
             samples="256"
             scale="1"
@@ -1392,7 +1442,7 @@ better, more realistic, and sparser renderings of the audio.</p>
 <h3>Reconstruction</h3>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/reconstruction_419b9a2d24e2a0893f9a451ea9815a50f9226c55"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/reconstruction_4dcba8263953d3b3963d9e885383d4f9a2977b98"
             height="200"
             samples="256"
             scale="1"
@@ -1402,16 +1452,27 @@ better, more realistic, and sparser renderings of the audio.</p>
 
 <a id="Event Vectors"></a>
 <h3>Event Vectors</h3>
-<p>Notice the blocks of silent event vectors.</p>
 
-<img src="https://iterative-decomposition-v3.s3.amazonaws.com/latents_3c4e799883512ee650e86b9e468ef8e0834c3c4e" height="200"></img>
+<img src="https://iterative-decomposition-v3.s3.amazonaws.com/latents_447f500c835b318cb0e5a1ccadb2f7ef0b3c61d0" height="200"></img>
+
+
+<a id="Event Scatterplot"></a>
+<h3>Event Scatterplot</h3>
+<p>Events clustered using <a href="https://scikit-learn.org/stable/modules/generated/sklearn.manifold.TSNE.html">t-SNE</a></p>
+
+<scatter-plot 
+                width="300" 
+                height="300" 
+                radius="0.04" 
+                points='[{"x": 0.32031357288360596, "y": 3.7849714756011963, "startSeconds": 0.06965985894203186, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event0_fac523326358bbf2c974715001feadecebf1c5ca", "color": "rgb(120 75 0)"}, {"x": 0.4016185700893402, "y": 3.771963119506836, "startSeconds": 0.05804988741874695, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event1_2ee2b9db41e709549a36f44eed0d5cc87ff3610a", "color": "rgb(128 76 4)"}, {"x": 0.5205385684967041, "y": 3.819875478744507, "startSeconds": 0.02321995422244072, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event2_88030e77dc9fd8fec5dfe60daab7c3d0a2acba9c", "color": "rgb(143 80 12)"}, {"x": 0.5762539505958557, "y": 3.8423845767974854, "startSeconds": 0.02321995422244072, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event3_78e456ec9cd6818786bd96287a706c86a4b03e32", "color": "rgb(150 82 16)"}, {"x": 0.9397627711296082, "y": 3.742814064025879, "startSeconds": 1.05650794506073, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event4_4b154057df9dfa0b88cf62757bbdd07ac6f63a68", "color": "rgb(187 85 37)"}, {"x": 1.3104608058929443, "y": 3.9382264614105225, "startSeconds": 1.3351473808288574, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event5_f7169b8c1d2147478525313b27808cc2ebd8a04b", "color": "rgb(235 99 61)"}, {"x": 0.5774056911468506, "y": 3.8430593013763428, "startSeconds": 0.04643990844488144, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event6_57d57d6166909ccef969e9cd06917acabf695032", "color": "rgb(151 82 16)"}, {"x": 0.5665373802185059, "y": 4.488009929656982, "startSeconds": 0.3366893231868744, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event7_5570f310adf8f313969c0e5f70ab8ddfbdcb3d77", "color": "rgb(174 103 22)"}, {"x": 1.2991725206375122, "y": 3.9779016971588135, "startSeconds": 1.3351473808288574, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event8_e4486fd35578ec4aaab523392bda268394e9f18d", "color": "rgb(236 101 61)"}, {"x": 0.881875216960907, "y": 3.918942451477051, "startSeconds": 2.3336052894592285, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event9_643920046f535faefd2635dd42f4483e74dcf385", "color": "rgb(187 90 35)"}, {"x": 1.1787223815917969, "y": 4.6160125732421875, "startSeconds": 1.5673469305038452, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event10_a1819f4932a0089f474ab66fc84c26990cc09a2c", "color": "rgb(247 120 60)"}, {"x": 0.8806902766227722, "y": 3.9075541496276855, "startSeconds": 1.8808163404464722, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event11_0699381e4c7c893be0e4dc5523b1b8c804efa27d", "color": "rgb(187 90 35)"}, {"x": 0.6691506505012512, "y": 4.444211483001709, "startSeconds": 0.4527890980243683, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event12_3e468c5a6371e7fe9c6e2b77e0e3247466a92483", "color": "rgb(184 104 28)"}, {"x": 1.1807438135147095, "y": 3.871995687484741, "startSeconds": 1.05650794506073, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event13_b73db152813594e73e736980225c6da3ffe64f61", "color": "rgb(219 95 53)"}, {"x": 0.8856032490730286, "y": 3.8629586696624756, "startSeconds": 2.252335548400879, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event14_5814e64362374bb20550df430d9c697cb932c501", "color": "rgb(186 88 35)"}, {"x": 0.8991373777389526, "y": 4.7762064933776855, "startSeconds": 0.8126984238624573, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event15_feb4ba07226fec8df9214a3627baf44afe6ac212", "color": "rgb(222 119 45)"}, {"x": 1.3037595748901367, "y": 4.073976516723633, "startSeconds": 1.4280271530151367, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event16_0d352646e7ca9a3323dbd5518ab5f86f8445c59d", "color": "rgb(240 104 62)"}, {"x": 1.224295735359192, "y": 3.958674192428589, "startSeconds": 1.2887074947357178, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event17_b911ef3c547107c4a30e304d353c8f6b84cfc62f", "color": "rgb(227 98 56)"}, {"x": 1.338700532913208, "y": 4.358588695526123, "startSeconds": 0.6037188172340393, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event18_8a43d6074bdb9e43a070c300a65c512224be56e2", "color": "rgb(254 114 68)"}, {"x": 1.0585280656814575, "y": 3.8728880882263184, "startSeconds": 0.0, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event19_0e30c79b0c9a65dbaa1c0976d73b5f5119890298", "color": "rgb(205 92 45)"}, {"x": 0.916203498840332, "y": 4.510379314422607, "startSeconds": 0.8126984238624573, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event20_68f921d1370da1cf17ed3b214b525d67e59fd58f", "color": "rgb(214 111 43)"}, {"x": 0.7395442724227905, "y": 4.5230865478515625, "startSeconds": 0.4992290139198303, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event21_2f43bc6ba7b13feeeb4c78f8c66dfa1dff4724ea", "color": "rgb(194 108 33)"}, {"x": 1.0950407981872559, "y": 4.023510932922363, "startSeconds": 1.277097463607788, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event22_301ac9a4af4ef903422a90aebe89739c49d86747", "color": "rgb(215 98 49)"}, {"x": 0.6307784914970398, "y": 4.517846584320068, "startSeconds": 0.31346938014030457, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event23_4ea880aed1832b5a5610627e99d28ef4109bc312", "color": "rgb(182 105 26)"}, {"x": 1.0750820636749268, "y": 3.649775743484497, "startSeconds": 1.05650794506073, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event24_61bd3187d7c21a3d88aa1180eafbb09efe91a548", "color": "rgb(198 85 44)"}, {"x": 0.6863532066345215, "y": 3.8550302982330322, "startSeconds": 1.7879364490509033, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event25_178a64c673f3ce12a698e295a39f66edfbdc65a6", "color": "rgb(163 84 23)"}, {"x": 0.9274411201477051, "y": 4.115466117858887, "startSeconds": 0.0, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event26_982698fbbc11a4ae0c78bd1016c48dd06948f81b", "color": "rgb(200 98 40)"}, {"x": 0.7704527974128723, "y": 4.080679893493652, "startSeconds": 2.739954710006714, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event27_c032004b09739d0f9fb738e29a19897c63eddc28", "color": "rgb(181 93 30)"}, {"x": 0.8872301578521729, "y": 4.091585159301758, "startSeconds": 2.426485300064087, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event28_61088331ce234aee5fcdfc348adf0301d57cfb1b", "color": "rgb(194 96 37)"}, {"x": 0.8928419351577759, "y": 4.518977642059326, "startSeconds": 1.5209070444107056, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event29_cdd7a563e159208ae9b73f92f999f5e6cdaf548d", "color": "rgb(211 111 42)"}, {"x": 0.9308487772941589, "y": 4.318614959716797, "startSeconds": 1.2887074947357178, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event30_d4bfde03fb00f58d98cf022c6ff147a15fd5dd29", "color": "rgb(208 105 42)"}, {"x": 1.358318567276001, "y": 4.021207809448242, "startSeconds": 2.9257142543792725, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event31_cb9d12b53acb124976904eaa23181cd6301d37c8", "color": "rgb(244 103 65)"}]'>
+            </scatter-plot>
 
 
 <a id="Individual Audio Events"></a>
 <h3>Individual Audio Events</h3>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event0_8067e52d595345ae3a15cd927bb51da30b9719e5"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event0_fac523326358bbf2c974715001feadecebf1c5ca"
             height="35"
             samples="256"
             scale="1"
@@ -1419,7 +1480,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event1_374cf8a29ef9904101d9ab36bce5431a7b4e6b69"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event1_2ee2b9db41e709549a36f44eed0d5cc87ff3610a"
             height="35"
             samples="256"
             scale="1"
@@ -1427,7 +1488,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event2_f3a5b9267b4513edb5038be1b81acb59170394b2"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event2_88030e77dc9fd8fec5dfe60daab7c3d0a2acba9c"
             height="35"
             samples="256"
             scale="1"
@@ -1435,7 +1496,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event3_f855505aa0bb0f05b3ccdf49aa568564297c86d1"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event3_78e456ec9cd6818786bd96287a706c86a4b03e32"
             height="35"
             samples="256"
             scale="1"
@@ -1443,7 +1504,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event4_4515abb4c6af5c32a5bd0c506f809b72ad1c8d0b"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event4_4b154057df9dfa0b88cf62757bbdd07ac6f63a68"
             height="35"
             samples="256"
             scale="1"
@@ -1451,7 +1512,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event5_2abaca1d7dbcfd698249a40266ae78043f0a2e1e"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event5_f7169b8c1d2147478525313b27808cc2ebd8a04b"
             height="35"
             samples="256"
             scale="1"
@@ -1459,7 +1520,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event6_867a1a55215d299cfbd11b7ab0f0d88114b3672d"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event6_57d57d6166909ccef969e9cd06917acabf695032"
             height="35"
             samples="256"
             scale="1"
@@ -1467,7 +1528,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event7_a4475ce54a289ff6c716521cc18a9669b67905ea"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event7_5570f310adf8f313969c0e5f70ab8ddfbdcb3d77"
             height="35"
             samples="256"
             scale="1"
@@ -1475,7 +1536,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event8_440e3f437ea42188154431ddcbf1c5ee0457a8ee"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event8_e4486fd35578ec4aaab523392bda268394e9f18d"
             height="35"
             samples="256"
             scale="1"
@@ -1483,7 +1544,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event9_c394edefd9edf8bd213978a38435dad1241cbc30"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event9_643920046f535faefd2635dd42f4483e74dcf385"
             height="35"
             samples="256"
             scale="1"
@@ -1491,7 +1552,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event10_b1dca179ef4e29adc763c646b73c77b679345982"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event10_a1819f4932a0089f474ab66fc84c26990cc09a2c"
             height="35"
             samples="256"
             scale="1"
@@ -1499,7 +1560,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event11_157e261e644065caad912f522a87fdf574d82e88"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event11_0699381e4c7c893be0e4dc5523b1b8c804efa27d"
             height="35"
             samples="256"
             scale="1"
@@ -1507,7 +1568,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event12_1e621cf44f5efab70cf7828a0f8a532e6dc6ef42"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event12_3e468c5a6371e7fe9c6e2b77e0e3247466a92483"
             height="35"
             samples="256"
             scale="1"
@@ -1515,7 +1576,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event13_5629fa0853a9559846a99933f075d63b416aeb3a"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event13_b73db152813594e73e736980225c6da3ffe64f61"
             height="35"
             samples="256"
             scale="1"
@@ -1523,7 +1584,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event14_6e0df58f0960d86969afc7868d3ab7445575c7cd"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event14_5814e64362374bb20550df430d9c697cb932c501"
             height="35"
             samples="256"
             scale="1"
@@ -1531,7 +1592,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event15_0b3f843e58afd7522df1a42a6448f565d87cbee9"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event15_feb4ba07226fec8df9214a3627baf44afe6ac212"
             height="35"
             samples="256"
             scale="1"
@@ -1539,7 +1600,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event16_fdd0e065d998e699ae07fcafa7c770b7c1292614"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event16_0d352646e7ca9a3323dbd5518ab5f86f8445c59d"
             height="35"
             samples="256"
             scale="1"
@@ -1547,7 +1608,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event17_cb073278b085117b593f96b2c8f6ca3ab5e5f886"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event17_b911ef3c547107c4a30e304d353c8f6b84cfc62f"
             height="35"
             samples="256"
             scale="1"
@@ -1555,7 +1616,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event18_094daf5d767835a5d5871262cf322a446e6af120"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event18_8a43d6074bdb9e43a070c300a65c512224be56e2"
             height="35"
             samples="256"
             scale="1"
@@ -1563,7 +1624,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event19_50914e862895161196cde2fda38dc5057dbae043"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event19_0e30c79b0c9a65dbaa1c0976d73b5f5119890298"
             height="35"
             samples="256"
             scale="1"
@@ -1571,7 +1632,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event20_fbc8d5520d76790b98f3003e3415d6c80d36a104"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event20_68f921d1370da1cf17ed3b214b525d67e59fd58f"
             height="35"
             samples="256"
             scale="1"
@@ -1579,7 +1640,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event21_63a965692e57cef72072f2f73a8fccb291cce90b"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event21_2f43bc6ba7b13feeeb4c78f8c66dfa1dff4724ea"
             height="35"
             samples="256"
             scale="1"
@@ -1587,7 +1648,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event22_ea5acda6ee3f5be45c6626667c8cc81d4f36c67c"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event22_301ac9a4af4ef903422a90aebe89739c49d86747"
             height="35"
             samples="256"
             scale="1"
@@ -1595,7 +1656,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event23_37e450ce418abb6fb2c5cd05c210c36087f67530"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event23_4ea880aed1832b5a5610627e99d28ef4109bc312"
             height="35"
             samples="256"
             scale="1"
@@ -1603,7 +1664,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event24_7466f89ae8f66090fab54a92bac54904521afa57"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event24_61bd3187d7c21a3d88aa1180eafbb09efe91a548"
             height="35"
             samples="256"
             scale="1"
@@ -1611,7 +1672,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event25_06c7617cf7d17b48c9c5cdb4f855309cbe780167"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event25_178a64c673f3ce12a698e295a39f66edfbdc65a6"
             height="35"
             samples="256"
             scale="1"
@@ -1619,7 +1680,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event26_f2be44414dc43761b794ce428613273d6fd1aeea"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event26_982698fbbc11a4ae0c78bd1016c48dd06948f81b"
             height="35"
             samples="256"
             scale="1"
@@ -1627,7 +1688,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event27_59f7e3932b47d8ef767fcfc52d7b2a62ec72af11"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event27_c032004b09739d0f9fb738e29a19897c63eddc28"
             height="35"
             samples="256"
             scale="1"
@@ -1635,7 +1696,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event28_3ed74cdd2f6beea9044f2cb82b6369755844063d"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event28_61088331ce234aee5fcdfc348adf0301d57cfb1b"
             height="35"
             samples="256"
             scale="1"
@@ -1643,7 +1704,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event29_176235a561c350ad2afb904b570cc5223f4baa45"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event29_cdd7a563e159208ae9b73f92f999f5e6cdaf548d"
             height="35"
             samples="256"
             scale="1"
@@ -1651,7 +1712,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event30_d5af8edb1c70b404883ba8ef19365a46665c64b9"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event30_d4bfde03fb00f58d98cf022c6ff147a15fd5dd29"
             height="35"
             samples="256"
             scale="1"
@@ -1659,7 +1720,7 @@ better, more realistic, and sparser renderings of the audio.</p>
         ></audio-view>
 
 <audio-view
-            src="https://iterative-decomposition-v3.s3.amazonaws.com/event31_8334bb9a8e17963f5b78e17674fd5392f2c40e4a"
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event31_cb9d12b53acb124976904eaa23181cd6301d37c8"
             height="35"
             samples="256"
             scale="1"
@@ -1702,8 +1763,6 @@ n_frames = n_samples // transform_step_size
 
 
 
-
-
 from typing import Dict
 
 from modules.eventgenerators.overfitresonance import OverfitResonanceModel
@@ -1718,13 +1777,13 @@ from conjure import S3Collection, \
 
     conjure_article, CitationComponent, numpy_conjure, AudioComponent, ImageComponent, \
 
-    CompositeComponent, Logger
+    CompositeComponent, Logger, ScatterPlotComponent
 
 from argparse import ArgumentParser
 
 from iterativedecomposition import Model as IterativeDecompositionModel
 
-
+from sklearn.manifold import TSNE
 
 
 
@@ -1737,6 +1796,8 @@ remote_collection_name = 'iterative-decomposition-v3'
 def to_numpy(x: torch.Tensor):
 
     return x.data.cpu().numpy()
+
+
 
 
 
@@ -1764,41 +1825,43 @@ def reconstruction_section(logger: Logger) -> CompositeComponent:
 
         resonance_model=OverfitResonanceModel(
 
-                n_noise_filters=32,
+            n_noise_filters=32,
 
-                noise_expressivity=8,
+            noise_expressivity=8,
 
-                noise_filter_samples=128,
+            noise_filter_samples=128,
 
-                noise_deformations=16,
+            noise_deformations=16,
 
-                instr_expressivity=8,
+            instr_expressivity=8,
 
-                n_events=1,
+            n_events=1,
 
-                n_resonances=2048,
+            n_resonances=4096,
 
-                n_envelopes=128,
+            n_envelopes=256,
 
-                n_decays=32,
+            n_decays=32,
 
-                n_deformations=32,
+            n_deformations=32,
 
-                n_samples=n_samples,
+            n_samples=n_samples,
 
-                n_frames=n_frames,
+            n_frames=n_frames,
 
-                samplerate=samplerate,
+            samplerate=samplerate,
 
-                hidden_channels=hidden_channels,
+            hidden_channels=hidden_channels,
 
-                wavetable_device='cpu'
+            wavetable_device='cpu',
 
-            ))
+            fine_positioning=True
+
+        ))
 
 
 
-    with open('iterativedecomposition.dat', 'rb') as f:
+    with open('iterativedecomposition2.dat', 'rb') as f:
 
         model.load_state_dict(torch.load(f, map_location=lambda storage, loc: storage))
 
@@ -1822,6 +1885,40 @@ def reconstruction_section(logger: Logger) -> CompositeComponent:
 
 
 
+    total_seconds = n_samples / samplerate
+
+    positions = torch.argmax(times, dim=-1, keepdim=True) / times.shape[-1]
+
+    times = [float(x) for x in (positions * total_seconds).view(-1).data.cpu().numpy()]
+
+
+
+    normalized = vectors.data.cpu().numpy().reshape((-1, context_dim))
+
+    normalized = normalized - normalized.min(axis=0, keepdims=True)
+
+    normalized = normalized / (normalized.max(axis=0, keepdims=True) + 1e-8)
+
+    tsne = TSNE(n_components=2)
+
+    points = tsne.fit_transform(normalized)
+
+    proj = np.random.uniform(0, 1, (2, 3))
+
+    colors = points @ proj
+
+    colors -= colors.min()
+
+    colors /= (colors.max() + 1e-8)
+
+    colors *= 255
+
+    colors = colors.astype(np.uint8)
+
+    colors = [f'rgb({c[0]} {c[1]} {c[2]})' for c in colors]
+
+
+
     # sum together all events
 
     summed = torch.sum(events, dim=1, keepdim=True)
@@ -1840,9 +1937,11 @@ def reconstruction_section(logger: Logger) -> CompositeComponent:
 
 
 
-
-
     events = {f'event{i}': events[:, i: i + 1, :] for i in range(events.shape[1])}
+
+
+
+    scatterplot_srcs = []
 
 
 
@@ -1852,7 +1951,27 @@ def reconstruction_section(logger: Logger) -> CompositeComponent:
 
         _, e = logger.log_sound(k, v)
 
+        scatterplot_srcs.append(e.public_uri)
+
         event_components[k] = AudioComponent(e.public_uri, height=35, controls=False)
+
+
+
+    scatterplot_component = ScatterPlotComponent(
+
+        scatterplot_srcs,
+
+        width=300,
+
+        height=300,
+
+        radius=0.04,
+
+        points=points,
+
+        times=times,
+
+        colors=colors, )
 
 
 
@@ -1869,6 +1988,8 @@ def reconstruction_section(logger: Logger) -> CompositeComponent:
         recon_audio=recon_audio_component,
 
         latents=latents,
+
+        scatterplot=scatterplot_component,
 
         **event_components
 
@@ -1890,8 +2011,6 @@ different auditory bandpass filters become more important than the precise ampli
 <code-block language="python">def demo_page_dict() -> Dict[str, any]:
 
     print(f'Generating article...')
-
-
 
 
 
