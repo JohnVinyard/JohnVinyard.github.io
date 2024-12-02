@@ -1,0 +1,576 @@
+
+        <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <meta http-equiv="X-UA-Compatible" content="ie=edge">
+                <title>Resonance Inference</title>
+                <link rel="preconnect" href="https://fonts.googleapis.com">
+                <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+                <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet">
+                <script src="https://cdn.jsdelivr.net/gh/JohnVinyard/web-components@v0.0.13/build/components/bundle.js"></script>
+                <style>
+                    body {
+                        font-family: "Gowun Batang", serif;
+                        margin: 5vh 5vw;
+                        color: #333;
+                        background-color: #f0f0f0;
+                        font-size: 1.1em;
+                    }
+                    .back-to-top {
+                        position: fixed;
+                        bottom: 20px;
+                        right: 20px;
+                        background-color: #333;
+                        color: #f0f0f0;
+                        padding: 10px;
+                        font-size: 0.9em;
+                    }
+                    img {
+                        width: 100%;
+                    }
+                    ul {
+                        list-style-type: none;
+                        padding-inline-start: 20px;
+                        font-size: 20px;
+                    }
+                    a {
+                        color: #660000;
+                    }
+                    a:visited {
+                        color: #000066;
+                    }
+                    caption {
+                        text-decoration: underline;
+                        font-size: 0.6em;
+                    }
+                    blockquote {
+                        background-color: #d5d5d5;
+                        padding: 2px 10px;
+                    }
+                </style>
+            </head>
+            <body>
+                
+    <h1>Resonance Inference</h1>
+<details>
+    <summary>
+        <caption>Table of Contents</caption>
+    </summary>
+
+<ul>
+<li><a href="#Resonance Inference">Resonance Inference</h1></a><ul>
+<li><a href="#Statefulness">Statefulness</h2></a></li>
+<li><a href="#Object Deformations">Object Deformations</h2></a></li>
+</ul>
+</li>
+<li><a href="#Cite this Article">Cite this Article</h1></a></li>
+<li><a href="#Examples">Examples</h1></a><ul>
+<li><a href="#Example 1">Example 1</h2></a></li>
+<li><a href="#Example 2">Example 2</h2></a></li>
+<li><a href="#Example 3">Example 3</h2></a></li>
+<li><a href="#Example 4">Example 4</h2></a></li>
+</ul>
+</li>
+</ul>
+</details>
+                
+
+<a id="Resonance Inference"></a>
+<h1>Resonance Inference</h1>
+<p>One path toward sparse representations of musical audio is to make assumptions about the
+system or underlying process that produced the signal.  Despite the prevalence of synthesizers and electronic music,
+much of the audio and music we hear is produced by objects in the physical world resonating.</p>
+<p>While a model that makes <em>no</em> assumptions would be more <em>general</em>, such a model might also
+waste a lot of capacity learning about the physics of sound as well as the dynamics of a musical performance.</p>
+<p>The event generator models I've used in my
+<a href="https://blog.cochlea.xyz/v3blogpost.html">iterative decomposition experiments</a> use cascading convolutions to model
+the resonances of musical instruments (and the rooms in which they are played) and my recent work on
+<a href="https://blog.cochlea.xyz/ssm.html">playable state-space models</a> also explored the modelling of physical resonance
+using a fully-linear network.</p>
+<p>This mini-experiment takes these ideas a bit further, overfitting a network to a single audio segment of ~6 seconds.
+The "prior" here is that the signal was produced by injecting energy into a low-dimensional "control plane", which is
+connected to multiple layers of resonances, gains and non-linearities.  Ideally, this model might be able to capture
+some of the nuances of physical resonance that the state-space model could not, and could lead to highly sparse "scores"
+which can be seen when looking at the "Control Signal" section of each example.</p>
+
+<a id="Statefulness"></a>
+<h2>Statefulness</h2>
+<p>One thing that the fully event-based approach misses is that resonating instruments/objects are <em>stateful</em>; If I pluck
+an already-vibrating string, I'll get a different sound than if I had plucked a string at rest.  This model's RNN-like
+structure makes it at least <em>possible</em> to capture those kinds of dynamics.  It is, of course, a tradeoff, and I am
+thinking about ways to integrate this model as an event generator in the iterative decomposition framework.</p>
+
+<a id="Object Deformations"></a>
+<h2>Object Deformations</h2>
+<p>Event generators in the <a href="https://blog.cochlea.xyz/v3blogpost.html">iterative decomposition models</a> interpolate between
+several different convolutions to mimic the deformation of resonating objects.  For example, I might pluck a string
+and then bend it, causing the resonant properties to change.  This model does not yet incorporate deformations, but might
+do so more efficiently than the long-convolution models, since we operate in a recursive, frame-by-frame fashion.</p>
+<p><a href="https://github.com/JohnVinyard/matching-pursuit/blob/main/freqdomain.py">Model and training code is here!</a></p>
+
+<a id="Cite this Article"></a>
+<h1>Cite this Article</h1>
+
+<citation-block
+            tag="johnvinyardresonanceinference2024"
+            author="John Vinyard"
+            url="https://blog.cochlea.xyz/resonance-inference.html"
+            header="Resonance Inference"
+            year="2024">
+        </citation-block>
+
+
+<a id="Examples"></a>
+<h1>Examples</h1>
+
+<a id="Example 1"></a>
+<h2>Example 1</h2>
+
+
+<a id="Original"></a>
+<h3>Original</h3>
+
+<audio-view
+            src="https://freq-domain-resonance-demo.s3.amazonaws.com/original_8fb67b68d93d5a1b4302a5821727b0593bc0fe85"
+            height="200"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Reconstruction"></a>
+<h3>Reconstruction</h3>
+
+<audio-view
+            src="https://freq-domain-resonance-demo.s3.amazonaws.com/recon_16201c0e2e72fb89dea4976fd13ce5f0bb7b61ba"
+            height="200"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Control Signal"></a>
+<h3>Control Signal</h3>
+
+<p>The "control signal" has 860 non-zero elements and a sparsity of 10.50%.<br />
+The control signal has a total of 
+<code>512 x 16 = 8192 elements</code></p>
+
+<img src="https://freq-domain-resonance-demo.s3.amazonaws.com/cp_372561c87bc47ab8955b8ffa2125473c5cf60cba" height="200"></img>
+
+
+<a id="Random control signal"></a>
+<h3>Random control signal</h3>
+<p>We produce a random, sparse control plane, interfaced with the overfit resonance model.</p>
+
+<audio-view
+            src="https://freq-domain-resonance-demo.s3.amazonaws.com/random_71afb4eed3408a949b84fd9dafcfe26a6d935035"
+            height="200"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Example 2"></a>
+<h2>Example 2</h2>
+
+
+<a id="Original"></a>
+<h3>Original</h3>
+
+<audio-view
+            src="https://freq-domain-resonance-demo.s3.amazonaws.com/original_a0e036891829b139db9c8cb1dc77f56a9d73fc3b"
+            height="200"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Reconstruction"></a>
+<h3>Reconstruction</h3>
+
+<audio-view
+            src="https://freq-domain-resonance-demo.s3.amazonaws.com/recon_853c7fb70ff264790ccb31696cc4feb5d6d72df3"
+            height="200"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Control Signal"></a>
+<h3>Control Signal</h3>
+
+<p>The "control signal" has 693 non-zero elements and a sparsity of 8.46%.<br />
+The control signal has a total of 
+<code>512 x 16 = 8192 elements</code></p>
+
+<img src="https://freq-domain-resonance-demo.s3.amazonaws.com/cp_8fa6dd188eaefa3106f1f932e28fe8545c42244f" height="200"></img>
+
+
+<a id="Random control signal"></a>
+<h3>Random control signal</h3>
+<p>We produce a random, sparse control plane, interfaced with the overfit resonance model.</p>
+
+<audio-view
+            src="https://freq-domain-resonance-demo.s3.amazonaws.com/random_87dfdb9f622063dfa6d2d64634cb459ed67c53a1"
+            height="200"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Example 3"></a>
+<h2>Example 3</h2>
+
+
+<a id="Original"></a>
+<h3>Original</h3>
+
+<audio-view
+            src="https://freq-domain-resonance-demo.s3.amazonaws.com/original_b5e598ec27f3d8475d37c76dc18d0263be22e0af"
+            height="200"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Reconstruction"></a>
+<h3>Reconstruction</h3>
+
+<audio-view
+            src="https://freq-domain-resonance-demo.s3.amazonaws.com/recon_4d0e42c86b64343783f8a426d1c0518bb029a951"
+            height="200"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Control Signal"></a>
+<h3>Control Signal</h3>
+
+<p>The "control signal" has 853 non-zero elements and a sparsity of 10.41%.<br />
+The control signal has a total of 
+<code>512 x 16 = 8192 elements</code></p>
+
+<img src="https://freq-domain-resonance-demo.s3.amazonaws.com/cp_8ae63e1d57018ebe7ac93472db7778fd8defebf4" height="200"></img>
+
+
+<a id="Random control signal"></a>
+<h3>Random control signal</h3>
+<p>We produce a random, sparse control plane, interfaced with the overfit resonance model.</p>
+
+<audio-view
+            src="https://freq-domain-resonance-demo.s3.amazonaws.com/random_2b1dda04bfbc0d52ba5a00cba2e043fe714ed43c"
+            height="200"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Example 4"></a>
+<h2>Example 4</h2>
+
+
+<a id="Original"></a>
+<h3>Original</h3>
+
+<audio-view
+            src="https://freq-domain-resonance-demo.s3.amazonaws.com/original_d4148f81a4818d96fbb67986a291ce5ef85f5bad"
+            height="200"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Reconstruction"></a>
+<h3>Reconstruction</h3>
+
+<audio-view
+            src="https://freq-domain-resonance-demo.s3.amazonaws.com/recon_4c2217c45e9a579a8109dc13efa11dfc8357a915"
+            height="200"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Control Signal"></a>
+<h3>Control Signal</h3>
+
+<p>The "control signal" has 604 non-zero elements and a sparsity of 7.37%.<br />
+The control signal has a total of 
+<code>512 x 16 = 8192 elements</code></p>
+
+<img src="https://freq-domain-resonance-demo.s3.amazonaws.com/cp_1f4495f57e680f837b7aa0dbd192870562d2d223" height="200"></img>
+
+
+<a id="Random control signal"></a>
+<h3>Random control signal</h3>
+<p>We produce a random, sparse control plane, interfaced with the overfit resonance model.</p>
+
+<audio-view
+            src="https://freq-domain-resonance-demo.s3.amazonaws.com/random_fa661af684b2b9afd9bea538f3ec27d3cb26e255"
+            height="200"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+<code-block language="python">from typing import Dict
+
+
+
+import torch
+
+from torch.optim import Adam
+
+
+
+from conjure import CompositeComponent, Logger, conjure_article, AudioComponent, S3Collection, ImageComponent, \
+
+    TextComponent, CitationComponent
+
+from data import get_one_audio_segment
+
+from freqdomain import construct_experiment_model, reconstruction_loss, sparsity_loss
+
+from modules.infoloss import CorrelationLoss
+
+from util import device
+
+
+
+remote_collection_name = 'freq-domain-resonance-demo'
+
+
+
+
+
+def to_numpy(x: torch.Tensor):
+
+    return x.data.cpu().numpy()
+
+
+
+
+
+def reconstruction_section(logger: Logger, n_iterations: int) -> CompositeComponent:
+
+    n_samples = 2 ** 17
+
+    samplerate = 22050
+
+
+
+    model = construct_experiment_model(n_samples)
+
+    optim = Adam(model.parameters(), lr=1e-3)
+
+    #loss_model = CorrelationLoss(n_elements=2048).to(device)
+
+
+
+    target = get_one_audio_segment(n_samples, samplerate, device=device)
+
+    target = target.view(1, 1, n_samples).to(device)
+
+
+
+    for i in range(n_iterations):
+
+        optim.zero_grad()
+
+        recon, control_signal = model.forward()
+
+        recon_loss = reconstruction_loss(recon, target)
+
+        recon_loss = recon_loss #+ loss_model.forward(target, recon)
+
+        loss = recon_loss + sparsity_loss(control_signal)
+
+        loss.backward()
+
+        print(i, loss.item())
+
+        optim.step()
+
+
+
+    with torch.no_grad():
+
+        final_recon, final_control_signal = model.forward()
+
+        rnd, _ = model.random()
+
+
+
+    nonzero = model.nonzero_count
+
+    sparsity = model.sparsity
+
+
+
+    markdown_text = f'''
+
+The "control signal" has {nonzero} non-zero elements and a sparsity of {(100 * sparsity):.2f}%.  
+
+The control signal has a total of 
+
+`{model.n_frames} x {model.control_plane_dim} = {model.n_frames * model.control_plane_dim} elements`
+
+    '''
+
+
+
+    _, orig = logger.log_sound('original', target)
+
+    _, recon = logger.log_sound('recon', final_recon)
+
+    _, random = logger.log_sound('random', rnd)
+
+    _, cp = logger.log_matrix_with_cmap('cp', final_control_signal[0], cmap='hot')
+
+
+
+    orig_audio_component = AudioComponent(orig.public_uri, height=200)
+
+    recon_audio_component = AudioComponent(recon.public_uri, height=200)
+
+    random_audio_component = AudioComponent(random.public_uri, height=200)
+
+    control_plane_component = ImageComponent(cp.public_uri, height=200)
+
+    text_component = TextComponent(markdown_text)
+
+
+
+
+
+    composite = CompositeComponent(
+
+        original=orig_audio_component,
+
+        reconstruction=recon_audio_component,
+
+        random=random_audio_component,
+
+        cp=control_plane_component,
+
+        sparsity_text=text_component,
+
+    )
+
+    return composite
+
+
+
+
+
+def demo_page_dict() -> Dict[str, any]:
+
+    remote = S3Collection(
+
+        remote_collection_name, is_public=True, cors_enabled=True)
+
+
+
+    logger = Logger(remote)
+
+
+
+    n_iterations = 1000
+
+
+
+    example_1 = reconstruction_section(logger, n_iterations=n_iterations)
+
+    example_2 = reconstruction_section(logger, n_iterations=n_iterations)
+
+    example_3 = reconstruction_section(logger, n_iterations=n_iterations)
+
+    example_4 = reconstruction_section(logger, n_iterations=n_iterations)
+
+
+
+    citation = CitationComponent(
+
+        tag='johnvinyardresonanceinference2024',
+
+        author='John Vinyard',
+
+        url='https://blog.cochlea.xyz/resonance-inference.html',
+
+        header='Resonance Inference',
+
+        year='2024')
+
+
+
+    return dict(
+
+        example_1=example_1,
+
+        example_2=example_2,
+
+        example_3=example_3,
+
+        example_4=example_4,
+
+        citation=citation
+
+    )
+
+
+
+
+
+def generate_demo_page():
+
+    display = demo_page_dict()
+
+    conjure_article(
+
+        __file__,
+
+        'html',
+
+        title='Resonance Inference',
+
+        **display)
+
+
+
+
+
+if __name__ == '__main__':
+
+    remote = S3Collection(
+
+        remote_collection_name, is_public=True, cors_enabled=True)
+
+    remote.destroy(prefix=b'')
+
+    generate_demo_page()</code-block>
+
+
+                <a href="#">
+                    <div class="back-to-top">
+                        Back to Top
+                    </div>
+                </a>
+
+            </body>
+            </html>
+    
