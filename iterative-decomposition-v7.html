@@ -1,0 +1,2534 @@
+
+        <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <meta http-equiv="X-UA-Compatible" content="ie=edge">
+                <title>Iterative Decomposition Model V3</title>
+                <link rel="preconnect" href="https://fonts.googleapis.com">
+                <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+                <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet">
+                <script src="https://cdn.jsdelivr.net/gh/JohnVinyard/web-components@v0.0.13/build/components/bundle.js"></script>
+                <style>
+                    body {
+                        font-family: "Gowun Batang", serif;
+                        margin: 5vh 5vw;
+                        color: #333;
+                        background-color: #f0f0f0;
+                        font-size: 1.1em;
+                    }
+                    .back-to-top {
+                        position: fixed;
+                        bottom: 20px;
+                        right: 20px;
+                        background-color: #333;
+                        color: #f0f0f0;
+                        padding: 10px;
+                        font-size: 0.9em;
+                    }
+                    img {
+                        width: 100%;
+                    }
+                    ul {
+                        list-style-type: none;
+                        padding-inline-start: 20px;
+                        font-size: 20px;
+                    }
+                    a {
+                        color: #660000;
+                    }
+                    a:visited {
+                        color: #000066;
+                    }
+                    caption {
+                        text-decoration: underline;
+                        font-size: 0.6em;
+                    }
+                    blockquote {
+                        background-color: #d5d5d5;
+                        padding: 2px 10px;
+                    }
+                </style>
+            </head>
+            <body>
+                
+    <h1>Iterative Decomposition Model V3</h1>
+<details>
+    <summary>
+        <caption>Table of Contents</caption>
+    </summary>
+
+<ul>
+<li><a href="#Streaming Iterative Decomposition">Streaming Iterative Decomposition</h1></a></li>
+<li><a href="#Future Work">Future Work</h1></a><ul>
+<li><a href="#Better Perceptual Audio Losses">Better Perceptual Audio Losses</h2></a></li>
+<li><a href="#Model Size, Training Time and Dataset">Model Size, Training Time and Dataset</h2></a></li>
+<li><a href="#Different Event Generator Variants">Different Event Generator Variants</h2></a></li>
+</ul>
+</li>
+<li><a href="#Cite this Article">Cite this Article</h1></a></li>
+<li><a href="#Event Scatterplot">Event Scatterplot</h1></a></li>
+<li><a href="#Streaming Algorithm for Arbitrary-Length Audio Segments">Streaming Algorithm for Arbitrary-Length Audio Segments</h1></a><ul>
+<li><a href="#Original (Streaming)">Original (Streaming)</h2></a></li>
+<li><a href="#Reconstruction (Streaming)">Reconstruction (Streaming)</h2></a></li>
+</ul>
+</li>
+<li><a href="#Examples">Examples</h1></a><ul>
+<li><a href="#Example 1">Example 1</h2></a></li>
+<li><a href="#Example 2">Example 2</h2></a></li>
+<li><a href="#Example 3">Example 3</h2></a></li>
+<li><a href="#Example 4">Example 4</h2></a></li>
+<li><a href="#Example 5">Example 5</h2></a></li>
+</ul>
+</li>
+<li><a href="#Notes">Notes</h1></a></li>
+</ul>
+</details>
+                
+
+<a id="Streaming Iterative Decomposition"></a>
+<h1>Streaming Iterative Decomposition</h1>
+<p>This article covers the continuation of work I've been pursuing in the area of sparse, interpretable audio models.  Our
+goal is to decompose recordings of acoustic instruments (orchestral music from the
+<a href="https://zenodo.org/records/5120004#.Yhxr0-jMJBA">MusicNet dataset</a> dataset) into constituent "events", which are encoded
+as low-dimensional vectors carrying information about attack envelopes and physical resonances of both the instrument being
+played and the room in which the performance occurs.</p>
+<p>Some previous iterations of this work:</p>
+<ul>
+<li><a href="https://blog.cochlea.xyz/v4blogpost.html">Iterative Decomposition Model V4</a></li>
+<li><a href="https://blog.cochlea.xyz/gamma-audio-splat.html">Gaussian/Gamma Splatting for Audio</a></li>
+</ul>
+<p><strong>In this newest version, we introduce a streaming algorithm so that audio segments of arbitrary lengths can be decomposed into
+constituent events.</strong></p>
+<p>All training and model code can be
+<a href="https://github.com/JohnVinyard/matching-pursuit/blob/main/iterativedecomposition.py">found here</a>.</p>
+
+<a id="Future Work"></a>
+<h1>Future Work</h1>
+
+<a id="Better Perceptual Audio Losses"></a>
+<h2>Better Perceptual Audio Losses</h2>
+<p>Recent experiments use a greedy, per-event loss which maximizes the energy removed from the signal at each step, as well
+as a learned, adversarial loss.  Reconstruction quality will likely benefit from a more perceptually-aligned loss and a
+larger, more diverse dataset.</p>
+
+<a id="Model Size, Training Time and Dataset"></a>
+<h2>Model Size, Training Time and Dataset</h2>
+<p>Firstly, this model is relatively small, weighing in at ~26M parameters (~117 MB on disk) and has only been trained for
+around 24 hours, so it seems there is a lot of space to increase the model size, dataset size and training time to
+further improve.  The reconstruction quality of the examples on this page is not amazing, certainly not good enough
+even for a lossy audio codec, but the structure the model extracts seems like it could be used for many interesting
+applications.  The training data should be expanded beyond the MusicNet dataset.</p>
+
+<a id="Different Event Generator Variants"></a>
+<h2>Different Event Generator Variants</h2>
+<p>The decoder side of the model is very interesting, and all sorts of physical modelling-like approaches could yield
+better, more realistic, and sparser renderings of the audio.</p>
+
+
+<a id="Cite this Article"></a>
+<h1>Cite this Article</h1>
+<p>If you'd like to cite this article, you can use the following <a href="https://bibtex.org/">BibTeX block</a>.</p>
+
+<citation-block
+            tag="johnvinyarditerativedecompositionv3"
+            author="Vinyard, John"
+            url="https://blog.cochlea.xyz/iterative-decomposition-v3.html"
+            header="Iterative Decomposition V3"
+            year="2024">
+        </citation-block>
+
+
+<a id="Event Scatterplot"></a>
+<h1>Event Scatterplot</h1>
+<p>Here is a scatterplot mapping events from four different audio segments onto a 2D plane using t-SNE.<br />
+Each 32-dimensional event vector encodes information about attack, resonance, and room impulse response.</p>
+<p>You can play around with a larger scatterplot of events sampled from MusicNet reconstructions <a href="https://blog.cochlea.xyz/scatterv7.html">here</a>.</p>
+
+<scatter-plot 
+                width="500" 
+                height="500" 
+                radius="0.3" 
+                points='[{"x": 9.507767677307129, "y": 3.21575927734375, "startSeconds": 2.7515645027160645, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event0_1f821ded7565be1dec5e9512e0dcb72712af4a80", "color": "rgb(248 207 235)"}, {"x": 10.255720138549805, "y": 2.1334142684936523, "startSeconds": 2.937324285507202, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event1_d76c121114a3b2c87ef262c02bb25a8346572276", "color": "rgb(242 211 231)"}, {"x": 11.01824951171875, "y": 2.817350149154663, "startSeconds": 2.937324285507202, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event2_c24c055632ba128f29538ddc521fec2110ef97a9", "color": "rgb(254 216 241)"}, {"x": 11.326523780822754, "y": 2.4564552307128906, "startSeconds": 2.9489340782165527, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event3_2ae4e9178b2c9fd6b0318d36b86ee55dc7f7a392", "color": "rgb(253 218 240)"}, {"x": 3.9090685844421387, "y": -2.2924435138702393, "startSeconds": 1.4164172410964966, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event4_c5c6f578446283600a1eca14e8db6e590ea5238e", "color": "rgb(152 170 154)"}, {"x": 11.34847640991211, "y": 1.971904993057251, "startSeconds": 2.9489340782165527, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event5_46660063f35398ffb25800ad585c2a31e7686a87", "color": "rgb(248 218 236)"}, {"x": 1.5959769487380981, "y": -1.770861268043518, "startSeconds": 0.9752380847930908, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event6_3448364ca1d061350ad3845377545482afd116a7", "color": "rgb(141 157 144)"}, {"x": 2.3987793922424316, "y": -4.067129611968994, "startSeconds": 0.08126983791589737, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event7_870c295c9319c3136281c08da39f752a9326b10e", "color": "rgb(123 160 130)"}, {"x": 1.6179288625717163, "y": -0.5108625888824463, "startSeconds": 1.0681178569793701, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event8_d706716600ef0d87c8ca0981bfa6b2c99ed8425a", "color": "rgb(154 158 154)"}, {"x": 0.2014225423336029, "y": -3.1348485946655273, "startSeconds": 0.39473921060562134, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event9_a42cbf8d8796223ea43e6f3ae610576a5dc4b15b", "color": "rgb(117 148 124)"}, {"x": 3.4795167446136475, "y": -1.7777374982833862, "startSeconds": 1.5209070444107056, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event10_9ec8c5c4458bea351216eaf9c75e4e6a8775abc7", "color": "rgb(154 168 156)"}, {"x": 4.49939489364624, "y": -4.847284317016602, "startSeconds": 1.7414965629577637, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event11_7ffcafd9760ad446069c0cf9058cedc271515b23", "color": "rgb(129 173 137)"}, {"x": 0.8310927748680115, "y": -3.8990776538848877, "startSeconds": 0.0, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event12_5d4bbb6712c20947f0874846a2fc62b7c9d813bd", "color": "rgb(113 151 121)"}, {"x": 8.413552284240723, "y": 3.451864719390869, "startSeconds": 2.7515645027160645, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event13_591c82af94c195ab4ede665271991aba3aea2da2", "color": "rgb(243 201 230)"}, {"x": 1.7217142581939697, "y": -0.49544474482536316, "startSeconds": 1.05650794506073, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event14_03f725e5f6363342b619079be5d9158a661a97de", "color": "rgb(155 158 155)"}, {"x": 1.2851340770721436, "y": -9.284616470336914, "startSeconds": 2.554194927215576, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event15_9910f3eb6d13ae4ef0fd3ee29704ce8cb3788ef9", "color": "rgb(61 151 80)"}, {"x": 4.818732261657715, "y": -6.0644612312316895, "startSeconds": 1.834376335144043, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event16_3e7a926604226fe188ae7f268691443d438bcd0f", "color": "rgb(119 174 129)"}, {"x": -0.7041937112808228, "y": -4.939634323120117, "startSeconds": 0.3250793516635895, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event17_81360d7b69227b808a1815e589497e135fe62a09", "color": "rgb(92 141 103)"}, {"x": -0.8084220290184021, "y": -3.0949013233184814, "startSeconds": 0.7778684496879578, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event18_f74921b0023e702028683ae7693886fc670dc759", "color": "rgb(110 142 118)"}, {"x": 0.9917477965354919, "y": -9.019640922546387, "startSeconds": 2.5425848960876465, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event19_37427843d05e3e76d227cc2696ecf01a4cff065b", "color": "rgb(61 149 81)"}, {"x": -0.7677854895591736, "y": -3.3449597358703613, "startSeconds": 0.7778684496879578, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event20_721b0702e441c24be740758a3a40c046df073afa", "color": "rgb(108 142 116)"}, {"x": -0.03918728232383728, "y": -5.817948341369629, "startSeconds": 0.20897959172725677, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event21_d149d2277ee7779c0687a6491dda33ae62d971a6", "color": "rgb(87 145 100)"}, {"x": 4.8998565673828125, "y": -6.075056552886963, "startSeconds": 1.834376335144043, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event22_4ff7cc2a741aea7c81c5d15bc62a6f0a012eb82c", "color": "rgb(119 174 130)"}, {"x": 1.2313861846923828, "y": -3.9367916584014893, "startSeconds": 0.0, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event23_76fc4832893f992f3150cee01abf1dfe5d556d45", "color": "rgb(116 153 124)"}, {"x": -1.8178608417510986, "y": -1.45533287525177, "startSeconds": 2.3103854656219482, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event24_d53d18e8150cb066df5bfe0a6c8a81fc8235943f", "color": "rgb(120 136 125)"}, {"x": -1.7541569471359253, "y": -6.745952129364014, "startSeconds": 0.54566890001297, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event25_f3baca7b310cbe319babf4e483064bce7e443aa9", "color": "rgb(66 134 82)"}, {"x": 7.873112678527832, "y": 3.5364043712615967, "startSeconds": 2.7863945960998535, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event26_69676fe6f82d97f0391dfcd2a0fd455d20057caa", "color": "rgb(240 198 227)"}, {"x": 2.989426851272583, "y": -2.176274061203003, "startSeconds": 1.5209070444107056, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event27_8fc72b379b9bd13a7438a2ea57ec62b117acce5f", "color": "rgb(146 165 149)"}, {"x": -0.8298647403717041, "y": -1.130827784538269, "startSeconds": 2.240725517272949, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event28_84a8f79590ef5930cc8b57e45701474e8f708568", "color": "rgb(131 142 134)"}, {"x": 2.1993865966796875, "y": -2.330125093460083, "startSeconds": 0.9868480563163757, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event29_07ba6cd5d920af9f24b029f1242a36ae416cd251", "color": "rgb(139 160 143)"}, {"x": 1.0933886766433716, "y": -5.013952732086182, "startSeconds": 0.3250793516635895, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event30_cd5834d4c4b24a5ba8c4892e9ca8292a686350ef", "color": "rgb(104 152 114)"}, {"x": -1.2921175956726074, "y": -6.049976825714111, "startSeconds": 0.6617686748504639, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event31_2aa4fcf2d43a4088bdb75a4507b10bde17c6dd31", "color": "rgb(76 137 90)"}, {"x": -3.7299046516418457, "y": 5.167722225189209, "startSeconds": 0.04643990844488144, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event32_2625e2b57e6ddaedb07af8db36970c500bcaacab", "color": "rgb(176 128 167)"}, {"x": -3.8774914741516113, "y": 4.092920303344727, "startSeconds": 0.1160997748374939, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event33_3aab1ac51a529e34013b82c53380581ef109df49", "color": "rgb(163 127 157)"}, {"x": -9.68273639678955, "y": 1.9703956842422485, "startSeconds": 1.1145577430725098, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event34_6f63c5a9481dccfd41e883658144c856863540ae", "color": "rgb(101 91 103)"}, {"x": -10.43067455291748, "y": 2.016430616378784, "startSeconds": 1.2074376344680786, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event35_a7058f1d323bf0914fc2b8b3587472f1ad380d0e", "color": "rgb(96 86 98)"}, {"x": -6.755870819091797, "y": 4.988318920135498, "startSeconds": 0.5688889026641846, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event36_0b6bd90089fb6e64e63753b52c0b8ae451d16b03", "color": "rgb(153 110 146)"}, {"x": -5.67925500869751, "y": 3.943443775177002, "startSeconds": 0.638548731803894, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event37_f18c07ce402cac415446f0e06813a7510af7f050", "color": "rgb(149 116 144)"}, {"x": -1.944412350654602, "y": 3.9183449745178223, "startSeconds": 1.4976871013641357, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event38_5cfd7d3bf87a8faa6fa74fcdb6c4d4b436535e7d", "color": "rgb(175 138 168)"}, {"x": -2.2315244674682617, "y": 4.19352388381958, "startSeconds": 1.5441269874572754, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event39_1b06970ef5ba39b8c5cac0e5d827c88afd3fb478", "color": "rgb(176 137 168)"}, {"x": -1.810044288635254, "y": 4.958132743835449, "startSeconds": 1.6602267026901245, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event40_7c805b3aee26a7055fc476d09352aefa5fb7f331", "color": "rgb(187 140 177)"}, {"x": -2.4421467781066895, "y": 7.5689873695373535, "startSeconds": 1.8111563920974731, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event41_fe41a68a2405ee4f34d14245c4b7a5d090510c3a", "color": "rgb(210 137 194)"}, {"x": -2.2911322116851807, "y": 7.811723232269287, "startSeconds": 1.8575963973999023, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event42_0903979114db2e6df4a7b276f1e3ff4b5ab63d60", "color": "rgb(213 138 197)"}, {"x": -5.585964202880859, "y": 5.378437519073486, "startSeconds": 2.1014058589935303, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event43_831706684f87592d2350ce520dac409827743f6d", "color": "rgb(165 117 157)"}, {"x": -5.77716064453125, "y": 4.096870422363281, "startSeconds": 0.638548731803894, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event44_d554257262eba58f92073a014d1a1523809dfa67", "color": "rgb(150 115 145)"}, {"x": -6.784770965576172, "y": 2.6325135231018066, "startSeconds": 0.847528338432312, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event45_ebf275e3a016d57a26b621385e73e5a81d8c49fc", "color": "rgb(128 109 127)"}, {"x": -5.301724910736084, "y": 5.895959854125977, "startSeconds": 2.2058956623077393, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event46_43c2dcdc58bdbda2d9a48eceff9605c87c3d894c", "color": "rgb(172 119 163)"}, {"x": -3.658329486846924, "y": 6.754027843475342, "startSeconds": 2.287165403366089, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event47_ee9741c0977e8bc8f784040a0f7df5767d6ac315", "color": "rgb(193 130 180)"}, {"x": -4.635253429412842, "y": 9.284821510314941, "startSeconds": 2.589024782180786, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event48_f617b945be1ee936a923c2cccb316d579ec8754f", "color": "rgb(212 125 195)"}, {"x": -4.495148658752441, "y": 1.82871413230896, "startSeconds": 2.739954710006714, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event49_7924de4e3189feb61b6da12076ab45329c175251", "color": "rgb(136 122 135)"}, {"x": -8.932928085327148, "y": 2.498837471008301, "startSeconds": 1.0332880020141602, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event50_3ea38d54c0ea485c4787cec9e22bb219a3407fbf", "color": "rgb(111 95 112)"}, {"x": -4.530782222747803, "y": 9.3447265625, "startSeconds": 2.391655206680298, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event51_882ece69d3d28db97e697a4d2de1b314d376bf9c", "color": "rgb(213 126 196)"}, {"x": -7.084824562072754, "y": 5.474420547485352, "startSeconds": 0.5340589284896851, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event52_45c32b3bb3153483c1ddc27270295ab47e3b1969", "color": "rgb(155 108 148)"}, {"x": -8.197688102722168, "y": 7.963163375854492, "startSeconds": 0.0, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event53_eefd2f3d6d194c4b217f946a860235983d9e3f5c", "color": "rgb(173 103 161)"}, {"x": -7.405676364898682, "y": 2.08461594581604, "startSeconds": 0.9171881675720215, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event54_2389404c4f32b7bd96a273938a5805c6660b0918", "color": "rgb(118 104 118)"}, {"x": -8.007923126220703, "y": 8.530244827270508, "startSeconds": 2.9489340782165527, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event55_dc897705c9bc2ab582d2fc69b586851a4aea42c5", "color": "rgb(181 104 167)"}, {"x": -4.4110918045043945, "y": 1.799496054649353, "startSeconds": 2.6470746994018555, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event56_6c00502558dca1356598c89cb45becc99da6b98b", "color": "rgb(136 122 135)"}, {"x": -1.6832925081253052, "y": 1.5162276029586792, "startSeconds": 0.3599092960357666, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event57_ffe25ba80d11f425a8e869323c6edfcf529231ef", "color": "rgb(152 139 150)"}, {"x": -0.5227716565132141, "y": 3.9776687622070312, "startSeconds": 1.369977355003357, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event58_00b543d3a10770733b86d2d7844a656beb3c96bf", "color": "rgb(186 147 177)"}, {"x": -5.909029483795166, "y": 6.108707427978516, "startSeconds": 2.0317459106445312, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event59_e750ea110040902e2bae3997aeff789d8cc10d58", "color": "rgb(170 116 161)"}, {"x": -7.932061672210693, "y": 7.981744766235352, "startSeconds": 0.0, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event60_da1568037e98ea5a7574107b3f32ce9564b374d4", "color": "rgb(175 104 163)"}, {"x": -1.1965066194534302, "y": 5.233312129974365, "startSeconds": 1.799546480178833, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event61_d4d9a40b6da8ab02e7f93e132ad57db8e70b73c4", "color": "rgb(194 144 183)"}, {"x": -1.3110617399215698, "y": 0.5087039470672607, "startSeconds": 0.3599092960357666, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event62_e42446cad37cb9f4d39ca72b88b1b2aca9c2f2ba", "color": "rgb(144 140 144)"}, {"x": 1.695879340171814, "y": 6.78695821762085, "startSeconds": 0.8591383099555969, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event63_ce680aa05021643a8362bc8647a93ce662c6d398", "color": "rgb(230 162 214)"}, {"x": 3.756174325942993, "y": 2.3889124393463135, "startSeconds": 2.879274368286133, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event64_f6f9fdc6c4f2cdda99092ffc8edffa1b323d718e", "color": "rgb(199 172 191)"}, {"x": -9.09139347076416, "y": 0.7127817273139954, "startSeconds": 0.09287981688976288, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event65_d36ecb9a82795f6e16ef31a1098f4e57587cf68c", "color": "rgb(92 94 96)"}, {"x": -9.410609245300293, "y": 0.03406490385532379, "startSeconds": 0.10448979586362839, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event66_37624b0f74f4ea48be9cd6577fdb89782a122843", "color": "rgb(83 91 89)"}, {"x": -8.933693885803223, "y": -0.31119781732559204, "startSeconds": 0.10448979586362839, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event67_ffb36650c67ff194a2da9dd43f3bdaa248308e98", "color": "rgb(82 94 89)"}, {"x": -8.218118667602539, "y": 0.20350749790668488, "startSeconds": 0.10448979586362839, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event68_b20677e6272a2695bfe2eaae47437ee50475396f", "color": "rgb(93 99 98)"}, {"x": 4.165426254272461, "y": 2.1451385021209717, "startSeconds": 2.9257142543792725, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event69_2d835b02da3476f08305988671a11093b8ac8013", "color": "rgb(200 174 192)"}, {"x": -8.00612735748291, "y": -0.4274827837944031, "startSeconds": 0.10448979586362839, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event70_695f2455ca49ce5bcc4bccbd136c3f3145c1740f", "color": "rgb(88 100 94)"}, {"x": -7.356755256652832, "y": -0.968024492263794, "startSeconds": 0.09287981688976288, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event71_94ecf9527f49a9edf58f5819bc99fa81342480fe", "color": "rgb(87 103 94)"}, {"x": -6.880084037780762, "y": -1.646056890487671, "startSeconds": 0.09287981688976288, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event72_4ea74df8796cc677c2142e2213a836c13a11543c", "color": "rgb(83 106 91)"}, {"x": -6.210855484008789, "y": -2.5194737911224365, "startSeconds": 0.09287981688976288, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event73_fc9f68dc0075b657c71ffd39bc7aa7bf58b6fd0e", "color": "rgb(78 109 88)"}, {"x": -5.340538024902344, "y": -3.6008472442626953, "startSeconds": 0.04643990844488144, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event74_2f8cebe848a9f38364d7f4b5ede645b6eb8baab5", "color": "rgb(73 114 85)"}, {"x": -5.695342063903809, "y": -4.108647346496582, "startSeconds": 0.04643990844488144, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event75_eda196d5f333585c829e7b87236bf8e615a3e3d9", "color": "rgb(66 111 78)"}, {"x": 5.189550399780273, "y": 4.226922988891602, "startSeconds": 2.0897958278656006, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event76_a8fa1fbcd7616e9e86332d02b0885ba56f102eee", "color": "rgb(228 182 216)"}, {"x": -7.2847676277160645, "y": -7.324838638305664, "startSeconds": 0.42956915497779846, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event77_2892378f1bafbe77fbcbdc9e4c0b0a1494c8e714", "color": "rgb(21 100 42)"}, {"x": -7.262648105621338, "y": -6.746856212615967, "startSeconds": 0.42956915497779846, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event78_1817187553e9de06283b3d6b3977a6e81450625a", "color": "rgb(27 101 47)"}, {"x": -5.176281929016113, "y": -4.432580471038818, "startSeconds": 0.04643990844488144, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event79_21e0e6417b6c358743d9f1b7d90876385d29f7e3", "color": "rgb(66 114 79)"}, {"x": -4.884730339050293, "y": -4.890548229217529, "startSeconds": 0.03482992947101593, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event80_a711c9155348ddef64b4deef9b280f60781e32c0", "color": "rgb(63 116 77)"}, {"x": -7.798994541168213, "y": -6.5505266189575195, "startSeconds": 0.42956915497779846, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event81_7a91c6ff6c93ffb9fd7c85fafa19f90f2319224e", "color": "rgb(25 97 45)"}, {"x": -8.498724937438965, "y": -7.481573581695557, "startSeconds": 0.3482993245124817, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event82_50bf6564c7814a5c23a1e03cf78d8f116ceedd21", "color": "rgb(11 93 33)"}, {"x": -5.671255111694336, "y": -5.615267276763916, "startSeconds": 0.0, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event83_7ac3dd257c438737fad1ad1df406652244e08768", "color": "rgb(50 111 66)"}, {"x": -8.885296821594238, "y": -7.062732219696045, "startSeconds": 0.3366893231868744, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event84_a79c711fe28a68cc360667218dd8fb3ece7dbc0f", "color": "rgb(13 91 34)"}, {"x": -9.754691123962402, "y": -7.735103130340576, "startSeconds": 0.29024943709373474, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event85_ba60d802be82dc0fb7049bc0c79ec0775f44cf47", "color": "rgb(0 85 23)"}, {"x": -7.93186616897583, "y": -4.261468410491943, "startSeconds": 0.5804988741874695, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event86_4c693912947089308c93a1dca48b06e2d15a27b0", "color": "rgb(48 98 63)"}, {"x": -8.23707103729248, "y": -4.066218376159668, "startSeconds": 0.5804988741874695, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event87_86ff5115498521aaf513655f13f5002748f116c3", "color": "rgb(48 96 63)"}, {"x": -8.881787300109863, "y": -5.003969192504883, "startSeconds": 0.4876190423965454, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event88_9bd9bbecb6bd7478315589eeadd51712cd6d51df", "color": "rgb(34 92 51)"}, {"x": -9.313267707824707, "y": -5.00058650970459, "startSeconds": 0.4643990993499756, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event89_c73b604765702f8e8eda1018a7a515cf925dbb3a", "color": "rgb(31 89 48)"}, {"x": -9.678750991821289, "y": -6.371693134307861, "startSeconds": 0.31346938014030457, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event90_88b00a861c1609e5ecbc449e9861e247a0c07bd3", "color": "rgb(14 86 35)"}, {"x": 2.872938394546509, "y": 2.5353550910949707, "startSeconds": 2.7515645027160645, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event91_d13426398adf819fe7a7b096c664e5987034b0be", "color": "rgb(195 167 187)"}, {"x": 3.18064284324646, "y": 2.9898486137390137, "startSeconds": 2.623854875564575, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event92_fb5b15bb3975dc3189a182d1f1117c5432940a2b", "color": "rgb(201 169 193)"}, {"x": 4.101600646972656, "y": 3.719675064086914, "startSeconds": 2.356825351715088, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event93_b4c99cbeb4885da4b5506e7bb8a1eb31af47ba2a", "color": "rgb(215 175 205)"}, {"x": 4.1605916023254395, "y": 4.451845169067383, "startSeconds": 2.252335548400879, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event94_a44810f3237cabb2c576d293a903af103582d93d", "color": "rgb(223 176 211)"}, {"x": 5.058406829833984, "y": 4.739084720611572, "startSeconds": 1.904036283493042, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event95_25620dcc0e85e1508bdeb7d98d33c3eced7373de", "color": "rgb(233 181 219)"}, {"x": 8.166531562805176, "y": 0.8140450119972229, "startSeconds": 1.2887074947357178, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event96_3d92774e18da6f5b07603acb562e3d6472481339", "color": "rgb(214 198 207)"}, {"x": 10.328716278076172, "y": -8.509931564331055, "startSeconds": 2.008526086807251, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event97_75b0d3749e093bab2664a8ce7ec782dc37d824c3", "color": "rgb(132 206 144)"}, {"x": 7.996979236602783, "y": -9.827314376831055, "startSeconds": 2.1594557762145996, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event98_77cd0160ed4ec62cdd9078da9917eeddb5ac0a13", "color": "rgb(102 191 118)"}, {"x": 6.915122985839844, "y": -9.383983612060547, "startSeconds": 1.6370067596435547, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event99_4b0273ff66cd873152b42d26738db80d33fd524c", "color": "rgb(99 185 115)"}, {"x": 10.589829444885254, "y": -0.11288903653621674, "startSeconds": 0.6617686748504639, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event100_629cd7ebb6d5ede783c7b8c1ae2406ffcd0e2233", "color": "rgb(221 212 214)"}, {"x": 8.867772102355957, "y": 0.89823317527771, "startSeconds": 1.172607660293579, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event101_0646666a7c5e1b255c1b521e50a7c453811902fb", "color": "rgb(220 202 212)"}, {"x": 7.6781229972839355, "y": 0.31705427169799805, "startSeconds": 2.554194927215576, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event102_943cead65b5119ec8e5aee1059b2215073a6e9af", "color": "rgb(205 195 199)"}, {"x": 6.695343494415283, "y": 0.5227496027946472, "startSeconds": 2.565804958343506, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event103_4ef3f96c074dabddb02ca6d35ba4864b15ac3df2", "color": "rgb(200 189 195)"}, {"x": 10.302046775817871, "y": -1.1349279880523682, "startSeconds": 0.6617686748504639, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event104_caecb9d0392bc010b3b01498ad1aeff55c370e0b", "color": "rgb(208 210 204)"}, {"x": 7.9397759437561035, "y": -7.030183792114258, "startSeconds": 1.6370067596435547, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event105_c2d2283689bdfb633d81d2f7a3b7caf94b3318c5", "color": "rgb(131 192 141)"}, {"x": 10.7232027053833, "y": -3.8883914947509766, "startSeconds": 0.30185940861701965, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event106_c861cfc6412e8518060f881357bde74ecdff1b9f", "color": "rgb(183 211 184)"}, {"x": 2.2019155025482178, "y": -9.804190635681152, "startSeconds": 2.449705123901367, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event107_4e35ac98d39d67af0ff79e806fd1ce1bb58e0515", "color": "rgb(62 156 82)"}, {"x": 4.926080703735352, "y": -9.920392990112305, "startSeconds": 2.356825351715088, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event108_1d46d7d6c9b74d57c2725ef9e8c90a7e484fa6d5", "color": "rgb(80 173 98)"}, {"x": 5.645676612854004, "y": -10.298103332519531, "startSeconds": 2.879274368286133, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event109_baba3a3c262b6f568972315500014fe94d43cb9b", "color": "rgb(81 177 100)"}, {"x": 2.771688222885132, "y": -10.364471435546875, "startSeconds": 1.8459863662719727, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event110_09fc0491b80ca9b7c558921962fffb7a6c83c3db", "color": "rgb(60 159 81)"}, {"x": 5.92339563369751, "y": -9.64673900604248, "startSeconds": 2.879274368286133, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event111_9372b2105d0465e5542199e160b4a1eeaea82505", "color": "rgb(89 179 107)"}, {"x": 6.944716453552246, "y": -7.297030925750732, "startSeconds": 2.8212244510650635, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event112_f3e82f378af888fc98db7186a957fad2fc02f9d0", "color": "rgb(121 186 132)"}, {"x": 10.394283294677734, "y": -2.3805158138275146, "startSeconds": 0.5572788715362549, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event113_c97aa9ecba1ca515c58ad1e1c2913c930d22b94a", "color": "rgb(196 210 195)"}, {"x": 10.370317459106445, "y": -4.319336891174316, "startSeconds": 0.03482992947101593, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event114_6fab871ba7ffa7dc456187ee18523cf611a81e33", "color": "rgb(176 208 179)"}, {"x": 8.685678482055664, "y": -1.171479344367981, "startSeconds": 1.0448979139328003, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event115_39050f720060d833fc6379b16a2a60ffae57dd31", "color": "rgb(197 200 194)"}, {"x": 7.681434154510498, "y": -4.542890548706055, "startSeconds": 0.02321995422244072, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event116_9e155a1930c414c6081a4449188115152febe188", "color": "rgb(155 192 160)"}, {"x": 9.149603843688965, "y": -3.8376026153564453, "startSeconds": 0.5108389854431152, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event117_917e34585620e24045d16adca91b87fb4b316425", "color": "rgb(172 201 175)"}, {"x": 10.537201881408691, "y": -8.357454299926758, "startSeconds": 1.9969160556793213, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event118_785e75dd681459d80a555853fe751a6dc6429e8b", "color": "rgb(135 207 147)"}, {"x": 5.882884502410889, "y": -0.6711481213569641, "startSeconds": 1.6253968477249146, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event119_409abf9a19974f5f8178c3eec36bf3a345dca97f", "color": "rgb(182 183 180)"}, {"x": 8.608677864074707, "y": -1.245181918144226, "startSeconds": 1.0100680589675903, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event120_421f245814bb08cfec72354f0ef161dd3ccfe421", "color": "rgb(195 199 193)"}, {"x": 4.6053876876831055, "y": -8.267759323120117, "startSeconds": 2.9605441093444824, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event121_f57cd01596d99d8ec980b958760beeca86cca58c", "color": "rgb(95 171 110)"}, {"x": 6.210069179534912, "y": -1.2462369203567505, "startSeconds": 1.5673469305038452, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event122_7b0a17cf270fee7e4b1d1b4204baa23534d8e7b3", "color": "rgb(179 185 177)"}, {"x": 8.948504447937012, "y": -3.9697837829589844, "startSeconds": 0.4527890980243683, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event123_7486158929edce6087e0962f457320700a5ff838", "color": "rgb(170 200 172)"}, {"x": 4.601059436798096, "y": -8.307640075683594, "startSeconds": 2.9605441093444824, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event124_56935071bae714ec4c9b54cef8035ef5efa533c1", "color": "rgb(94 171 109)"}, {"x": 6.106064319610596, "y": -1.6252626180648804, "startSeconds": 2.728344678878784, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event125_23a473ef866137f145100e174f612dcbec0969ae", "color": "rgb(174 184 174)"}, {"x": 8.804610252380371, "y": -8.161253929138184, "startSeconds": 2.1942856311798096, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event126_4c4a3337a14f8855bd91ea4561ceb989d9ed2943", "color": "rgb(125 197 137)"}, {"x": 7.256067276000977, "y": -4.555435657501221, "startSeconds": 0.0, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event127_465f746bb7546af3b147f06195ef8a09af248583", "color": "rgb(152 189 157)"}]'>
+            </scatter-plot>
+
+
+<a id="Streaming Algorithm for Arbitrary-Length Audio Segments"></a>
+<h1>Streaming Algorithm for Arbitrary-Length Audio Segments</h1>
+<p>In this latest iteration of the work, we introduce a "streaming" algorithm so that we can decompose audio segments of
+arbitrary lengths.</p>
+
+
+<a id="Original (Streaming)"></a>
+<h2>Original (Streaming)</h2>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/streamingorig_f67903a0d96b470e449ac7d4b86c79fc5f6e4bdb"
+            height="100"
+            samples="256"
+            scale="4"
+            controls
+        ></audio-view>
+
+
+<a id="Reconstruction (Streaming)"></a>
+<h2>Reconstruction (Streaming)</h2>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/streamingrecon_c3b7a48a3c24ef7793960a4e8ff7f36f665aa270"
+            height="100"
+            samples="256"
+            scale="4"
+            controls
+        ></audio-view>
+
+
+<a id="Examples"></a>
+<h1>Examples</h1>
+
+
+<a id="Example 1"></a>
+<h2>Example 1</h2>
+
+
+<a id="Original Audio"></a>
+<h3>Original Audio</h3>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/original_b1b9d9e64c2f5d5ab2c5336d43bc32165c69f7ed"
+            height="100"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Reconstruction"></a>
+<h3>Reconstruction</h3>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/reconstruction_a0df5f0249f5966c29fdb7d624f517696d8d81c3"
+            height="100"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Randomized"></a>
+<h3>Randomized</h3>
+
+<p>Here, we generate random event vectors with the original event times.</p>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/randomizedevents_337f39fd94a0664af0930ae0661a5b1ec11fa995"
+            height="100"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+<p>Here we use the original event vectors, but generate random times.</p>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/randomizedtimes_eb55531f35ea6bd19c9b63f56a93a50588a0e8b0"
+            height="100"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Event Vectors"></a>
+<h3>Event Vectors</h3>
+
+<img src="https://iterative-decomposition-v3.s3.amazonaws.com/latents_5c21fc03497386669eaf333cb387b284c6d0f6f1" height="200"></img>
+
+
+<a id="Event Scatterplot"></a>
+<h3>Event Scatterplot</h3>
+<p>Events clustered using <a href="https://scikit-learn.org/stable/modules/generated/sklearn.manifold.TSNE.html">t-SNE</a></p>
+
+<scatter-plot 
+                width="300" 
+                height="300" 
+                radius="0.04" 
+                points='[{"x": -7.756568431854248, "y": 12.715642929077148, "startSeconds": 0.8126984238624573, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event0_106086e4754ff1a95db48a253de5bf70ac8635af", "color": "rgb(90 3 243)"}, {"x": -7.807281017303467, "y": 12.723631858825684, "startSeconds": 0.952018141746521, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event1_b53264835a0f56b55536c79c03db0e9d003aecb0", "color": "rgb(90 2 243)"}, {"x": -7.5826215744018555, "y": 12.723997116088867, "startSeconds": 0.40634921193122864, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event2_597083c85e71a1dc87923f9a7c963f60ad92eef9", "color": "rgb(93 5 244)"}, {"x": -7.509733200073242, "y": 12.733297348022461, "startSeconds": 0.26702946424484253, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event3_abf4d7c74e57485836e23c328a6ba7bebfd0a888", "color": "rgb(94 5 244)"}, {"x": -7.554666042327881, "y": 12.796338081359863, "startSeconds": 0.01160997711122036, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event4_3d0816ab47e763df641c5055ca8ae5c366acae64", "color": "rgb(94 5 245)"}, {"x": -7.550664901733398, "y": 12.814679145812988, "startSeconds": 0.0, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event5_15cb44c241827f112063a991bf82569be0f40ddd", "color": "rgb(94 5 245)"}, {"x": -7.555583953857422, "y": 12.829508781433105, "startSeconds": 0.01160997711122036, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event6_ce1c1fbce556f32c3a0d5ab6d66ace5825b46426", "color": "rgb(94 5 245)"}, {"x": -7.802988052368164, "y": 12.724145889282227, "startSeconds": 0.9636281132698059, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event7_afb8e855b6b066b79990008fd51d21e1a687ac75", "color": "rgb(90 2 243)"}, {"x": -7.978068828582764, "y": 12.691816329956055, "startSeconds": 2.1362357139587402, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event8_b1773478a314134d99668a1078f427be5cf84d87", "color": "rgb(87 0 243)"}, {"x": -7.537567138671875, "y": 12.797998428344727, "startSeconds": 0.16253967583179474, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event9_6dff3bf6f0344777073080cccb6ab0848d2d481c", "color": "rgb(94 5 245)"}, {"x": -7.507778167724609, "y": 12.777965545654297, "startSeconds": 0.5921088457107544, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event10_8c89afb8a8e017774b7ebee9ead481cc0f228e2a", "color": "rgb(94 6 245)"}, {"x": -7.981269836425781, "y": 12.69900131225586, "startSeconds": 1.5325169563293457, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event11_40db041dbe9f91c01260cfc34c7b7518d7d60e6c", "color": "rgb(87 0 243)"}, {"x": -7.967620849609375, "y": 12.718071937561035, "startSeconds": 2.1246259212493896, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event12_077e7d8facd9559a6f2a095d14218f079d738857", "color": "rgb(87 0 243)"}, {"x": -7.7759904861450195, "y": 12.561062812805176, "startSeconds": 1.1261677742004395, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event13_97f7e61f52afec514da7d7f9f49290c836702cdb", "color": "rgb(89 2 241)"}, {"x": -8.061408042907715, "y": 12.743230819702148, "startSeconds": 1.6486167907714844, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event14_fe49616ee09c2d510d73b313d7182cff41ef82c1", "color": "rgb(86 0 243)"}, {"x": -7.888579845428467, "y": 12.626696586608887, "startSeconds": 2.7515645027160645, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event15_d6f3caf32a7c0dc4116ed4a7adcb3cf5b42f61b3", "color": "rgb(88 1 242)"}, {"x": -7.845539093017578, "y": 12.667110443115234, "startSeconds": 2.7515645027160645, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event16_0f06a1ad247a1da2cff5fed2c817b2106b5fe3e4", "color": "rgb(89 2 242)"}, {"x": -7.627095699310303, "y": 12.762618064880371, "startSeconds": 0.5572788715362549, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event17_4e7d84db350c7f062a758e0422ac4574119b897d", "color": "rgb(92 4 244)"}, {"x": -7.922615051269531, "y": 12.635493278503418, "startSeconds": 1.369977355003357, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event18_31fc79305b6e64aa3dacbc1a527ea9be8003723e", "color": "rgb(87 1 242)"}, {"x": -7.593400001525879, "y": 12.792118072509766, "startSeconds": 0.16253967583179474, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event19_6fcc21abe17e63c2606086e627dec8e03335325b", "color": "rgb(93 5 245)"}, {"x": -7.936741828918457, "y": 12.630783081054688, "startSeconds": 1.369977355003357, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event20_3acc09bd93ab1f644aa62b6b513a05945cff6fa6", "color": "rgb(87 1 242)"}, {"x": -8.011666297912598, "y": 13.515179634094238, "startSeconds": 2.252335548400879, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event21_40d55751f33fa111d6213f59dfa0be746cdb22c7", "color": "rgb(94 1 254)"}, {"x": -8.014876365661621, "y": 13.527634620666504, "startSeconds": 2.252335548400879, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event22_07a94b1d5e6f3aae382650497568d2d91370c7e9", "color": "rgb(94 1 254)"}, {"x": -8.01156997680664, "y": 13.517004013061523, "startSeconds": 2.252335548400879, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event23_8ab1e2123af37d59fb9a6b9a43ebd782977fd7ff", "color": "rgb(94 1 254)"}, {"x": -8.009037017822266, "y": 13.513919830322266, "startSeconds": 2.252335548400879, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event24_7a01ab9ed86784587758e38b90e520bfd8d1f933", "color": "rgb(94 1 254)"}, {"x": -8.009474754333496, "y": 13.511270523071289, "startSeconds": 2.252335548400879, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event25_12f57394ed7200e12ed6da814986d77bf66da111", "color": "rgb(94 1 254)"}, {"x": -8.00859260559082, "y": 13.513465881347656, "startSeconds": 2.252335548400879, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event26_dfe98c5ac0dfead3401f825b370fee6e13d9805c", "color": "rgb(94 1 254)"}, {"x": -8.009808540344238, "y": 13.514577865600586, "startSeconds": 2.252335548400879, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event27_c1b44c1e59e61db3a9ee760cf68b30cfd9dc226a", "color": "rgb(94 1 254)"}, {"x": -8.01036262512207, "y": 13.51653003692627, "startSeconds": 2.252335548400879, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event28_68afc379bd00a800edc3b4f13cb204ac1e4a649a", "color": "rgb(94 1 254)"}, {"x": -8.009467124938965, "y": 13.513955116271973, "startSeconds": 2.252335548400879, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event29_21f3dc6d2ba6aa28426ecea969833c5d12b8a7d3", "color": "rgb(94 1 254)"}, {"x": -8.009350776672363, "y": 13.512397766113281, "startSeconds": 2.252335548400879, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event30_89498421baa7f564ddd6b311319c2a2f0cc10966", "color": "rgb(94 1 254)"}, {"x": -8.00925064086914, "y": 13.51283073425293, "startSeconds": 2.252335548400879, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event31_9e38c892f6ebaf590993436ecf8643333630c388", "color": "rgb(94 1 254)"}]'>
+            </scatter-plot>
+
+
+<a id="Individual Audio Events"></a>
+<h3>Individual Audio Events</h3>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event0_106086e4754ff1a95db48a253de5bf70ac8635af"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event1_b53264835a0f56b55536c79c03db0e9d003aecb0"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event2_597083c85e71a1dc87923f9a7c963f60ad92eef9"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event3_abf4d7c74e57485836e23c328a6ba7bebfd0a888"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event4_3d0816ab47e763df641c5055ca8ae5c366acae64"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event5_15cb44c241827f112063a991bf82569be0f40ddd"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event6_ce1c1fbce556f32c3a0d5ab6d66ace5825b46426"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event7_afb8e855b6b066b79990008fd51d21e1a687ac75"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event8_b1773478a314134d99668a1078f427be5cf84d87"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event9_6dff3bf6f0344777073080cccb6ab0848d2d481c"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event10_8c89afb8a8e017774b7ebee9ead481cc0f228e2a"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event11_40db041dbe9f91c01260cfc34c7b7518d7d60e6c"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event12_077e7d8facd9559a6f2a095d14218f079d738857"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event13_97f7e61f52afec514da7d7f9f49290c836702cdb"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event14_fe49616ee09c2d510d73b313d7182cff41ef82c1"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event15_d6f3caf32a7c0dc4116ed4a7adcb3cf5b42f61b3"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event16_0f06a1ad247a1da2cff5fed2c817b2106b5fe3e4"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event17_4e7d84db350c7f062a758e0422ac4574119b897d"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event18_31fc79305b6e64aa3dacbc1a527ea9be8003723e"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event19_6fcc21abe17e63c2606086e627dec8e03335325b"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event20_3acc09bd93ab1f644aa62b6b513a05945cff6fa6"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event21_40d55751f33fa111d6213f59dfa0be746cdb22c7"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event22_07a94b1d5e6f3aae382650497568d2d91370c7e9"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event23_8ab1e2123af37d59fb9a6b9a43ebd782977fd7ff"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event24_7a01ab9ed86784587758e38b90e520bfd8d1f933"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event25_12f57394ed7200e12ed6da814986d77bf66da111"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event26_dfe98c5ac0dfead3401f825b370fee6e13d9805c"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event27_c1b44c1e59e61db3a9ee760cf68b30cfd9dc226a"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event28_68afc379bd00a800edc3b4f13cb204ac1e4a649a"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event29_21f3dc6d2ba6aa28426ecea969833c5d12b8a7d3"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event30_89498421baa7f564ddd6b311319c2a2f0cc10966"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event31_9e38c892f6ebaf590993436ecf8643333630c388"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+
+<a id="Example 2"></a>
+<h2>Example 2</h2>
+
+
+<a id="Original Audio"></a>
+<h3>Original Audio</h3>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/original_729a1cafe6fc3ec8111c598a347047253dd13823"
+            height="100"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Reconstruction"></a>
+<h3>Reconstruction</h3>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/reconstruction_d96843325f046ac76a88b50594cec1919ee9fcbe"
+            height="100"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Randomized"></a>
+<h3>Randomized</h3>
+
+<p>Here, we generate random event vectors with the original event times.</p>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/randomizedevents_d81a775d367d1666e34647d1062011c58d545424"
+            height="100"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+<p>Here we use the original event vectors, but generate random times.</p>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/randomizedtimes_f5dc623c5d5852a715dba10c61f0062f6f9383a1"
+            height="100"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Event Vectors"></a>
+<h3>Event Vectors</h3>
+
+<img src="https://iterative-decomposition-v3.s3.amazonaws.com/latents_5ebcb33e3ad70c0b18fcd55727eaffd290dd6a63" height="200"></img>
+
+
+<a id="Event Scatterplot"></a>
+<h3>Event Scatterplot</h3>
+<p>Events clustered using <a href="https://scikit-learn.org/stable/modules/generated/sklearn.manifold.TSNE.html">t-SNE</a></p>
+
+<scatter-plot 
+                width="300" 
+                height="300" 
+                radius="0.04" 
+                points='[{"x": 1.398930549621582, "y": 0.5567796230316162, "startSeconds": 0.847528338432312, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event0_0b6c3f7fcdbcfaf40a0aeb61008d9faa3aa18d2e", "color": "rgb(171 73 183)"}, {"x": 1.3115804195404053, "y": 1.3092072010040283, "startSeconds": 0.2554194927215576, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event1_998783f4c69b3d2871fff6d022e1deb769d9ac75", "color": "rgb(233 133 254)"}, {"x": 1.35648512840271, "y": 0.6493948698043823, "startSeconds": 0.9404081702232361, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event2_abf1ee51a030c5d8dce9e60ec7132b90b7fd2986", "color": "rgb(176 79 189)"}, {"x": 1.310524344444275, "y": 1.2178300619125366, "startSeconds": 0.2205895632505417, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event3_365b82b0a0e28f93c4ab971d12018f1745eec343", "color": "rgb(224 126 245)"}, {"x": 1.3891689777374268, "y": 0.6597856283187866, "startSeconds": 1.0681178569793701, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event4_2bbd6706b1d3d0ca21815bdd4f352023513370fe", "color": "rgb(180 81 193)"}, {"x": 1.2780975103378296, "y": 0.47710493206977844, "startSeconds": 0.4992290139198303, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event5_eef5e85f091bfab0044a53d6264326269e873b58", "color": "rgb(152 63 163)"}, {"x": 0.8478255271911621, "y": 1.0558700561523438, "startSeconds": 2.0897958278656006, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event6_7e646aa387d2d617b5af09266b04ec6bae4283f3", "color": "rgb(165 99 182)"}, {"x": 0.9001787304878235, "y": 1.0213637351989746, "startSeconds": 2.0897958278656006, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event7_6ed2811da842146d98cd6e9d5364879bb7d5f495", "color": "rgb(167 97 183)"}, {"x": 0.7986514568328857, "y": 0.9754626750946045, "startSeconds": 2.11301589012146, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event8_eda729ab7d429d5057af889e62dfbac49d2fbcf3", "color": "rgb(153 91 168)"}, {"x": 1.4839683771133423, "y": 0.7023833394050598, "startSeconds": 1.5441269874572754, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event9_d029e2d5b62c4b184f033bb18d8b50961fce3a12", "color": "rgb(193 87 207)"}, {"x": 1.3158321380615234, "y": 1.1879955530166626, "startSeconds": 0.20897959172725677, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event10_57acf25f9bf337cd387f916140945c8a5b64a72a", "color": "rgb(222 123 242)"}, {"x": 1.2477385997772217, "y": 0.5928749442100525, "startSeconds": 0.5572788715362549, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event11_57907a84ff1ba26570a6fca5966e48381b4c044d", "color": "rgb(160 71 172)"}, {"x": 1.4417222738265991, "y": 0.6606469750404358, "startSeconds": 1.265487551689148, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event12_79b37f1974977250ae3094152907ad1d93b10b02", "color": "rgb(185 83 199)"}, {"x": 1.4507627487182617, "y": 0.6555660367012024, "startSeconds": 1.4280271530151367, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event13_ef8ac886c179fb1796a3c2396fa9eb7868b6455c", "color": "rgb(186 83 199)"}, {"x": 1.4775382280349731, "y": 1.1029465198516846, "startSeconds": 0.0, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event14_63d5571e0aeb5901bd2a2c94f9a108b8d16474f3", "color": "rgb(230 121 249)"}, {"x": 0.9074472188949585, "y": 1.1465184688568115, "startSeconds": 2.461315155029297, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event15_0a73e6c243518b4a36c125b415dbba2141ba5e57", "color": "rgb(179 108 197)"}, {"x": 0.9500167369842529, "y": 1.090915322303772, "startSeconds": 2.3684353828430176, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event16_fbe029e66f519274694cfb746a3de8ad3a53b026", "color": "rgb(178 105 195)"}, {"x": 0.9245063066482544, "y": 1.0000115633010864, "startSeconds": 2.078185796737671, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event17_b89667732935c5a67b9d6d22a2ddd44fac38f2b3", "color": "rgb(167 96 183)"}, {"x": 0.8003534078598022, "y": 0.8581011295318604, "startSeconds": 2.774784564971924, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event18_b4993dfd5566af0d00749fbfb1aaa3623b7abd01", "color": "rgb(142 81 156)"}, {"x": 0.802124559879303, "y": 0.8785991072654724, "startSeconds": 2.693514585494995, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event19_8e82233f5059c1849ef1dcef7ac6a16ea1cfe31c", "color": "rgb(144 83 158)"}, {"x": 1.3469786643981934, "y": 0.5690049529075623, "startSeconds": 0.4411791265010834, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event20_e1ab93545b83f18fc03ba2714cceb8fcc2aa1a76", "color": "rgb(168 72 180)"}, {"x": 1.4663141965866089, "y": 0.7552255988121033, "startSeconds": 1.4164172410964966, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event21_0caa821daf0acad8426e8f9407924829f5aa8a12", "color": "rgb(196 91 211)"}, {"x": 0.8033018708229065, "y": 0.8987687826156616, "startSeconds": 2.705124616622925, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event22_5c204555ddc271e880bd138050919a4c3061d7ec", "color": "rgb(146 84 161)"}, {"x": 1.287235140800476, "y": 0.576759934425354, "startSeconds": 0.743038535118103, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event23_9bc67cde5c54d755301a9c2bdae8a018a9c9ac04", "color": "rgb(163 71 175)"}, {"x": 1.427457332611084, "y": 1.0546358823776245, "startSeconds": 0.03482992947101593, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event24_10dc28be9f11a34d7b2474318ba5946c32cb7865", "color": "rgb(220 115 239)"}, {"x": 0.8312241435050964, "y": 0.8697965145111084, "startSeconds": 2.9489340782165527, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event25_a09d9c7c6656df21b2a09388d0997abe398eac3a", "color": "rgb(146 83 160)"}, {"x": 1.1394472122192383, "y": 0.7348076701164246, "startSeconds": 1.7763265371322632, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event26_3472256d1cfd830a03634645e33941d348ee798d", "color": "rgb(163 80 177)"}, {"x": 0.8590950965881348, "y": 0.8365865349769592, "startSeconds": 2.321995496749878, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event27_32229a13dc6aabcaffb0209507c0147a5bf480b9", "color": "rgb(146 81 160)"}, {"x": 1.444677710533142, "y": 0.7791064381599426, "startSeconds": 1.3351473808288574, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event28_2af34e09e29156171c42064f02a6d837720f2840", "color": "rgb(196 93 212)"}, {"x": 1.386924147605896, "y": 1.006683588027954, "startSeconds": 0.06965985894203186, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event29_b96ca56e947077e9cd2e4040a6cb3b48713700f5", "color": "rgb(212 110 230)"}, {"x": 0.9565028548240662, "y": 0.9329898357391357, "startSeconds": 2.217505693435669, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event30_d5895d5ebc137d0fc7f6fcef7939c8796e11ffad", "color": "rgb(164 92 179)"}, {"x": 0.9225013852119446, "y": -0.1510712057352066, "startSeconds": 0.4876190423965454, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event31_66297949460c0daecddd7c4c61681584ab99ca7b", "color": "rgb(60 0 61)"}]'>
+            </scatter-plot>
+
+
+<a id="Individual Audio Events"></a>
+<h3>Individual Audio Events</h3>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event0_0b6c3f7fcdbcfaf40a0aeb61008d9faa3aa18d2e"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event1_998783f4c69b3d2871fff6d022e1deb769d9ac75"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event2_abf1ee51a030c5d8dce9e60ec7132b90b7fd2986"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event3_365b82b0a0e28f93c4ab971d12018f1745eec343"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event4_2bbd6706b1d3d0ca21815bdd4f352023513370fe"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event5_eef5e85f091bfab0044a53d6264326269e873b58"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event6_7e646aa387d2d617b5af09266b04ec6bae4283f3"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event7_6ed2811da842146d98cd6e9d5364879bb7d5f495"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event8_eda729ab7d429d5057af889e62dfbac49d2fbcf3"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event9_d029e2d5b62c4b184f033bb18d8b50961fce3a12"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event10_57acf25f9bf337cd387f916140945c8a5b64a72a"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event11_57907a84ff1ba26570a6fca5966e48381b4c044d"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event12_79b37f1974977250ae3094152907ad1d93b10b02"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event13_ef8ac886c179fb1796a3c2396fa9eb7868b6455c"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event14_63d5571e0aeb5901bd2a2c94f9a108b8d16474f3"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event15_0a73e6c243518b4a36c125b415dbba2141ba5e57"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event16_fbe029e66f519274694cfb746a3de8ad3a53b026"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event17_b89667732935c5a67b9d6d22a2ddd44fac38f2b3"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event18_b4993dfd5566af0d00749fbfb1aaa3623b7abd01"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event19_8e82233f5059c1849ef1dcef7ac6a16ea1cfe31c"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event20_e1ab93545b83f18fc03ba2714cceb8fcc2aa1a76"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event21_0caa821daf0acad8426e8f9407924829f5aa8a12"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event22_5c204555ddc271e880bd138050919a4c3061d7ec"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event23_9bc67cde5c54d755301a9c2bdae8a018a9c9ac04"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event24_10dc28be9f11a34d7b2474318ba5946c32cb7865"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event25_a09d9c7c6656df21b2a09388d0997abe398eac3a"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event26_3472256d1cfd830a03634645e33941d348ee798d"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event27_32229a13dc6aabcaffb0209507c0147a5bf480b9"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event28_2af34e09e29156171c42064f02a6d837720f2840"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event29_b96ca56e947077e9cd2e4040a6cb3b48713700f5"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event30_d5895d5ebc137d0fc7f6fcef7939c8796e11ffad"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event31_66297949460c0daecddd7c4c61681584ab99ca7b"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+
+<a id="Example 3"></a>
+<h2>Example 3</h2>
+
+
+<a id="Original Audio"></a>
+<h3>Original Audio</h3>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/original_dfde6ded58d70c01e721ce9a7c79e510f2d2a4ac"
+            height="100"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Reconstruction"></a>
+<h3>Reconstruction</h3>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/reconstruction_56150a7a76e6c74d86acaae3774c6cc551a43d36"
+            height="100"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Randomized"></a>
+<h3>Randomized</h3>
+
+<p>Here, we generate random event vectors with the original event times.</p>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/randomizedevents_dfcdb25356dc0ae86b3564a68cb00eeea0430aeb"
+            height="100"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+<p>Here we use the original event vectors, but generate random times.</p>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/randomizedtimes_744d8080f6b2e0c96156421be1804f4ddb370ff8"
+            height="100"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Event Vectors"></a>
+<h3>Event Vectors</h3>
+
+<img src="https://iterative-decomposition-v3.s3.amazonaws.com/latents_b1c9e28cbe8f22dd335c832fb796dde75d249b14" height="200"></img>
+
+
+<a id="Event Scatterplot"></a>
+<h3>Event Scatterplot</h3>
+<p>Events clustered using <a href="https://scikit-learn.org/stable/modules/generated/sklearn.manifold.TSNE.html">t-SNE</a></p>
+
+<scatter-plot 
+                width="300" 
+                height="300" 
+                radius="0.04" 
+                points='[{"x": -1.6358897686004639, "y": 12.021733283996582, "startSeconds": 2.356825351715088, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event0_7819664b54add7db9d198915cb6faa270cf0dcc7", "color": "rgb(1 237 106)"}, {"x": -1.7348564863204956, "y": 12.108757972717285, "startSeconds": 2.496145009994507, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event1_0262a26c35cc960756d11b02115e962cfab451af", "color": "rgb(0 238 104)"}, {"x": -2.3182809352874756, "y": 12.563693046569824, "startSeconds": 2.6122448444366455, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event2_d59d5dfae43d51733da031380d5f99c1e9c5b98f", "color": "rgb(0 244 92)"}, {"x": -2.013251304626465, "y": 12.202731132507324, "startSeconds": 2.763174533843994, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event3_8c67dc8a680ea3aa81fe5052abc1a64bf119f82b", "color": "rgb(0 238 97)"}, {"x": -2.1981277465820312, "y": 12.678966522216797, "startSeconds": 2.9489340782165527, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event4_abe88752c1292543288b72bfab60b3dd28c95913", "color": "rgb(0 247 98)"}, {"x": -1.2197314500808716, "y": 12.578683853149414, "startSeconds": 0.27863943576812744, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event5_8b41c62882a0a89a195d297f951f3f6c4ac8b265", "color": "rgb(2 250 127)"}, {"x": -1.857021450996399, "y": 12.12326717376709, "startSeconds": 2.356825351715088, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event6_28c84ffb6ce230839d0dd2159cb37f45a32158b1", "color": "rgb(0 237 101)"}, {"x": -2.232128143310547, "y": 12.618158340454102, "startSeconds": 2.11301589012146, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event7_8f5b25abcd7225a201f3c856234114dd300de957", "color": "rgb(0 246 96)"}, {"x": -2.1108880043029785, "y": 12.286273002624512, "startSeconds": 2.8212244510650635, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event8_25f77801920df96d4a09294e2e8c5c7638a028ea", "color": "rgb(0 239 95)"}, {"x": -2.084559917449951, "y": 12.834938049316406, "startSeconds": 1.0448979139328003, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event9_6d2f6b4a600da463d32f49b5a64a8834e352caa0", "color": "rgb(0 251 103)"}, {"x": -1.2525253295898438, "y": 12.669777870178223, "startSeconds": 0.27863943576812744, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event10_85786abec6da539320e7b162605980c1cdffeee0", "color": "rgb(2 252 127)"}, {"x": -1.9649240970611572, "y": 12.844613075256348, "startSeconds": 1.0332880020141602, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event11_3ef4d2772f27eee3858528e82bd7eb1cfdc24c37", "color": "rgb(0 252 107)"}, {"x": -1.8029507398605347, "y": 12.178473472595215, "startSeconds": 2.356825351715088, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event12_69b39d41f9dec27275dc9442c8a01581a5571687", "color": "rgb(0 239 103)"}, {"x": -2.0286293029785156, "y": 12.269739151000977, "startSeconds": 2.763174533843994, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event13_a680e3e2ec7bea6a2150ecd265c6bf0a58a659df", "color": "rgb(0 239 97)"}, {"x": -1.2130985260009766, "y": 12.739056587219238, "startSeconds": 0.31346938014030457, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event14_3af148931de2a9f649425efbb71a86634ffa2a18", "color": "rgb(2 254 129)"}, {"x": -1.5618418455123901, "y": 12.702676773071289, "startSeconds": 1.4628571271896362, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event15_96c93dd8c8e371743f09f81e8ae6a06496b9795a", "color": "rgb(1 251 118)"}, {"x": -1.6176060438156128, "y": 12.683694839477539, "startSeconds": 1.4628571271896362, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event16_fdf278086374d03c4b4ca83cdbe75add1e82d609", "color": "rgb(1 250 116)"}, {"x": -2.150871753692627, "y": 12.664494514465332, "startSeconds": 2.11301589012146, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event17_50a970f67d7e462951f5c86e36f3a1ee798a35be", "color": "rgb(0 247 99)"}, {"x": -1.746525764465332, "y": 12.837335586547852, "startSeconds": 1.0448979139328003, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event18_3af7e8b7eaf4e09762272e9e7192675b0cf6fc72", "color": "rgb(1 253 114)"}, {"x": -1.5954588651657104, "y": 12.499466896057129, "startSeconds": 0.0, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event19_5c568a7119c5360afa4cee4f85dc358ed14a1740", "color": "rgb(1 247 114)"}, {"x": -1.3825864791870117, "y": 12.62763786315918, "startSeconds": 0.650158703327179, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event20_a6ac010ab400769b6cc3be7050cf6560f01694d7", "color": "rgb(1 250 122)"}, {"x": -1.8889399766921997, "y": 12.964073181152344, "startSeconds": 1.9504761695861816, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event21_540249b3f7587c999f756248d8a0d3857c489c2e", "color": "rgb(0 254 111)"}, {"x": -1.7192765474319458, "y": 12.841320991516113, "startSeconds": 1.4628571271896362, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event22_3c3c27b13494696c6182441bfd7bc9e2a64dfe90", "color": "rgb(1 253 115)"}, {"x": -2.057196855545044, "y": 12.784502983093262, "startSeconds": 2.9605441093444824, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event23_740d30ce72304c5e3e7e1cd97591ab9de93f3324", "color": "rgb(0 250 103)"}, {"x": -1.897602915763855, "y": 12.263311386108398, "startSeconds": 2.7515645027160645, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event24_ebd706a9a8028683de7853e61120e2f0ae57c098", "color": "rgb(0 240 101)"}, {"x": -1.8717533349990845, "y": 12.554641723632812, "startSeconds": 1.0448979139328003, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event25_0fa136f91c2e0c3becf65b7276848af97d385754", "color": "rgb(0 246 106)"}, {"x": -1.591084599494934, "y": 12.692133903503418, "startSeconds": 0.0, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event26_95e94f4abd73a9577a21d7e052f12da36b5d8fd8", "color": "rgb(1 251 117)"}, {"x": -2.041384220123291, "y": 12.086881637573242, "startSeconds": 2.5425848960876465, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event27_36244075310c919a561d467b19f777a7d9317efa", "color": "rgb(0 236 95)"}, {"x": -2.092505693435669, "y": 12.658191680908203, "startSeconds": 2.043355941772461, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event28_ac67dab3d17af48612331688215e1cafa50b5ddf", "color": "rgb(0 247 101)"}, {"x": -2.0619938373565674, "y": 12.741918563842773, "startSeconds": 2.9605441093444824, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event29_bfad5e0de90a9a13f733b90c12ce5b910139c7bf", "color": "rgb(0 249 103)"}, {"x": -1.774309515953064, "y": 12.32608699798584, "startSeconds": 0.30185940861701965, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event30_dc822df3f9eff2c7a9b9e8c36f73020ae504520d", "color": "rgb(0 242 106)"}, {"x": -2.176957845687866, "y": 12.306632041931152, "startSeconds": 2.5774149894714355, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event31_8014e67f58f4e1a5d011a0685568adc0137031e6", "color": "rgb(0 239 93)"}]'>
+            </scatter-plot>
+
+
+<a id="Individual Audio Events"></a>
+<h3>Individual Audio Events</h3>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event0_7819664b54add7db9d198915cb6faa270cf0dcc7"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event1_0262a26c35cc960756d11b02115e962cfab451af"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event2_d59d5dfae43d51733da031380d5f99c1e9c5b98f"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event3_8c67dc8a680ea3aa81fe5052abc1a64bf119f82b"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event4_abe88752c1292543288b72bfab60b3dd28c95913"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event5_8b41c62882a0a89a195d297f951f3f6c4ac8b265"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event6_28c84ffb6ce230839d0dd2159cb37f45a32158b1"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event7_8f5b25abcd7225a201f3c856234114dd300de957"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event8_25f77801920df96d4a09294e2e8c5c7638a028ea"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event9_6d2f6b4a600da463d32f49b5a64a8834e352caa0"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event10_85786abec6da539320e7b162605980c1cdffeee0"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event11_3ef4d2772f27eee3858528e82bd7eb1cfdc24c37"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event12_69b39d41f9dec27275dc9442c8a01581a5571687"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event13_a680e3e2ec7bea6a2150ecd265c6bf0a58a659df"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event14_3af148931de2a9f649425efbb71a86634ffa2a18"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event15_96c93dd8c8e371743f09f81e8ae6a06496b9795a"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event16_fdf278086374d03c4b4ca83cdbe75add1e82d609"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event17_50a970f67d7e462951f5c86e36f3a1ee798a35be"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event18_3af7e8b7eaf4e09762272e9e7192675b0cf6fc72"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event19_5c568a7119c5360afa4cee4f85dc358ed14a1740"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event20_a6ac010ab400769b6cc3be7050cf6560f01694d7"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event21_540249b3f7587c999f756248d8a0d3857c489c2e"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event22_3c3c27b13494696c6182441bfd7bc9e2a64dfe90"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event23_740d30ce72304c5e3e7e1cd97591ab9de93f3324"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event24_ebd706a9a8028683de7853e61120e2f0ae57c098"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event25_0fa136f91c2e0c3becf65b7276848af97d385754"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event26_95e94f4abd73a9577a21d7e052f12da36b5d8fd8"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event27_36244075310c919a561d467b19f777a7d9317efa"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event28_ac67dab3d17af48612331688215e1cafa50b5ddf"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event29_bfad5e0de90a9a13f733b90c12ce5b910139c7bf"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event30_dc822df3f9eff2c7a9b9e8c36f73020ae504520d"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event31_8014e67f58f4e1a5d011a0685568adc0137031e6"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+
+<a id="Example 4"></a>
+<h2>Example 4</h2>
+
+
+<a id="Original Audio"></a>
+<h3>Original Audio</h3>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/original_06c7363e7be9bc60751abedf03cb77b6d2d9a514"
+            height="100"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Reconstruction"></a>
+<h3>Reconstruction</h3>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/reconstruction_272c34ddeceb097f8f411a38929f433ba1cc5d27"
+            height="100"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Randomized"></a>
+<h3>Randomized</h3>
+
+<p>Here, we generate random event vectors with the original event times.</p>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/randomizedevents_f18a16f7b4bdb6f3c82157ac94f0bc1f80e2dc86"
+            height="100"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+<p>Here we use the original event vectors, but generate random times.</p>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/randomizedtimes_c10fcbdc8ae511396863e93150e0e02f6036469f"
+            height="100"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Event Vectors"></a>
+<h3>Event Vectors</h3>
+
+<img src="https://iterative-decomposition-v3.s3.amazonaws.com/latents_d95b599fb3d1de39c9713056401c25966d480755" height="200"></img>
+
+
+<a id="Event Scatterplot"></a>
+<h3>Event Scatterplot</h3>
+<p>Events clustered using <a href="https://scikit-learn.org/stable/modules/generated/sklearn.manifold.TSNE.html">t-SNE</a></p>
+
+<scatter-plot 
+                width="300" 
+                height="300" 
+                radius="0.04" 
+                points='[{"x": -0.9837912917137146, "y": -0.5513681769371033, "startSeconds": 0.26702946424484253, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event0_0a1e5a03e6c1a30db36643d345e4316c2a665656", "color": "rgb(190 175 111)"}, {"x": -1.0590890645980835, "y": -0.4804580509662628, "startSeconds": 0.27863943576812744, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event1_3e24029118ac9ae7311a5f3c6280c9c57cd1adac", "color": "rgb(191 179 102)"}, {"x": -1.3723700046539307, "y": 0.1718721091747284, "startSeconds": 0.9287981986999512, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event2_f0e1e41ee9c3ef9a3015e9594015ad26f2c54fa6", "color": "rgb(212 231 79)"}, {"x": -1.3635613918304443, "y": 0.15764519572257996, "startSeconds": 0.9287981986999512, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event3_4ae530002a903c1e1b441aacb9f9f6f6557c3512", "color": "rgb(212 230 80)"}, {"x": -1.666236400604248, "y": -0.05278199911117554, "startSeconds": 1.09133780002594, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event4_73e88cf0a69b7a0e72f90077a752768b53c7ebb2", "color": "rgb(189 201 33)"}, {"x": -1.8511961698532104, "y": -0.37179481983184814, "startSeconds": 1.2074376344680786, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event5_24befa6cb7c98557290e0163ef7026805af81f37", "color": "rgb(165 165 0)"}, {"x": -1.7841922044754028, "y": 0.009398246183991432, "startSeconds": 1.6486167907714844, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event6_bd8d71f8fe908b91de21037daa53da71b55c6190", "color": "rgb(188 203 19)"}, {"x": -1.748119831085205, "y": 0.02354772761464119, "startSeconds": 1.6486167907714844, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event7_10a2bf9138c12a9f74dc750e95c87e9187ef7f3a", "color": "rgb(190 206 24)"}, {"x": -1.7929565906524658, "y": -0.3231109082698822, "startSeconds": 1.2074376344680786, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event8_2289812a61aca17051441565c2e6d947f5163ffc", "color": "rgb(170 171 9)"}, {"x": -1.062449336051941, "y": -0.436428964138031, "startSeconds": 0.4876190423965454, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event9_cc1f526a28925ab6770930c1304913f8075173ee", "color": "rgb(193 183 103)"}, {"x": -1.0844193696975708, "y": -0.4042896330356598, "startSeconds": 0.4876190423965454, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event10_a23fd4e81e583b19a82b16f7724d98b4f8960097", "color": "rgb(194 186 101)"}, {"x": -1.5379372835159302, "y": -0.6518898010253906, "startSeconds": 0.7662584781646729, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event11_a76df0807dbcdc5e18fb7da29cb2f2b43d47cb7d", "color": "rgb(163 148 34)"}, {"x": -1.5012304782867432, "y": -0.6639450192451477, "startSeconds": 0.7546485066413879, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event12_76d636adfb57ded842f1e91bb04d1293c677ca87", "color": "rgb(164 148 38)"}, {"x": -1.495449423789978, "y": -0.6643738746643066, "startSeconds": 0.743038535118103, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event13_ad9bca1c60d29e9738e15b1c03fccf66bfa448c2", "color": "rgb(164 148 39)"}, {"x": -1.527703046798706, "y": -0.7209851145744324, "startSeconds": 0.7314285635948181, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event14_e681b27c204590e60e098922450caa111ead96b6", "color": "rgb(160 142 33)"}, {"x": -1.7392805814743042, "y": -0.34896552562713623, "startSeconds": 1.3931972980499268, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event15_3e3b2ed39468e45e974f76221e2c08893c5e5ba9", "color": "rgb(171 171 15)"}, {"x": -1.008967399597168, "y": -0.08923114091157913, "startSeconds": 2.14784574508667, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event16_57992d37164d96ec2147d12fe9772ad4dffa298d", "color": "rgb(213 218 120)"}, {"x": -1.0033947229385376, "y": -0.08387263864278793, "startSeconds": 2.1362357139587402, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event17_4d0a4875f3b2719fd6996fb3809cfea459075f80", "color": "rgb(214 219 121)"}, {"x": -1.072715163230896, "y": -0.07445007562637329, "startSeconds": 2.1594557762145996, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event18_25a7c8bef99017a88adad4b1dc0149c8da3a3f5b", "color": "rgb(212 217 112)"}, {"x": -1.7026872634887695, "y": -0.5017378330230713, "startSeconds": 0.0, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event19_3cd5f03d3d04834f5020e3e0268c6d745290181a", "color": "rgb(164 157 16)"}, {"x": -1.633535623550415, "y": -0.5061236619949341, "startSeconds": 0.02321995422244072, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event20_8ae5f400e5fbd48d668025130a809d2b8e682dfa", "color": "rgb(167 159 25)"}, {"x": -1.7208760976791382, "y": -0.40134939551353455, "startSeconds": 1.8575963973999023, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event21_67b76fe55da80a4b0fc59e01a4a239b3d6cb0dd8", "color": "rgb(169 166 16)"}, {"x": -0.9244195222854614, "y": 0.2678225636482239, "startSeconds": 2.589024782180786, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event22_e741eefafb6b4b648877740742ca27869a273e71", "color": "rgb(235 254 142)"}, {"x": -1.4451833963394165, "y": -0.6956498026847839, "startSeconds": 0.7546485066413879, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event23_6cb75a8fdb713139c2986abfdaa9ceb8e380000f", "color": "rgb(164 147 45)"}, {"x": -1.016631007194519, "y": 0.0518648661673069, "startSeconds": 2.1710658073425293, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event24_a7287afb6af986c7fdd794c463be7aae6a958be1", "color": "rgb(220 231 123)"}, {"x": -1.4197431802749634, "y": -0.49283698201179504, "startSeconds": 0.03482992947101593, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event25_ef40fb09b77ddbbe255bd2055dcc6c7010398395", "color": "rgb(176 167 54)"}, {"x": -1.6556646823883057, "y": -0.37386783957481384, "startSeconds": 1.2074376344680786, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event26_aa8cff1b0af92e06b6bb8bf794b418cbc08c0a66", "color": "rgb(173 171 26)"}, {"x": -1.3134404420852661, "y": 0.1447242796421051, "startSeconds": 0.9287981986999512, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event27_f02801ee33fef77b01d3533aded1eb346c77c5e5", "color": "rgb(213 231 86)"}, {"x": -1.054409146308899, "y": -0.4384302794933319, "startSeconds": 0.4992290139198303, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event28_fea0bd6a93869f640d259f4a080aae7250b92617", "color": "rgb(193 183 104)"}, {"x": -1.6804521083831787, "y": 0.0745474100112915, "startSeconds": 1.6602267026901245, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event29_c0122b2f308451b738c2da95e36c4fc04937fe75", "color": "rgb(195 213 35)"}, {"x": -1.0321216583251953, "y": -0.5806306600570679, "startSeconds": 0.0, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event30_7fae9da271a3862d20e3b656d479bb77d4f27dec", "color": "rgb(187 170 103)"}, {"x": -1.1011769771575928, "y": 0.22997774183750153, "startSeconds": 2.902494192123413, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event31_ac864b5ffa7d97a5f91eab7ab15554e020cbb982", "color": "rgb(226 245 117)"}]'>
+            </scatter-plot>
+
+
+<a id="Individual Audio Events"></a>
+<h3>Individual Audio Events</h3>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event0_0a1e5a03e6c1a30db36643d345e4316c2a665656"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event1_3e24029118ac9ae7311a5f3c6280c9c57cd1adac"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event2_f0e1e41ee9c3ef9a3015e9594015ad26f2c54fa6"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event3_4ae530002a903c1e1b441aacb9f9f6f6557c3512"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event4_73e88cf0a69b7a0e72f90077a752768b53c7ebb2"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event5_24befa6cb7c98557290e0163ef7026805af81f37"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event6_bd8d71f8fe908b91de21037daa53da71b55c6190"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event7_10a2bf9138c12a9f74dc750e95c87e9187ef7f3a"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event8_2289812a61aca17051441565c2e6d947f5163ffc"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event9_cc1f526a28925ab6770930c1304913f8075173ee"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event10_a23fd4e81e583b19a82b16f7724d98b4f8960097"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event11_a76df0807dbcdc5e18fb7da29cb2f2b43d47cb7d"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event12_76d636adfb57ded842f1e91bb04d1293c677ca87"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event13_ad9bca1c60d29e9738e15b1c03fccf66bfa448c2"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event14_e681b27c204590e60e098922450caa111ead96b6"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event15_3e3b2ed39468e45e974f76221e2c08893c5e5ba9"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event16_57992d37164d96ec2147d12fe9772ad4dffa298d"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event17_4d0a4875f3b2719fd6996fb3809cfea459075f80"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event18_25a7c8bef99017a88adad4b1dc0149c8da3a3f5b"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event19_3cd5f03d3d04834f5020e3e0268c6d745290181a"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event20_8ae5f400e5fbd48d668025130a809d2b8e682dfa"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event21_67b76fe55da80a4b0fc59e01a4a239b3d6cb0dd8"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event22_e741eefafb6b4b648877740742ca27869a273e71"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event23_6cb75a8fdb713139c2986abfdaa9ceb8e380000f"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event24_a7287afb6af986c7fdd794c463be7aae6a958be1"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event25_ef40fb09b77ddbbe255bd2055dcc6c7010398395"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event26_aa8cff1b0af92e06b6bb8bf794b418cbc08c0a66"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event27_f02801ee33fef77b01d3533aded1eb346c77c5e5"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event28_fea0bd6a93869f640d259f4a080aae7250b92617"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event29_c0122b2f308451b738c2da95e36c4fc04937fe75"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event30_7fae9da271a3862d20e3b656d479bb77d4f27dec"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event31_ac864b5ffa7d97a5f91eab7ab15554e020cbb982"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+
+<a id="Example 5"></a>
+<h2>Example 5</h2>
+
+
+<a id="Original Audio"></a>
+<h3>Original Audio</h3>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/original_8f5de78b0228e70fc726d967c66a2bf6d5639840"
+            height="100"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Reconstruction"></a>
+<h3>Reconstruction</h3>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/reconstruction_ffaa84b158a3599d5d2016ce5181696ccc29a075"
+            height="100"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Randomized"></a>
+<h3>Randomized</h3>
+
+<p>Here, we generate random event vectors with the original event times.</p>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/randomizedevents_c2b8ee7f7fe281d8416ee972a628e00855aa76b4"
+            height="100"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+<p>Here we use the original event vectors, but generate random times.</p>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/randomizedtimes_aeae093587edef701fbe07464b8ae56632a4d920"
+            height="100"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Event Vectors"></a>
+<h3>Event Vectors</h3>
+
+<img src="https://iterative-decomposition-v3.s3.amazonaws.com/latents_5db91eff6c93f62d8ca99d34624b473d2f8e07b1" height="200"></img>
+
+
+<a id="Event Scatterplot"></a>
+<h3>Event Scatterplot</h3>
+<p>Events clustered using <a href="https://scikit-learn.org/stable/modules/generated/sklearn.manifold.TSNE.html">t-SNE</a></p>
+
+<scatter-plot 
+                width="300" 
+                height="300" 
+                radius="0.04" 
+                points='[{"x": -2.33377742767334, "y": -8.587752342224121, "startSeconds": 0.0, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event0_79efa05d6a7a06c5fa8e46dd88f6d5a5eee21d9a", "color": "rgb(26 140 252)"}, {"x": -2.207277536392212, "y": -8.564476013183594, "startSeconds": 0.0, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event1_c608a9dc85494ce01c7cc8c45659091ccb6e1309", "color": "rgb(29 142 252)"}, {"x": -2.0347065925598145, "y": -8.633625984191895, "startSeconds": 0.09287981688976288, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event2_cb607e84fe29a81b22b858449eaffaa87542cdbf", "color": "rgb(29 141 253)"}, {"x": -1.9212267398834229, "y": -8.715648651123047, "startSeconds": 0.18575963377952576, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event3_43b19caf4877abd8768fa7dcf672638996db2732", "color": "rgb(29 141 253)"}, {"x": -1.8775360584259033, "y": -8.769586563110352, "startSeconds": 0.20897959172725677, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event4_b73c1a8fc046cb47cd887f7801a5bf7abc904119", "color": "rgb(28 140 253)"}, {"x": -1.7041441202163696, "y": -8.632012367248535, "startSeconds": 0.3366893231868744, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event5_efcac05fa02af9de7d05082d66628c8b5585e9d4", "color": "rgb(34 143 254)"}, {"x": -1.6886848211288452, "y": -8.736218452453613, "startSeconds": 0.3482993245124817, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event6_f380f047d6e54e54ff3700c0ccbc411d99df2836", "color": "rgb(32 142 254)"}, {"x": -1.7208558320999146, "y": -8.590385437011719, "startSeconds": 0.42956915497779846, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event7_5175bd0f6fd15ddd456d5a20c8df2d494b941305", "color": "rgb(35 144 254)"}, {"x": -2.660161018371582, "y": -8.558530807495117, "startSeconds": 1.9736961126327515, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event8_3630d965d04b79512693cae26c021194fd81d498", "color": "rgb(22 139 250)"}, {"x": -1.8600542545318604, "y": -8.762410163879395, "startSeconds": 0.5108389854431152, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event9_f3a434b768b984e430810a9d519ae0e193ca5ef6", "color": "rgb(28 140 253)"}, {"x": -1.8080203533172607, "y": -8.786121368408203, "startSeconds": 0.5340589284896851, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event10_e78b46c34b3c77c4868c89f31dada635fa648b3f", "color": "rgb(29 140 253)"}, {"x": -2.6844115257263184, "y": -8.668063163757324, "startSeconds": 2.1942856311798096, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event11_6cc936e0d34dec7937fe89aacc29f113a2d6bf1d", "color": "rgb(18 137 250)"}, {"x": -1.6524536609649658, "y": -8.959259986877441, "startSeconds": 0.6269387602806091, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event12_ea7b801803a071521c6029e4567d2eaddf4a2ef1", "color": "rgb(26 138 253)"}, {"x": -2.6759495735168457, "y": -8.639595031738281, "startSeconds": 1.9853061437606812, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event13_03f1e4e10221268e6a3b1ed5673145a7e13ae67f", "color": "rgb(19 137 250)"}, {"x": -1.6769822835922241, "y": -9.002426147460938, "startSeconds": 0.6269387602806091, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event14_396eedae4e32d22c341be7cd42b0ac9bba2ae533", "color": "rgb(24 137 253)"}, {"x": -1.9768763780593872, "y": -9.197728157043457, "startSeconds": 0.19736960530281067, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event15_bed67a07bbae55c59c1b87930653f0d460c9a425", "color": "rgb(14 132 251)"}, {"x": -1.8123817443847656, "y": -9.15131950378418, "startSeconds": 0.8243083953857422, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event16_1ae25d5c3d0bb2551b446bc534f1317bfb2952c5", "color": "rgb(18 134 252)"}, {"x": -2.740954875946045, "y": -8.676568984985352, "startSeconds": 2.426485300064087, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event17_e57baab7494d86e3956eaa743a29ec6d7bb81cbc", "color": "rgb(17 136 249)"}, {"x": -2.6441805362701416, "y": -8.881755828857422, "startSeconds": 2.0665760040283203, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event18_5cf365d71c64582a5e6db9330e6abd6ba58c37a7", "color": "rgb(13 133 249)"}, {"x": -2.2007246017456055, "y": -9.392650604248047, "startSeconds": 0.0, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event19_820010aea26caf92d307a45d4eba2f52166629f7", "color": "rgb(6 127 249)"}, {"x": -1.7791451215744019, "y": -9.06999397277832, "startSeconds": 0.6269387602806091, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event20_d584572b01a18a4cfdb01ce09400e549c142ef39", "color": "rgb(21 136 252)"}, {"x": -2.346088171005249, "y": -9.268281936645508, "startSeconds": 0.0, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event21_d5575dc8e438c60732f97df21570a7b26f07392b", "color": "rgb(7 129 249)"}, {"x": -2.606980085372925, "y": -8.798925399780273, "startSeconds": 1.8575963973999023, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event22_5854540a75451b767d3d7e0371a11e6a39dcf5c4", "color": "rgb(16 135 249)"}, {"x": -2.294489622116089, "y": -8.553827285766602, "startSeconds": 2.763174533843994, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event23_fafd84423ddcbdb3dd6afcc484a07a0b5b9668e8", "color": "rgb(28 141 252)"}, {"x": -2.0170323848724365, "y": -9.17292308807373, "startSeconds": 0.6153287887573242, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event24_c3f160ebeb18a7dc77ebdd942d75072a42310534", "color": "rgb(15 132 250)"}, {"x": -2.3056044578552246, "y": -8.689098358154297, "startSeconds": 2.7515645027160645, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event25_2899be75350f7d9ed142314b31c18c45d49a4141", "color": "rgb(24 139 251)"}, {"x": -2.45112681388855, "y": -8.949564933776855, "startSeconds": 2.2987754344940186, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event26_f96e435e41dd7c4f07a1307c28d71132d1a83af5", "color": "rgb(14 133 249)"}, {"x": -2.2038629055023193, "y": -9.391074180603027, "startSeconds": 0.9752380847930908, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event27_ed6feb90b8b1d0f4a4ff6cfe13bfff7022ba0c10", "color": "rgb(6 127 249)"}, {"x": -2.123481035232544, "y": -8.395017623901367, "startSeconds": 2.9605441093444824, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event28_5887cae9ad6aa2d46660acc9b8d1cfa0f12c3b17", "color": "rgb(35 145 254)"}, {"x": -2.352883815765381, "y": -9.315926551818848, "startSeconds": 0.0, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event29_0778f6c6bdfdb759425c7de3961f6e26d64ef439", "color": "rgb(5 128 248)"}, {"x": -2.001412868499756, "y": -9.082056999206543, "startSeconds": 0.2321995496749878, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event30_4eb815b552162b75322411afd3548480f7dab0d3", "color": "rgb(17 134 251)"}, {"x": -2.5367438793182373, "y": -9.424277305603027, "startSeconds": 2.623854875564575, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event31_67dced17b4fabaeff81a660638c240ef037117a7", "color": "rgb(0 125 247)"}]'>
+            </scatter-plot>
+
+
+<a id="Individual Audio Events"></a>
+<h3>Individual Audio Events</h3>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event0_79efa05d6a7a06c5fa8e46dd88f6d5a5eee21d9a"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event1_c608a9dc85494ce01c7cc8c45659091ccb6e1309"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event2_cb607e84fe29a81b22b858449eaffaa87542cdbf"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event3_43b19caf4877abd8768fa7dcf672638996db2732"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event4_b73c1a8fc046cb47cd887f7801a5bf7abc904119"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event5_efcac05fa02af9de7d05082d66628c8b5585e9d4"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event6_f380f047d6e54e54ff3700c0ccbc411d99df2836"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event7_5175bd0f6fd15ddd456d5a20c8df2d494b941305"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event8_3630d965d04b79512693cae26c021194fd81d498"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event9_f3a434b768b984e430810a9d519ae0e193ca5ef6"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event10_e78b46c34b3c77c4868c89f31dada635fa648b3f"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event11_6cc936e0d34dec7937fe89aacc29f113a2d6bf1d"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event12_ea7b801803a071521c6029e4567d2eaddf4a2ef1"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event13_03f1e4e10221268e6a3b1ed5673145a7e13ae67f"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event14_396eedae4e32d22c341be7cd42b0ac9bba2ae533"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event15_bed67a07bbae55c59c1b87930653f0d460c9a425"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event16_1ae25d5c3d0bb2551b446bc534f1317bfb2952c5"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event17_e57baab7494d86e3956eaa743a29ec6d7bb81cbc"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event18_5cf365d71c64582a5e6db9330e6abd6ba58c37a7"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event19_820010aea26caf92d307a45d4eba2f52166629f7"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event20_d584572b01a18a4cfdb01ce09400e549c142ef39"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event21_d5575dc8e438c60732f97df21570a7b26f07392b"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event22_5854540a75451b767d3d7e0371a11e6a39dcf5c4"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event23_fafd84423ddcbdb3dd6afcc484a07a0b5b9668e8"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event24_c3f160ebeb18a7dc77ebdd942d75072a42310534"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event25_2899be75350f7d9ed142314b31c18c45d49a4141"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event26_f96e435e41dd7c4f07a1307c28d71132d1a83af5"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event27_ed6feb90b8b1d0f4a4ff6cfe13bfff7022ba0c10"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event28_5887cae9ad6aa2d46660acc9b8d1cfa0f12c3b17"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event29_0778f6c6bdfdb759425c7de3961f6e26d64ef439"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event30_4eb815b552162b75322411afd3548480f7dab0d3"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/event31_67dced17b4fabaeff81a660638c240ef037117a7"
+            height="25"
+            samples="256"
+            scale="1"
+            
+        ></audio-view>
+
+<code-block language="python">n_samples = 2 ** 17
+
+samples_per_event = 2048
+
+
+
+# this is cut in half since we'll mask out the second half of encoder activations
+
+n_events = (n_samples // samples_per_event) // 2
+
+context_dim = 32
+
+
+
+# the samplerate, in hz, of the audio signal
+
+samplerate = 22050
+
+
+
+# derived, the total number of seconds of audio
+
+n_seconds = n_samples / samplerate
+
+
+
+transform_window_size = 2048
+
+transform_step_size = 256
+
+
+
+n_frames = n_samples // transform_step_size
+
+
+
+
+
+from argparse import ArgumentParser
+
+from typing import Dict, Tuple
+
+
+
+import numpy as np
+
+import torch
+
+from sklearn.manifold import TSNE
+
+from torch import nn
+
+
+
+from conjure import S3Collection, \
+
+    conjure_article, CitationComponent, AudioComponent, ImageComponent, \
+
+    CompositeComponent, Logger, ScatterPlotComponent
+
+from data import get_one_audio_segment, AudioIterator
+
+from iterativedecomposition import Model as IterativeDecompositionModel
+
+from modules.eventgenerators.overfitresonance import OverfitResonanceModel
+
+from modules import max_norm, sparse_softmax
+
+
+
+
+
+remote_collection_name = 'iterative-decomposition-v3'
+
+
+
+
+
+def to_numpy(x: torch.Tensor):
+
+    return x.data.cpu().numpy()
+
+
+
+
+
+# thanks to https://discuss.pytorch.org/t/how-do-i-check-the-number-of-parameters-of-a-model/4325/9
+
+def count_parameters(model):
+
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+
+
+
+
+def process_events(
+
+        vectors: torch.Tensor,
+
+        times: torch.Tensor,
+
+        total_seconds: float) -> Tuple:
+
+    positions = torch.argmax(times, dim=-1, keepdim=True) / times.shape[-1]
+
+    times = [float(x) for x in (positions * total_seconds).view(-1).data.cpu().numpy()]
+
+
+
+    normalized = vectors.data.cpu().numpy().reshape((-1, context_dim))
+
+    normalized = normalized - normalized.min(axis=0, keepdims=True)
+
+    normalized = normalized / (normalized.max(axis=0, keepdims=True) + 1e-8)
+
+    tsne = TSNE(n_components=2)
+
+    points = tsne.fit_transform(normalized)
+
+    proj = np.random.uniform(0, 1, (2, 3))
+
+    colors = points @ proj
+
+    colors -= colors.min()
+
+    colors /= (colors.max() + 1e-8)
+
+    colors *= 255
+
+    colors = colors.astype(np.uint8)
+
+    colors = [f'rgb({c[0]} {c[1]} {c[2]})' for c in colors]
+
+
+
+    return points, times, colors
+
+
+
+
+
+def load_model(wavetable_device: str = 'cpu') -> nn.Module:
+
+
+
+    hidden_channels = 512
+
+
+
+    model = IterativeDecompositionModel(
+
+        in_channels=1024,
+
+        hidden_channels=hidden_channels,
+
+        resonance_model=OverfitResonanceModel(
+
+            n_noise_filters=64,
+
+            noise_expressivity=4,
+
+            noise_filter_samples=128,
+
+            noise_deformations=32,
+
+            instr_expressivity=4,
+
+            n_events=1,
+
+            n_resonances=4096,
+
+            n_envelopes=64,
+
+            n_decays=64,
+
+            n_deformations=64,
+
+            n_samples=n_samples,
+
+            n_frames=n_frames,
+
+            samplerate=samplerate,
+
+            hidden_channels=hidden_channels,
+
+            wavetable_device=wavetable_device,
+
+            fine_positioning=False,
+
+            fft_resonance=True
+
+        ))
+
+
+
+    with open('iterativedecomposition7.dat', 'rb') as f:
+
+        model.load_state_dict(torch.load(f, map_location=lambda storage, loc: storage))
+
+
+
+    print('Total parameters', count_parameters(model))
+
+    print('Encoder parameters', count_parameters(model.encoder))
+
+    print('Decoder parameters', count_parameters(model.resonance))
+
+
+
+    return model
+
+
+
+
+
+def scatterplot_section(logger: Logger) -> ScatterPlotComponent:
+
+    model = load_model()
+
+    ai = AudioIterator(
+
+        batch_size=4,
+
+        n_samples=n_samples,
+
+        samplerate=22050,
+
+        normalize=True,
+
+        as_torch=True)
+
+
+
+    batch = next(iter(ai))
+
+    batch = batch.view(-1, 1, n_samples).to('cpu')
+
+    events, vectors, times = model.iterative(batch)
+
+
+
+    total_seconds = n_samples / samplerate
+
+
+
+    points, times, colors = process_events(vectors, times, total_seconds)
+
+
+
+    events = events.view(-1, n_samples)
+
+
+
+    events = {f'event{i}': events[i: i + 1, :] for i in range(events.shape[0])}
+
+
+
+    scatterplot_srcs = []
+
+
+
+    event_components = {}
+
+    for k, v in events.items():
+
+        _, e = logger.log_sound(k, v)
+
+        scatterplot_srcs.append(e.public_uri)
+
+        event_components[k] = AudioComponent(e.public_uri, height=35, controls=False)
+
+
+
+    scatterplot_component = ScatterPlotComponent(
+
+        scatterplot_srcs,
+
+        width=500,
+
+        height=500,
+
+        radius=0.3,
+
+        points=points,
+
+        times=times,
+
+        colors=colors, )
+
+
+
+    return scatterplot_component
+
+
+
+
+
+def generate_multiple_events(
+
+        model: nn.Module,
+
+        vectors: torch.Tensor,
+
+        times: torch.Tensor) -> torch.Tensor:
+
+
+
+    generation_result = torch.cat(
+
+        [model.generate(vectors[:, i:i + 1, :], times[:, i:i + 1, :]) for i in range(n_events)], dim=1)
+
+
+
+    generation_result = torch.sum(generation_result, dim=1, keepdim=True)
+
+    generation_result = max_norm(generation_result)
+
+    return generation_result
+
+
+
+def generate(
+
+        model: nn.Module,
+
+        vectors: torch.Tensor,
+
+        times: torch.Tensor,
+
+        randomize_events: bool,
+
+        randomize_times: bool) -> torch.Tensor:
+
+
+
+    batch, n_events, _ = vectors.shape
+
+
+
+    if randomize_events:
+
+        vectors = torch.zeros_like(vectors).uniform_(vectors.min().item(), vectors.max().item())
+
+
+
+    if randomize_times:
+
+        times = torch.zeros_like(times).uniform_(-1, 1)
+
+        times = sparse_softmax(times, dim=-1, normalize=True) * times
+
+
+
+    generation_result = generate_multiple_events(model, vectors, times)
+
+    return generation_result
+
+
+
+
+
+def streaming_section(logger: Logger) -> CompositeComponent:
+
+    model = load_model()
+
+    samples = get_one_audio_segment(n_samples * 4, samplerate, device='cpu').view(1, 1, -1)
+
+
+
+    with torch.no_grad():
+
+        recon = model.streaming(samples)
+
+
+
+    _, orig = logger.log_sound(key='streamingorig', audio=samples)
+
+    orig = AudioComponent(orig.public_uri, height=100, controls=True, scale=4)
+
+
+
+    _, recon = logger.log_sound(key='streamingrecon', audio=recon)
+
+    recon = AudioComponent(recon.public_uri, height=100, controls=True, scale=4)
+
+
+
+    return CompositeComponent(
+
+        orig=orig,
+
+        recon=recon,
+
+    )
+
+
+
+
+
+def reconstruction_section(logger: Logger) -> CompositeComponent:
+
+    model = load_model()
+
+
+
+    # get a random audio segment
+
+    samples = get_one_audio_segment(n_samples, samplerate, device='cpu').view(1, 1, n_samples)
+
+    events, vectors, times = model.iterative(samples)
+
+
+
+    # generate audio with the same times, but randomized event vectors
+
+    randomized_events = generate(model, vectors, times, randomize_events=True, randomize_times=False)
+
+    _, random_events = logger.log_sound('randomizedevents', randomized_events)
+
+    random_events_component = AudioComponent(random_events.public_uri, height=100, controls=True)
+
+
+
+    # generate audio with the same events, but randomized times
+
+    randomized_times = generate(model, vectors, times, randomize_events=False, randomize_times=True)
+
+    _, random_times = logger.log_sound('randomizedtimes', randomized_times)
+
+    random_times_component = AudioComponent(random_times.public_uri, height=100, controls=True)
+
+
+
+    total_seconds = n_samples / samplerate
+
+
+
+    points, times, colors = process_events(vectors, times, total_seconds)
+
+
+
+    # sum together all events
+
+    summed = torch.sum(events, dim=1, keepdim=True)
+
+
+
+    _, original = logger.log_sound(f'original', samples)
+
+    _, reconstruction = logger.log_sound(f'reconstruction', summed)
+
+
+
+    orig_audio_component = AudioComponent(original.public_uri, height=100)
+
+    recon_audio_component = AudioComponent(reconstruction.public_uri, height=100)
+
+
+
+    events = {f'event{i}': events[:, i: i + 1, :] for i in range(events.shape[1])}
+
+
+
+    scatterplot_srcs = []
+
+
+
+    event_components = {}
+
+    for k, v in events.items():
+
+        _, e = logger.log_sound(k, v)
+
+        scatterplot_srcs.append(e.public_uri)
+
+        event_components[k] = AudioComponent(e.public_uri, height=25, controls=False)
+
+
+
+    scatterplot_component = ScatterPlotComponent(
+
+        scatterplot_srcs,
+
+        width=300,
+
+        height=300,
+
+        radius=0.04,
+
+        points=points,
+
+        times=times,
+
+        colors=colors, )
+
+
+
+    _, event_vectors = logger.log_matrix_with_cmap('latents', vectors[0].T, cmap='hot')
+
+    latents = ImageComponent(event_vectors.public_uri, height=200, title='latent event vectors')
+
+
+
+
+
+
+
+    composite = CompositeComponent(
+
+        orig_audio=orig_audio_component,
+
+        recon_audio=recon_audio_component,
+
+        latents=latents,
+
+        scatterplot=scatterplot_component,
+
+        random_events=random_events_component,
+
+        random_times=random_times_component,
+
+        **event_components
+
+    )
+
+
+
+    return composite</code-block>
+
+
+<a id="Notes"></a>
+<h1>Notes</h1>
+<p>This blog post is generated from a
+<a href="https://github.com/JohnVinyard/matching-pursuit/blob/main/v3blogpost.py">Python script</a> using
+<a href="https://github.com/JohnVinyard/conjure">conjure</a>.</p>
+<p>[^1]:  While the STFT (short-time fourier transform) doesn't capture <em>everything</em> of perceptual import, it does a fairly
+good job, better than the "raw", time-domain audio signal, at least.  In the time domain, we get into trouble when we
+begin to try to represent and remove the noisier parts of the signal;  here the statistics and relationships between
+different auditory bandpass filters become more important than the precise amplitude values.  </p>
+
+<code-block language="python">def demo_page_dict() -> Dict[str, any]:
+
+    print(f'Generating article...')
+
+
+
+    remote = S3Collection(
+
+        remote_collection_name, is_public=True, cors_enabled=True)
+
+
+
+    logger = Logger(remote)
+
+
+
+    print('Creating large scatterplot')
+
+    large_scatterplot = scatterplot_section(logger)
+
+
+
+    print('Creating streaming section')
+
+    streaming = streaming_section(logger)
+
+
+
+    print('Creating reconstruction examples')
+
+    example_1 = reconstruction_section(logger)
+
+    example_2 = reconstruction_section(logger)
+
+    example_3 = reconstruction_section(logger)
+
+    example_4 = reconstruction_section(logger)
+
+    example_5 = reconstruction_section(logger)
+
+
+
+    citation = CitationComponent(
+
+        tag='johnvinyarditerativedecompositionv3',
+
+        author='Vinyard, John',
+
+        url='https://blog.cochlea.xyz/iterative-decomposition-v3.html',
+
+        header='Iterative Decomposition V3',
+
+        year='2024',
+
+    )
+
+
+
+    return dict(
+
+        large_scatterplot=large_scatterplot,
+
+        streaming=streaming,
+
+        example_1=example_1,
+
+        example_2=example_2,
+
+        example_3=example_3,
+
+        example_4=example_4,
+
+        example_5=example_5,
+
+        citation=citation
+
+    )
+
+
+
+
+
+def generate_demo_page():
+
+    display = demo_page_dict()
+
+    conjure_article(
+
+        __file__,
+
+        'html',
+
+        title='Iterative Decomposition Model V3',
+
+        **display)
+
+
+
+
+
+if __name__ == '__main__':
+
+    parser = ArgumentParser()
+
+
+
+    parser.add_argument('--clear', action='store_true')
+
+    parser.add_argument('--list', action='store_true')
+
+
+
+    args = parser.parse_args()
+
+
+
+    if args.list:
+
+        remote = S3Collection(
+
+            remote_collection_name, is_public=True, cors_enabled=True)
+
+        print(remote)
+
+        print('Listing stored keys')
+
+        for key in remote.iter_prefix(start_key=b'', prefix=b''):
+
+            print(key)
+
+
+
+    if args.clear:
+
+        remote = S3Collection(
+
+            remote_collection_name, is_public=True, cors_enabled=True)
+
+        remote.destroy(prefix=b'')
+
+
+
+    generate_demo_page()</code-block>
+
+
+                <a href="#">
+                    <div class="back-to-top">
+                        Back to Top
+                    </div>
+                </a>
+
+            </body>
+            </html>
+    
