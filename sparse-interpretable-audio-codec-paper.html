@@ -1,0 +1,1324 @@
+
+        <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <meta http-equiv="X-UA-Compatible" content="ie=edge">
+                <title>Toward a Sparse Interpretable Audio Codec</title>
+                <link rel="preconnect" href="https://fonts.googleapis.com">
+                <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+                <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet">
+                <script src="https://cdn.jsdelivr.net/gh/JohnVinyard/web-components@v0.0.13/build/components/bundle.js"></script>
+                <style>
+                    body {
+                        font-family: "Gowun Batang", serif;
+                        margin: 5vh 5vw;
+                        color: #333;
+                        background-color: #f0f0f0;
+                        font-size: 1.1em;
+                    }
+                    .back-to-top {
+                        position: fixed;
+                        bottom: 20px;
+                        right: 20px;
+                        background-color: #333;
+                        color: #f0f0f0;
+                        padding: 10px;
+                        font-size: 0.9em;
+                    }
+                    img.full-width {
+                        width: 100%;
+                    }
+                    ul {
+                        list-style-type: none;
+                        padding-inline-start: 20px;
+                        font-size: 20px;
+                    }
+                    a {
+                        color: #660000;
+                    }
+                    a:visited {
+                        color: #000066;
+                    }
+                    caption {
+                        text-decoration: underline;
+                        font-size: 0.6em;
+                    }
+                    blockquote {
+                        background-color: #d5d5d5;
+                        padding: 2px 10px;
+                    }
+                </style>
+            </head>
+            <body>
+                
+    <h1>Toward a Sparse Interpretable Audio Codec</h1>
+<details>
+    <summary>
+        <caption>Table of Contents</caption>
+    </summary>
+
+<ul>
+<li><a href="#Introduction">Introduction</h1></a></li>
+<li><a href="#Previous Work">Previous Work</h1></a></li>
+<li><a href="#Model">Model</h1></a><ul>
+<li><a href="#Encoder">Encoder</h2></a></li>
+<li><a href="#Decoder">Decoder</h2></a></li>
+</ul>
+</li>
+<li><a href="#Training Procedure">Training Procedure</h1></a></li>
+<li><a href="#Streaming Algorithm">Streaming Algorithm</h1></a></li>
+<li><a href="#Future Work">Future Work</h1></a><ul>
+<li><a href="#Better Perceptual Audio Losses">Better Perceptual Audio Losses</h2></a></li>
+<li><a href="#Model Size, Training Time and Dataset">Model Size, Training Time and Dataset</h2></a></li>
+<li><a href="#Different Event Generator Variants">Different Event Generator Variants</h2></a></li>
+</ul>
+</li>
+<li><a href="#Cite this Article">Cite this Article</h1></a></li>
+<li><a href="#Streaming Algorithm for Arbitrary-Length Audio Segments">Streaming Algorithm for Arbitrary-Length Audio Segments</h1></a><ul>
+<li><a href="#Original (Streaming)">Original (Streaming)</h2></a></li>
+<li><a href="#Reconstruction (Streaming)">Reconstruction (Streaming)</h2></a></li>
+</ul>
+</li>
+<li><a href="#Audio Examples">Audio Examples</h1></a><ul>
+<li><a href="#Example 1">Example 1</h2></a></li>
+<li><a href="#Example 2">Example 2</h2></a></li>
+<li><a href="#Example 3">Example 3</h2></a></li>
+<li><a href="#Example 4">Example 4</h2></a></li>
+<li><a href="#Example 5">Example 5</h2></a></li>
+</ul>
+</li>
+<li><a href="#Notes">Notes</h1></a></li>
+</ul>
+</details>
+                
+
+<a id="Introduction"></a>
+<h1>Introduction</h1>
+<p>Most widely-used modern audio codecs, such as Ogg Vorbis and MP3, as well as more recent "neural" codecs like
+<a href="https://arxiv.org/abs/2210.13438">Meta's Encodec</a> or <a href="https://arxiv.org/abs/2306.06546">Descript's</a> are based on
+block-coding;  audio is divided into overlapping, fixed-size "frames" which are then compressed.  While they produce
+excellent reproduction quality and can be used for downstream tasks such as text-to-audio, they do not produce an
+intuitive, directly-interpretable representation.</p>
+<p>In this work, we introduce a proof-of-concept audio encoder that seeks to encode audio as a sparse set of events and
+their times-of-occurrence.  Rudimentary physics-based assumptions are used to model attack and the physical resonance
+of both the instrument being played and the room in which a performance occurs, hopefully encouraging a sparse,
+parsimonious, and easy-to-interpret representation.</p>
+
+<a id="Previous Work"></a>
+<h1>Previous Work</h1>
+<p>This work takes inspiration from symbolic approaches, such as MIDI, iterative decomposition methods like matching pursuit
+and granular synthesis, which represents audio as a sparse set of "grains" or simple audio atoms.</p>
+
+<a id="Model"></a>
+<h1>Model</h1>
+
+<a id="Encoder"></a>
+<h2>Encoder</h2>
+<p>The encoder iteratively removes energy from the input spectrogram, producing an event vector and one-hot/dirac impulse
+representing the time of occurrence.</p>
+
+<a id="Decoder"></a>
+<h2>Decoder</h2>
+<p>The decoder uses the 32-dimensional event vector to choose an attack envelope, evolving resonance, and room impulse
+response to model the acoustic event, and then "schedules" it by convolving the event with the one-hot/direc impulse.  Audio
+is not produced using typical upsampling convolutions, avoiding artifacts and producing more natural-sounding events.</p>
+
+<a id="Training Procedure"></a>
+<h1>Training Procedure</h1>
+<p>We train on the <a href="https://zenodo.org/records/5120004#.Yhxr0-jMJBA">MusicNet dataset</a> dataset) for ~48 hours, selecting
+random ~6 second audio segments sampled at 22050hz (mono) with a batch-size of 2.  The model takes the following steps
+for 32 iterations on each training sample:</p>
+<ol>
+<li>The encoder analyzes the STFT spectrogram of the signal, producing a single 32-dimensional event vector and a one-hot vector representing time-of-occurrence</li>
+<li>The decoder produces "raw" audio samples of the acoustic event</li>
+<li>an STFT spectrogram of the acoustic event is produced and subtracted from the input spectrogram</li>
+<li>The encoder analyzes the residual and the process is repeated</li>
+</ol>
+<p>The model is trained to maximize the amount of energy removed from the original signal at each step, and to minimize
+an adversarial loss, produced by a small, convolutional down-sampling discriminator which is trained in parallel,
+analyzing both the real and reproduced signals in the STFT spectrogram domain.  Half of the generated events are
+masked/removed when analyzed by the discriminator, encouraging each event vector to stand on its own as a realistic
+event.</p>
+<p>All training and model code can be
+<a href="https://github.com/JohnVinyard/matching-pursuit/blob/main/iterativedecomposition.py">found here</a>.</p>
+
+<a id="Streaming Algorithm"></a>
+<h1>Streaming Algorithm</h1>
+<p>When encoding, the entire ~6-second spectrogram is analyzed, but its second-half is masked when choosing the next event.
+In this way, the model can slide along overlapping sections of audio and encode segments of arbitrary durations.</p>
+
+<a id="Future Work"></a>
+<h1>Future Work</h1>
+
+<a id="Better Perceptual Audio Losses"></a>
+<h2>Better Perceptual Audio Losses</h2>
+<p>Recent experiments use a greedy, per-event loss which maximizes the energy removed from the signal at each step, as well
+as a learned, adversarial loss.  Reconstruction quality will likely benefit from a more perceptually-aligned loss and a
+larger, more diverse dataset.</p>
+
+<a id="Model Size, Training Time and Dataset"></a>
+<h2>Model Size, Training Time and Dataset</h2>
+<p>Firstly, this model is relatively small, weighing in at ~14M parameters (~80 MB on disk) and has only been trained for
+around 48 hours, so it seems there is a lot of space to increase the model size, dataset size and training time to
+further improve.  The reconstruction quality of the examples on this page is not amazing, certainly not good enough
+even for a lossy audio codec, but the structure the model extracts seems like it could be used for many interesting
+applications.  The training data should be expanded beyond the MusicNet dataset.</p>
+
+<a id="Different Event Generator Variants"></a>
+<h2>Different Event Generator Variants</h2>
+<p>The decoder side of the model is very interesting, and all sorts of physical modelling-like approaches could yield
+better, more realistic, and sparser renderings of the audio.</p>
+
+
+<a id="Cite this Article"></a>
+<h1>Cite this Article</h1>
+<p>If you'd like to cite this article, you can use the following <a href="https://bibtex.org/">BibTeX block</a>.</p>
+
+<citation-block
+            tag="johnvinyarditerativedecompositionv3"
+            author="Vinyard, John"
+            url="https://blog.cochlea.xyz/sparse-interpretable-audio-codec-paper.html"
+            header="Toward a Sparse Interpretable Audio Codec"
+            year="2025">
+        </citation-block>
+
+
+<a id="Streaming Algorithm for Arbitrary-Length Audio Segments"></a>
+<h1>Streaming Algorithm for Arbitrary-Length Audio Segments</h1>
+<p>In this latest iteration of the work, we introduce a "streaming" algorithm so that we can decompose audio segments of
+arbitrary lengths.</p>
+
+
+<a id="Original (Streaming)"></a>
+<h2>Original (Streaming)</h2>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/streamingorig_fa11bf9f31dd9d420d2809516306522820463683"
+            height="100"
+            samples="256"
+            scale="4"
+            controls
+        ></audio-view>
+
+
+<a id="Reconstruction (Streaming)"></a>
+<h2>Reconstruction (Streaming)</h2>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/streamingrecon_35c56de793b3b032442139a1b6a48a37734f193d"
+            height="100"
+            samples="256"
+            scale="4"
+            controls
+        ></audio-view>
+
+
+<a id="Audio Examples"></a>
+<h1>Audio Examples</h1>
+
+
+<a id="Example 1"></a>
+<h2>Example 1</h2>
+
+
+<a id="Original Audio"></a>
+<h3>Original Audio</h3>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/original_ffbf2b7543732f9330dc952b3b53eb0a9ad8b2c8"
+            height="100"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Reconstruction"></a>
+<h3>Reconstruction</h3>
+<p>We mask the second half of the input audio to enable the streaming algorithm, so only the first half of the input audio is reproduced.</p>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/reconstruction_4e6ad6231eb5c701cd6d780caea20e681045f9b8"
+            height="100"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Decomposition"></a>
+<h3>Decomposition</h3>
+<p>We can see that while energy is removed at each step, removed segments do not map cleanly onto audio "events" as a human listener would typically conceive of them.  Future work will move toward fewer and more meaningul events via induced sparsity and/or clustering of events.</p>
+
+<img class="full-width" src="https://iterative-decomposition-v3.s3.amazonaws.com/decomposition_199c8473cadb43f6b208f5f2ee564285bc747649" height="200"></img>
+
+
+<a id="Randomized"></a>
+<h3>Randomized</h3>
+
+<p>Here, we generate random event vectors with the original event times.</p>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/randomizedevents_390d9c0081a2f02fdf7981534904c5327a8ec578"
+            height="100"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+<p>Here we use the original event vectors, but generate random times.</p>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/randomizedtimes_528a3066efab9107573493d6bbd85cc0612f8258"
+            height="100"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Event Vectors"></a>
+<h3>Event Vectors</h3>
+<p>Different stopping conditions might be chosen during inference (e.g. norm of the residual) but during training, we remove energy for 32 steps.  Each event vector is of dimension 32.  The decoder generates an event from this vector, which is then scheduled.  </p>
+
+<img class="" src="https://iterative-decomposition-v3.s3.amazonaws.com/latents_044258fe916b52c4294d09dc3f29e7f728f3db8b" height="200"></img>
+
+
+<a id="Event Scatterplot"></a>
+<h3>Event Scatterplot</h3>
+<p>Time is along the x-axis, and a 32D -&gt; 1D projection of event vectors using t-SNE constitutes the distribution along the y-axis.  Colors are produced via a random projection from 32D -&gt; 3D (RGB).  Here it becomes clear that there are many redundant/overlapping events.  Future work will stress more sparsity and less event overlap, hopefully increasing interpretability further.</p>
+
+<scatter-plot 
+                width="600" 
+                height="300" 
+                radius="0.01" 
+                points='[{"x": 0.0857980027794838, "y": 0.3613281149227987, "startSeconds": 2.14784574508667, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event0_53ca7852a5642fd582b6de0932303f837cbc967b", "color": "rgb(40 169 143)"}, {"x": 0.08554455637931824, "y": 0.3613281149227987, "startSeconds": 2.14784574508667, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event1_110a1ae28b33d093962a8f9179edae88fdf0a35f", "color": "rgb(28 148 130)"}, {"x": 0.41119688749313354, "y": 0.39257809930859366, "startSeconds": 2.3336052894592285, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event2_19fb7f9f89fb05ff97e48abe7c8cebecaa4d0aac", "color": "rgb(131 187 164)"}, {"x": 0.5259565114974976, "y": 0.41406249365536496, "startSeconds": 2.461315155029297, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event3_01d7b9f109184748b90cd61eb57a780e9f496612", "color": "rgb(109 166 153)"}, {"x": 0.23924469947814941, "y": 0.4667968723879312, "startSeconds": 2.774784564971924, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event4_0a6daf8625b1272a36eb76a5f668513ca57c8d13", "color": "rgb(34 123 111)"}, {"x": 0.054728519171476364, "y": 0.48437499863211997, "startSeconds": 2.879274368286133, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event5_0efb547d2cdbbf5695e1d0597ea78c7731b7091d", "color": "rgb(53 146 123)"}, {"x": 0.12302858382463455, "y": 0.48828122662598616, "startSeconds": 2.902494192123413, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event6_99d8dda38d9a6187f5f3a0c164030bdd38a3a2df", "color": "rgb(51 148 113)"}, {"x": 0.12435269355773926, "y": 0.10156249938972906, "startSeconds": 0.6037188172340393, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event7_ec956ef3750591fbfc3f781c9fe34ffa8b0ac4b7", "color": "rgb(88 195 154)"}, {"x": 0.1975715458393097, "y": 0.10156249938972906, "startSeconds": 0.6037188172340393, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event8_23bc3b8279763db53bc4c214515061fa73c3aac1", "color": "rgb(82 184 142)"}, {"x": 0.31344103813171387, "y": 0.12499999770625436, "startSeconds": 0.743038535118103, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event9_d846540d94cf740f0a5deb71d5dead5918cb307f", "color": "rgb(59 150 124)"}, {"x": 0.38098618388175964, "y": 0.15429686809511622, "startSeconds": 0.9171881675720215, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event10_147e4279ce1e57d53596833d64c15fee5fb30d6a", "color": "rgb(98 184 175)"}, {"x": 0.4494587481021881, "y": 0.09765625134150469, "startSeconds": 0.5804988741874695, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event11_2a88bea143745f6ecd051dae1fc1508d50b92b6e", "color": "rgb(66 166 133)"}, {"x": 0.005960797891020775, "y": 0.0, "startSeconds": 0.0, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event12_a93f3569b00b6293a7e92a16251698dced5bf835", "color": "rgb(101 175 125)"}, {"x": 0.09223846346139908, "y": 0.0, "startSeconds": 0.0, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event13_9d6f9626a2f32725c93dd9538cfc164c6905aee2", "color": "rgb(101 182 128)"}, {"x": 0.15048736333847046, "y": 0.003906249928320449, "startSeconds": 0.02321995422244072, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event14_145e1b77f6a06f22ffaeaa37b33062be52ef93d9", "color": "rgb(92 169 111)"}, {"x": 0.26704105734825134, "y": 0.003906249928320449, "startSeconds": 0.02321995422244072, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event15_951c4355c0d571f21589dfb72c03540ed001aff3", "color": "rgb(86 172 123)"}, {"x": 0.1606464833021164, "y": 0.2910156099460437, "startSeconds": 1.729886531829834, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event16_c50e14502209534aa1358255d2764bc63e7aaedb", "color": "rgb(85 187 148)"}, {"x": 0.05801913142204285, "y": 0.31835936633797246, "startSeconds": 1.8924262523651123, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event17_08d017284b9524b695ad9165e228882321388042", "color": "rgb(44 146 120)"}, {"x": 0.3233366310596466, "y": 0.1933593686317181, "startSeconds": 1.1493877172470093, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event18_44c09fb5e04e2c33a63e9d0b371ded45363d2445", "color": "rgb(183 240 222)"}, {"x": 0.32343789935112, "y": 0.1933593686317181, "startSeconds": 1.1493877172470093, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event19_b10ef4aba055ddccb63903e54edbe41a5edb4deb", "color": "rgb(174 230 211)"}, {"x": 0.23855364322662354, "y": 0.24609374736428435, "startSeconds": 1.4628571271896362, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event20_b3134d5a8558551692100f8e8288956298741296", "color": "rgb(147 254 183)"}, {"x": 0.41811490058898926, "y": 0.1933593686317181, "startSeconds": 1.1493877172470093, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event21_26e8118359a9397a1e631810688576e76747c2b7", "color": "rgb(146 207 183)"}, {"x": 0.9069017767906189, "y": 0.06640624690135155, "startSeconds": 0.39473921060562134, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event22_0f0e8403d8ecbe50b7563f6a4bbca666510360cd", "color": "rgb(64 92 92)"}, {"x": 0.5371949672698975, "y": 0.005859374579131327, "startSeconds": 0.03482992947101593, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event23_5f4af5145bb647d36c6dbe371b3c5ad2083538d5", "color": "rgb(97 159 134)"}, {"x": 0.20047423243522644, "y": 0.48828122662598616, "startSeconds": 2.902494192123413, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event24_4c881c87c6a33826abe3cb1b012b11f463f41106", "color": "rgb(53 145 114)"}, {"x": 0.4929428994655609, "y": 0.4374999819447112, "startSeconds": 2.600634813308716, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event25_f03b61bee39f9b156e9b5d9f53c574db4bbf1a91", "color": "rgb(85 175 132)"}, {"x": 0.8727982044219971, "y": 0.39257809930859366, "startSeconds": 2.3336052894592285, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event26_b8e257c9a45527d2806c988ac0111a9c7ed61577", "color": "rgb(64 131 115)"}, {"x": 0.9397914409637451, "y": 0.1933593686317181, "startSeconds": 1.1493877172470093, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event27_30a1337e7ed5885a22ca2a31dab97c76cdbc6dfa", "color": "rgb(80 107 111)"}, {"x": 0.9360122680664062, "y": 0.0, "startSeconds": 0.0, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event28_aaa8e6e750a76ff794e33e00cb2363039fe1cfce", "color": "rgb(86 150 126)"}, {"x": 0.4681689143180847, "y": 0.2988281260968506, "startSeconds": 1.7763265371322632, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event29_406692a1558462207a0cd6521548bf64ffcc8453", "color": "rgb(0 69 53)"}, {"x": 1.042837381362915, "y": 0.16406249824285624, "startSeconds": 0.9752380847930908, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event30_6efdd2507c1a964590db69258f54580c79078efa", "color": "rgb(2 76 78)"}, {"x": 1.0926551818847656, "y": 0.27148436970492185, "startSeconds": 1.6137868165969849, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event31_077bace272f389c6231520ef0430462d5377edc9", "color": "rgb(58 118 93)"}]'>
+            </scatter-plot>
+
+
+<a id="Example 2"></a>
+<h2>Example 2</h2>
+
+
+<a id="Original Audio"></a>
+<h3>Original Audio</h3>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/original_e199b80bb96fd8ad3fe65a170f18c139e0f5b04e"
+            height="100"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Reconstruction"></a>
+<h3>Reconstruction</h3>
+<p>We mask the second half of the input audio to enable the streaming algorithm, so only the first half of the input audio is reproduced.</p>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/reconstruction_52e80f3a23d2d97f7dfd2e27916149f5d7bf6910"
+            height="100"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Decomposition"></a>
+<h3>Decomposition</h3>
+<p>We can see that while energy is removed at each step, removed segments do not map cleanly onto audio "events" as a human listener would typically conceive of them.  Future work will move toward fewer and more meaningul events via induced sparsity and/or clustering of events.</p>
+
+<img class="full-width" src="https://iterative-decomposition-v3.s3.amazonaws.com/decomposition_5a6c24ea749abc5651f4c1fca95ba55f7cda35d2" height="200"></img>
+
+
+<a id="Randomized"></a>
+<h3>Randomized</h3>
+
+<p>Here, we generate random event vectors with the original event times.</p>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/randomizedevents_43eaf70e804d7586b52444a111760afef22a5c4c"
+            height="100"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+<p>Here we use the original event vectors, but generate random times.</p>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/randomizedtimes_5de10357974b2c9b886696b450c403146f728a77"
+            height="100"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Event Vectors"></a>
+<h3>Event Vectors</h3>
+<p>Different stopping conditions might be chosen during inference (e.g. norm of the residual) but during training, we remove energy for 32 steps.  Each event vector is of dimension 32.  The decoder generates an event from this vector, which is then scheduled.  </p>
+
+<img class="" src="https://iterative-decomposition-v3.s3.amazonaws.com/latents_7cfc64a3c68c077f8d74ae021f86b03e598db985" height="200"></img>
+
+
+<a id="Event Scatterplot"></a>
+<h3>Event Scatterplot</h3>
+<p>Time is along the x-axis, and a 32D -&gt; 1D projection of event vectors using t-SNE constitutes the distribution along the y-axis.</p>
+
+<scatter-plot 
+                width="600" 
+                height="300" 
+                radius="0.01" 
+                points='[{"x": -7.898530006408691, "y": 0.19726561667994247, "startSeconds": 1.172607660293579, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event0_bc19d498a71e4a15732935dbf8bfd9b58c2aebfb", "color": "rgb(129 139 86)"}, {"x": -7.9948625564575195, "y": 0.30859373619023245, "startSeconds": 1.834376335144043, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event1_ff2ae43ee97df127a4d3eefb8617b0974c0304c0", "color": "rgb(248 229 137)"}, {"x": -7.7359490394592285, "y": 0.4453124780411599, "startSeconds": 2.6470746994018555, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event2_8670251f89b9b5a9deb8bd916ac38124c3a6386a", "color": "rgb(219 218 120)"}, {"x": -8.021138191223145, "y": 0.30859373619023245, "startSeconds": 1.834376335144043, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event3_63cd4f331479677ff2734ae05e8b1b79edf390c8", "color": "rgb(222 189 111)"}, {"x": -7.913819313049316, "y": 0.19921875073123374, "startSeconds": 1.1842176914215088, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event4_33954ed944fa32b946ec2580339e3b750a2233d8", "color": "rgb(128 142 84)"}, {"x": -7.850646495819092, "y": 0.13671875187810656, "startSeconds": 0.8126984238624573, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event5_821e3f358ce659ebb20b3ad69cd350d5cd18e40d", "color": "rgb(175 158 99)"}, {"x": -8.360901832580566, "y": 0.039062500536601874, "startSeconds": 0.2321995496749878, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event6_67444946a3f414822aa03bd1242d9a681fbfc77e", "color": "rgb(195 236 114)"}, {"x": -7.7265448570251465, "y": 0.4453124780411599, "startSeconds": 2.6470746994018555, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event7_611127312af552d915054bb51409a7a74f6fd2da", "color": "rgb(211 210 107)"}, {"x": -7.945250988006592, "y": 0.13671875187810656, "startSeconds": 0.8126984238624573, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event8_26df0e3e48aedf99906bc566aabf3cd903134f1a", "color": "rgb(176 166 91)"}, {"x": -8.359071731567383, "y": 0.039062500536601874, "startSeconds": 0.2321995496749878, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event9_2d500bace210387e03340f2bddaed41178a1d971", "color": "rgb(203 243 112)"}, {"x": -8.096329689025879, "y": 0.09765625134150469, "startSeconds": 0.5804988741874695, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event10_54a9fa358e399f027b5391f221210bbf97d22931", "color": "rgb(254 232 141)"}, {"x": -8.399922370910645, "y": 0.33984376068474376, "startSeconds": 2.0201361179351807, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event11_96cf1e9a055d154467394d6dce35583c71f52208", "color": "rgb(244 225 138)"}, {"x": -8.358179092407227, "y": 0.0, "startSeconds": 0.0, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event12_bafc6d1ce896e76190515932976ec8d70e073862", "color": "rgb(117 155 44)"}, {"x": -7.990390300750732, "y": 0.2656249876054062, "startSeconds": 1.5789568424224854, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event13_ea8c691788ea3f66684cbdccbe9aa88d38ebe088", "color": "rgb(163 154 68)"}, {"x": -8.032569885253906, "y": 0.2656249876054062, "startSeconds": 1.5789568424224854, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event14_5f9e6f0b72058de9705b10081ff3b169d203f5db", "color": "rgb(158 151 63)"}, {"x": -8.106083869934082, "y": 0.24218749931605998, "startSeconds": 1.4396371841430664, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event15_7db8603c0e2407d9bea7bebbeb5679d27b7c950f", "color": "rgb(212 227 89)"}, {"x": -8.209388732910156, "y": 0.2402343652647687, "startSeconds": 1.4280271530151367, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event16_3ec41539603ff7db3aad4b6bdcc8c09598946196", "color": "rgb(215 223 92)"}, {"x": -8.504938125610352, "y": 0.16992188034237188, "startSeconds": 1.0100680589675903, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event17_1f65e4e80f042bd959ec7a04030e7477a9c28dca", "color": "rgb(29 19 5)"}, {"x": -8.467220306396484, "y": 0.2402343652647687, "startSeconds": 1.4280271530151367, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event18_2350addc5685aff62db82476dbe7f299fccd607e", "color": "rgb(199 213 74)"}, {"x": -8.102398872375488, "y": 0.37304687912183, "startSeconds": 2.217505693435669, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event19_2f60e1d4f01208e5d6b3f51e605a0f09f83129fb", "color": "rgb(207 172 103)"}, {"x": -8.706921577453613, "y": 0.16992188034237188, "startSeconds": 1.0100680589675903, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event20_3ecceae9a46cd721e745659adfbf0a80214e4129", "color": "rgb(31 14 0)"}, {"x": -7.975152015686035, "y": 0.47460936848437996, "startSeconds": 2.8212244510650635, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event21_440a375364431e1a282c8f5be1337b5e9b4a88e8", "color": "rgb(145 207 69)"}, {"x": -7.747939109802246, "y": 0.40429686350762495, "startSeconds": 2.4032652378082275, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event22_835d8f982ef0ac1e73c4cacb17edf1f0fb34328c", "color": "rgb(236 185 119)"}, {"x": -8.486187934875488, "y": 0.33984376068474376, "startSeconds": 2.0201361179351807, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event23_e2d8d1922171b97ad9ed0ee4d3594491a14d2b82", "color": "rgb(239 223 135)"}, {"x": -8.206460952758789, "y": 0.37304687912183, "startSeconds": 2.217505693435669, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event24_f0a9965d37a8138ce85c9c4ccae8c0b57618f2ac", "color": "rgb(226 168 115)"}, {"x": -7.806478977203369, "y": 0.43945311599600245, "startSeconds": 2.6122448444366455, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event25_e9ffcfb87a85142509c79ee629abc4724a524519", "color": "rgb(202 184 108)"}, {"x": -8.670307159423828, "y": 0.10546874743795343, "startSeconds": 0.6269387602806091, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event26_9120addaf9c1917926866b85c283e6dc064e20b2", "color": "rgb(234 208 121)"}, {"x": -8.512490272521973, "y": 0.3574218869289325, "startSeconds": 2.1246259212493896, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event27_b43ded0ce189d178d2e9b234ab8d7967ffda2aaf", "color": "rgb(218 193 110)"}, {"x": -8.745444297790527, "y": 0.0, "startSeconds": 0.0, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event28_3d11bc80ff233413c61069effd2fafce29d58498", "color": "rgb(98 153 44)"}, {"x": -8.673222541809082, "y": 0.16992188034237188, "startSeconds": 1.0100680589675903, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event29_e09416315643df5e8a63505fb4fbe07dda60187c", "color": "rgb(81 44 17)"}, {"x": -8.79670238494873, "y": 0.046874996633050614, "startSeconds": 0.27863943576812744, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event30_0ad1805d4a80e1519aa6d72b26140e9460bc906b", "color": "rgb(251 238 140)"}, {"x": -8.78622055053711, "y": 0.24218749931605998, "startSeconds": 1.4396371841430664, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event31_191c0ece933ba10db0900a9be71a50851ebd0d53", "color": "rgb(144 159 28)"}]'>
+            </scatter-plot>
+
+
+<a id="Example 3"></a>
+<h2>Example 3</h2>
+
+
+<a id="Original Audio"></a>
+<h3>Original Audio</h3>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/original_a4716f58378e7f91309666b59772c5ce78decec6"
+            height="100"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Reconstruction"></a>
+<h3>Reconstruction</h3>
+<p>We mask the second half of the input audio to enable the streaming algorithm, so only the first half of the input audio is reproduced.</p>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/reconstruction_fbbf3e0538570d263549bc105c3a748382b761a7"
+            height="100"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Decomposition"></a>
+<h3>Decomposition</h3>
+<p>We can see that while energy is removed at each step, removed segments do not map cleanly onto audio "events" as a human listener would typically conceive of them.  Future work will move toward fewer and more meaningul events via induced sparsity and/or clustering of events.</p>
+
+<img class="full-width" src="https://iterative-decomposition-v3.s3.amazonaws.com/decomposition_de4d1e400ec3351f9f97332d1f9bd69f0ec1c975" height="200"></img>
+
+
+<a id="Randomized"></a>
+<h3>Randomized</h3>
+
+<p>Here, we generate random event vectors with the original event times.</p>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/randomizedevents_849906f123182bdb0c3c798b838a9538e0408ab6"
+            height="100"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+<p>Here we use the original event vectors, but generate random times.</p>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/randomizedtimes_10258d32e9875dbd419c93b119b07e6882d0dfff"
+            height="100"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Event Vectors"></a>
+<h3>Event Vectors</h3>
+<p>Different stopping conditions might be chosen during inference (e.g. norm of the residual) but during training, we remove energy for 32 steps.  Each event vector is of dimension 32.  The decoder generates an event from this vector, which is then scheduled.  </p>
+
+<img class="" src="https://iterative-decomposition-v3.s3.amazonaws.com/latents_38e5860f24a6db3e4c9379e460b207cbe8f3ae03" height="200"></img>
+
+
+<a id="Event Scatterplot"></a>
+<h3>Event Scatterplot</h3>
+<p>Time is along the x-axis, and a 32D -&gt; 1D projection of event vectors using t-SNE constitutes the distribution along the y-axis.</p>
+
+<scatter-plot 
+                width="600" 
+                height="300" 
+                radius="0.01" 
+                points='[{"x": 8.826774597167969, "y": 0.23046875517138687, "startSeconds": 1.369977355003357, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event0_d53a7df8b83d37c3df336cd794dcb86861eaefa3", "color": "rgb(197 168 147)"}, {"x": 8.575474739074707, "y": 0.25976562556024874, "startSeconds": 1.5441269874572754, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event1_3ac41218307b89c5672992a76af2c7495ec4bb2d", "color": "rgb(236 137 116)"}, {"x": 8.981419563293457, "y": 0.23046875517138687, "startSeconds": 1.369977355003357, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event2_fa8a40c4cf6672edda3761724d507cb4314e2897", "color": "rgb(192 170 148)"}, {"x": 8.952239036560059, "y": 0.11914062563391781, "startSeconds": 0.7082086205482483, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event3_68eb941720f4de9e940b0132bb848f1e9ffef419", "color": "rgb(132 102 45)"}, {"x": 8.7183256149292, "y": 0.04492187260893843, "startSeconds": 0.26702946424484253, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event4_e1e729161e9a89841c679ba48df371753d585fa0", "color": "rgb(175 101 83)"}, {"x": 8.697126388549805, "y": 0.060546874829014996, "startSeconds": 0.3599092960357666, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event5_dd9617e67f1446f5d9db8b21777a37226aa43e6e", "color": "rgb(244 143 147)"}, {"x": 8.670403480529785, "y": 0.14062499992633093, "startSeconds": 0.8359183669090271, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event6_9841e205826cb76d1a625514730196b8ba5d24dd", "color": "rgb(217 141 126)"}, {"x": 8.997859001159668, "y": 0.08203124912142812, "startSeconds": 0.4876190423965454, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event7_9e02936b07f868b72c4c7f44c743f3f4a6d61b01", "color": "rgb(149 70 67)"}, {"x": 8.611827850341797, "y": 0.38281250926957, "startSeconds": 2.2755556106567383, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event8_3888424f3385290491138826e4a8daec7be86961", "color": "rgb(210 79 134)"}, {"x": 8.937582969665527, "y": 0.046874996633050614, "startSeconds": 0.27863943576812744, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event9_8d809731fabcfbb08cc74833bacf45fa2fee43a6", "color": "rgb(186 122 104)"}, {"x": 9.186230659484863, "y": 0.23046875517138687, "startSeconds": 1.369977355003357, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event10_2044cbcfc97e5c60933e3d890517f49805f94c50", "color": "rgb(194 172 140)"}, {"x": 9.240047454833984, "y": 0.07421874801138983, "startSeconds": 0.4411791265010834, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event11_2c4af639f9d1e52ed1a0dbc778c28b495588dedb", "color": "rgb(180 121 108)"}, {"x": 8.813755989074707, "y": 0.1562500021464075, "startSeconds": 0.9287981986999512, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event12_dbca5fe8a1f28854cd5f79d0790baa9b1fd5a85c", "color": "rgb(237 160 163)"}, {"x": 8.80198860168457, "y": 0.007812499856640898, "startSeconds": 0.04643990844488144, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event13_b7d57bf3048603959b635087695fa34414d3bad0", "color": "rgb(235 156 134)"}, {"x": 8.573067665100098, "y": 0.33203124453393684, "startSeconds": 1.9736961126327515, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event14_a38c0a3683d4a78b4f0b0d8bc77df4f70bae0249", "color": "rgb(254 133 133)"}, {"x": 9.752618789672852, "y": 0.21093749487590685, "startSeconds": 1.2538775205612183, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event15_16a076f9f9cec7c91dbb84822b39c743d6aff421", "color": "rgb(126 186 103)"}, {"x": 9.145721435546875, "y": 0.0, "startSeconds": 0.0, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event16_98ee7c0a4099f84e4a9c73af099b8cbc242d1629", "color": "rgb(201 124 66)"}, {"x": 8.726901054382324, "y": 0.35546875287764124, "startSeconds": 2.11301589012146, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event17_33e659b2c4534e0bdf37cc03513cc14bac4173d1", "color": "rgb(254 155 163)"}, {"x": 8.734758377075195, "y": 0.2890624959491106, "startSeconds": 1.7182766199111938, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event18_ba5bde1716fb698d5e6892b79852c5acd041a7db", "color": "rgb(218 142 98)"}, {"x": 8.838400840759277, "y": 0.35546875287764124, "startSeconds": 2.11301589012146, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event19_c374c35ae4ac50147044cecdc134112182cf7395", "color": "rgb(251 160 167)"}, {"x": 9.378082275390625, "y": 0.14257812395044311, "startSeconds": 0.847528338432312, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event20_9a1bbe025831c787a339ac4d0139b583de102c9e", "color": "rgb(125 142 44)"}, {"x": 8.915688514709473, "y": 0.35546875287764124, "startSeconds": 2.11301589012146, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event21_8e0a5f53e620cee341038a8df031a29ad7907c90", "color": "rgb(243 154 161)"}, {"x": 9.469849586486816, "y": 0.04882812567075234, "startSeconds": 0.29024943709373474, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event22_80304ac446b0b056a5c2f2106d58fc1f2bc859fb", "color": "rgb(71 49 0)"}, {"x": 8.799749374389648, "y": 0.4082031316102075, "startSeconds": 2.426485300064087, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event23_915881645c232d395e484f413700d3924cc356e1", "color": "rgb(167 47 116)"}, {"x": 9.361024856567383, "y": 0.0, "startSeconds": 0.0, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event24_8f970bcd3a65518f306c87571acd393fcc0d54c5", "color": "rgb(199 120 57)"}, {"x": 9.507692337036133, "y": 0.20703124682768248, "startSeconds": 1.2306575775146484, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event25_93ccd99e1d009107e3216c15486ef0eabb3b44a1", "color": "rgb(135 136 113)"}, {"x": 9.1161470413208, "y": 0.3574218869289325, "startSeconds": 2.1246259212493896, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event26_eb414aab4a0977ee0ae92c6e244d33f0d78d047e", "color": "rgb(225 151 141)"}, {"x": 9.038970947265625, "y": 0.023437498316525307, "startSeconds": 0.13931971788406372, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event27_1d537bbe5bef4110f3fe736d5004955de4ab9bcf", "color": "rgb(248 104 151)"}, {"x": 8.94733715057373, "y": 0.4082031316102075, "startSeconds": 2.426485300064087, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event28_3fe342a2b1291cc9a469b2173bfb81acc2a7ee7a", "color": "rgb(180 58 140)"}, {"x": 9.561698913574219, "y": 0.26171873955718183, "startSeconds": 1.5557368993759155, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event29_e070ba600612ce331222b53428722ac236a40060", "color": "rgb(209 142 131)"}, {"x": 9.484485626220703, "y": 0.08203124912142812, "startSeconds": 0.4876190423965454, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event30_898a04b8ee908c0ad588cff0bd0abdee720f936a", "color": "rgb(133 53 63)"}, {"x": 9.508980751037598, "y": 0.20703124682768248, "startSeconds": 1.2306575775146484, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event31_98303aa30b82efd6c72a75981442f1d73c7bd272", "color": "rgb(137 133 119)"}]'>
+            </scatter-plot>
+
+
+<a id="Example 4"></a>
+<h2>Example 4</h2>
+
+
+<a id="Original Audio"></a>
+<h3>Original Audio</h3>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/original_e606bc4ba9b83d6e6f11e37600ee552a0ee3b6ef"
+            height="100"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Reconstruction"></a>
+<h3>Reconstruction</h3>
+<p>We mask the second half of the input audio to enable the streaming algorithm, so only the first half of the input audio is reproduced.</p>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/reconstruction_85c913ce7f096f8ed2c3077f4188dc5c758a353f"
+            height="100"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Decomposition"></a>
+<h3>Decomposition</h3>
+<p>We can see that while energy is removed at each step, removed segments do not map cleanly onto audio "events" as a human listener would typically conceive of them.  Future work will move toward fewer and more meaningul events via induced sparsity and/or clustering of events.</p>
+
+<img class="full-width" src="https://iterative-decomposition-v3.s3.amazonaws.com/decomposition_9b95f392c9c99473027853d7edd31e14e09b2f73" height="200"></img>
+
+
+<a id="Randomized"></a>
+<h3>Randomized</h3>
+
+<p>Here, we generate random event vectors with the original event times.</p>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/randomizedevents_0374f6d95a357289f315229b18c61c032d8a5100"
+            height="100"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+<p>Here we use the original event vectors, but generate random times.</p>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/randomizedtimes_0b87ec433ac2eeb0ba44574e5079be2758d45a9b"
+            height="100"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Event Vectors"></a>
+<h3>Event Vectors</h3>
+<p>Different stopping conditions might be chosen during inference (e.g. norm of the residual) but during training, we remove energy for 32 steps.  Each event vector is of dimension 32.  The decoder generates an event from this vector, which is then scheduled.  </p>
+
+<img class="" src="https://iterative-decomposition-v3.s3.amazonaws.com/latents_b14162484c5792d71bbbf0b91408aec8655d2496" height="200"></img>
+
+
+<a id="Event Scatterplot"></a>
+<h3>Event Scatterplot</h3>
+<p>Time is along the x-axis, and a 32D -&gt; 1D projection of event vectors using t-SNE constitutes the distribution along the y-axis.</p>
+
+<scatter-plot 
+                width="600" 
+                height="300" 
+                radius="0.01" 
+                points='[{"x": -0.06996823847293854, "y": 0.23828125126783561, "startSeconds": 1.4164172410964966, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event0_5ae5ec92425dbb066a68fd9c4537665b70edefb4", "color": "rgb(177 63 98)"}, {"x": -0.08445966988801956, "y": 0.35546875287764124, "startSeconds": 2.11301589012146, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event1_85941c7150aeebd6347cd08369d18ecaffc82343", "color": "rgb(235 123 163)"}, {"x": -0.05285461246967316, "y": 0.23828125126783561, "startSeconds": 1.4164172410964966, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event2_04c6cb29992d7b7ee28d4950778b5640c3728f73", "color": "rgb(198 76 106)"}, {"x": -0.036145806312561035, "y": 0.2675781216566975, "startSeconds": 1.590566873550415, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event3_cb008558e31abb38dd92f73eaff754f04868bc6f", "color": "rgb(193 82 123)"}, {"x": -0.0806550607085228, "y": 0.2871093618978193, "startSeconds": 1.7066665887832642, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event4_768fbebcb03bb2e9f2a53b6d14ef48ba28b48ed3", "color": "rgb(190 73 129)"}, {"x": -0.11983522772789001, "y": 0.3046874881420081, "startSeconds": 1.8111563920974731, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event5_34443fc9ce0929486dbb6c057a1b5fe75a508344", "color": "rgb(237 93 147)"}, {"x": -0.3044494688510895, "y": 0.11132811951028998, "startSeconds": 0.6617686748504639, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event6_85f6e51835926f47fb60a037aa551b4958fde131", "color": "rgb(103 79 74)"}, {"x": -0.4109831154346466, "y": 0.2539062434607331, "startSeconds": 1.5092970132827759, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event7_d69ce58a8dcc496174fa7f9bddb2b1d5492bfa2f", "color": "rgb(222 99 147)"}, {"x": -0.29465433955192566, "y": 0.0957031273173925, "startSeconds": 0.5688889026641846, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event8_42f704ffd709f5e8aa35eb6223068d48db99290b", "color": "rgb(97 79 74)"}, {"x": -0.3814219832420349, "y": 0.0957031273173925, "startSeconds": 0.5688889026641846, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event9_46c9b177ba15387c7fb5c2e5d207a49e65c8a218", "color": "rgb(99 86 71)"}, {"x": -0.3722124397754669, "y": 0.17968749043575372, "startSeconds": 1.0681178569793701, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event10_cacb1608c21e58986ee5aafaaa48cd91d2b9bf14", "color": "rgb(41 8 0)"}, {"x": -0.6733590960502625, "y": 0.0957031273173925, "startSeconds": 0.5688889026641846, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event11_38cc31de188255151f0526c381e13fcfb644ad8a", "color": "rgb(121 96 115)"}, {"x": -0.9268326759338379, "y": 0.07812500107320375, "startSeconds": 0.4643990993499756, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event12_3fdd492500dcdcfcdc665baa14db52e72c557d03", "color": "rgb(102 62 103)"}, {"x": -0.906032919883728, "y": 0.06835937593905328, "startSeconds": 0.40634921193122864, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event13_6a9287496677297cfbbbdfd4bd8be5476f2fd28d", "color": "rgb(119 52 118)"}, {"x": -0.09993772208690643, "y": 0.4980468567737262, "startSeconds": 2.9605441093444824, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event14_a16d565e7ee255826426724983404ab12f312318", "color": "rgb(191 100 167)"}, {"x": -0.9323383569717407, "y": 0.06445312287723937, "startSeconds": 0.3831292390823364, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event15_c6eb1967156ee2c9ce3b9768a0b9a2b607d209a7", "color": "rgb(125 54 123)"}, {"x": -0.9477526545524597, "y": 0.046874996633050614, "startSeconds": 0.27863943576812744, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event16_4e058d405a6f4d03ea70ed4d6e443bfe3fbec59e", "color": "rgb(96 60 106)"}, {"x": -0.9700716733932495, "y": 0.04492187260893843, "startSeconds": 0.26702946424484253, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event17_d248ceb3469050bb02388a94b125519141831110", "color": "rgb(98 72 117)"}, {"x": -1.009423017501831, "y": 0.04492187260893843, "startSeconds": 0.26702946424484253, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event18_b5ad60abb0b4e6893bfc0f46175126898f74ab32", "color": "rgb(112 75 138)"}, {"x": -0.9083415269851685, "y": 0.005859374579131327, "startSeconds": 0.03482992947101593, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event19_2f676a4dae84ba93bf186b0a3658d6eb5e7fe296", "color": "rgb(73 41 104)"}, {"x": -0.8284984827041626, "y": 0.005859374579131327, "startSeconds": 0.03482992947101593, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event20_12d410d798896bfe1430b03fe05c2d8f2dbd0035", "color": "rgb(98 49 124)"}, {"x": -0.8591521382331848, "y": 0.005859374579131327, "startSeconds": 0.03482992947101593, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event21_e2f70fa82d719bf288ee3d881cc4f968ccf222e4", "color": "rgb(112 53 144)"}, {"x": -0.9132945537567139, "y": 0.005859374579131327, "startSeconds": 0.03482992947101593, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event22_e2ef4a979f16de232dd811061476d9038eb54f6e", "color": "rgb(109 49 149)"}, {"x": -0.9543092846870422, "y": 0.005859374579131327, "startSeconds": 0.03482992947101593, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event23_09009ae0038c7011ed7fd1f3133743623e0b11c4", "color": "rgb(111 49 158)"}, {"x": -0.9626608490943909, "y": 0.007812499856640898, "startSeconds": 0.04643990844488144, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event24_07f1987cd3226caaa06a9c30f368fa5787bf9aa7", "color": "rgb(126 61 172)"}, {"x": -0.12403897196054459, "y": 0.4707031003817974, "startSeconds": 2.798004388809204, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event25_470f27727a351d941563d267c64bb62e9e801f99", "color": "rgb(140 85 99)"}, {"x": 0.03332683444023132, "y": 0.3769531071156962, "startSeconds": 2.240725517272949, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event26_524b4d07b0b6ee4b2c5ab9cd12a44a40fc5357fd", "color": "rgb(254 172 155)"}, {"x": -0.5917226672172546, "y": 0.14843749602277967, "startSeconds": 0.8823582530021667, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event27_9c544d653e9a062c812817273c3736b3d215b07d", "color": "rgb(99 29 70)"}, {"x": -1.0256272554397583, "y": 0.017578124990791366, "startSeconds": 0.10448979586362839, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event28_b88c1cf03ae63c3eb44cded1f7c8c748df85f430", "color": "rgb(137 64 157)"}, {"x": -0.0810273140668869, "y": 0.4316406198995537, "startSeconds": 2.565804958343506, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event29_10b4b7c5a18b60bb16e36a4af8b0a3c740a6b2af", "color": "rgb(184 114 105)"}, {"x": -0.05040553957223892, "y": 0.38281250926957, "startSeconds": 2.2755556106567383, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event30_c0214f03f05252cda3d6d4c988280822873b0ac1", "color": "rgb(232 161 143)"}, {"x": -0.14721694588661194, "y": 0.3847656032121449, "startSeconds": 2.287165403366089, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event31_0a6903ce22552cf7095c18624f39f36bc5932254", "color": "rgb(253 160 163)"}]'>
+            </scatter-plot>
+
+
+<a id="Example 5"></a>
+<h2>Example 5</h2>
+
+
+<a id="Original Audio"></a>
+<h3>Original Audio</h3>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/original_115dd714743af7d03af94baec685f1aa91232b56"
+            height="100"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Reconstruction"></a>
+<h3>Reconstruction</h3>
+<p>We mask the second half of the input audio to enable the streaming algorithm, so only the first half of the input audio is reproduced.</p>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/reconstruction_c65d183aeb1c55abe195e197d1eaf4e49cdaa1b7"
+            height="100"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Decomposition"></a>
+<h3>Decomposition</h3>
+<p>We can see that while energy is removed at each step, removed segments do not map cleanly onto audio "events" as a human listener would typically conceive of them.  Future work will move toward fewer and more meaningul events via induced sparsity and/or clustering of events.</p>
+
+<img class="full-width" src="https://iterative-decomposition-v3.s3.amazonaws.com/decomposition_041f04b74f6100671042989796f2e7177d1ff726" height="200"></img>
+
+
+<a id="Randomized"></a>
+<h3>Randomized</h3>
+
+<p>Here, we generate random event vectors with the original event times.</p>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/randomizedevents_acaa68efc32a28202aade3dd68c5fde76a4cb7f7"
+            height="100"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+<p>Here we use the original event vectors, but generate random times.</p>
+
+<audio-view
+            src="https://iterative-decomposition-v3.s3.amazonaws.com/randomizedtimes_798f7b94b3e643dda921ed01be78ff4b59f9e423"
+            height="100"
+            samples="256"
+            scale="1"
+            controls
+        ></audio-view>
+
+
+<a id="Event Vectors"></a>
+<h3>Event Vectors</h3>
+<p>Different stopping conditions might be chosen during inference (e.g. norm of the residual) but during training, we remove energy for 32 steps.  Each event vector is of dimension 32.  The decoder generates an event from this vector, which is then scheduled.  </p>
+
+<img class="" src="https://iterative-decomposition-v3.s3.amazonaws.com/latents_533b94ace9729247196190b7745476679cc90205" height="200"></img>
+
+
+<a id="Event Scatterplot"></a>
+<h3>Event Scatterplot</h3>
+<p>Time is along the x-axis, and a 32D -&gt; 1D projection of event vectors using t-SNE constitutes the distribution along the y-axis.</p>
+
+<scatter-plot 
+                width="600" 
+                height="300" 
+                radius="0.01" 
+                points='[{"x": 0.44545531272888184, "y": 0.11523437758569344, "startSeconds": 0.6849886775016785, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event0_c92b7e883434717a5e3ee7b6167133b552d6733f", "color": "rgb(98 113 219)"}, {"x": 0.47332605719566345, "y": 0.11523437758569344, "startSeconds": 0.6849886775016785, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event1_e8f95bfa4409e6d239df239e7cbabc84b87fdc62", "color": "rgb(93 102 208)"}, {"x": 0.545003354549408, "y": 0.12109374965802999, "startSeconds": 0.7198185920715332, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event2_29611daeff99a2b59717530bf24ac9b969145e7f", "color": "rgb(98 98 213)"}, {"x": 0.5878441333770752, "y": 0.1562500021464075, "startSeconds": 0.9287981986999512, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event3_0cf0b5f7d05944b94d95b58dbd9798d1497b92a3", "color": "rgb(102 93 218)"}, {"x": 0.7343103289604187, "y": 0.17773437643882062, "startSeconds": 1.05650794506073, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event4_41a152705eeaecd14788924010278b7a9ff68240", "color": "rgb(118 88 196)"}, {"x": 1.1084635257720947, "y": 0.19531250268300937, "startSeconds": 1.160997748374939, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event5_b1108254818dddc466621907b1dfd52ae825da33", "color": "rgb(130 47 109)"}, {"x": 0.9356650710105896, "y": 0.2050781127763912, "startSeconds": 1.2190475463867188, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event6_fb8abe52e05271cb7ea0b59461acd041228d1731", "color": "rgb(117 0 154)"}, {"x": 0.42632097005844116, "y": 0.07226562398727765, "startSeconds": 0.42956915497779846, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event7_2e07d01ede75a3fec7797f52f4fd032e207e05e8", "color": "rgb(102 100 246)"}, {"x": 0.5068069696426392, "y": 0.07226562398727765, "startSeconds": 0.42956915497779846, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event8_ef42a9b8107f94801d8306396925e701cdeffe45", "color": "rgb(85 84 215)"}, {"x": 0.4815560579299927, "y": 0.07031249996316546, "startSeconds": 0.41795918345451355, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event9_0327da57c8bb42ae512234658538517fd5971d2c", "color": "rgb(87 81 190)"}, {"x": 0.3087117075920105, "y": 0.02734374887154445, "startSeconds": 0.16253967583179474, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event10_e78af522857195ea5c7ecb739ca0418ffbf8c2c0", "color": "rgb(89 83 194)"}, {"x": 0.2999240458011627, "y": 0.011718749158262654, "startSeconds": 0.06965985894203186, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event11_5d225aae72357bb17edb9eb9cf1174bf3327a547", "color": "rgb(71 55 162)"}, {"x": 0.14964351058006287, "y": 0.23437500321961124, "startSeconds": 1.3931972980499268, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event12_d77d2d5bbfc653cffdba9ff4f2db3d3d07359053", "color": "rgb(80 45 191)"}, {"x": 0.3325701653957367, "y": 0.2695312356536306, "startSeconds": 1.6021767854690552, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event13_97a83c1b8baa0d15288ab6e07c9739dca0f7e7aa", "color": "rgb(95 114 222)"}, {"x": 0.39867135882377625, "y": 0.27148436970492185, "startSeconds": 1.6137868165969849, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event14_28a98e84cb7e2190986ad6bf7b320dbc7546b00a", "color": "rgb(106 138 218)"}, {"x": 0.7665287852287292, "y": 0.302734374145075, "startSeconds": 1.799546480178833, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event15_b65ad844d5081bba3199b4a7cb17a548e6b03da2", "color": "rgb(58 56 147)"}, {"x": 0.7483137845993042, "y": 0.3281249964857125, "startSeconds": 1.9504761695861816, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event16_785104dffd0fb2f89e8fd379ad09d1241154fc8d", "color": "rgb(55 74 164)"}, {"x": 0.735778272151947, "y": 0.33203124453393684, "startSeconds": 1.9736961126327515, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event17_361009dbe887fad233ae1329a60f3fae6cf405bf", "color": "rgb(60 76 169)"}, {"x": 0.7945340871810913, "y": 0.3496093507237674, "startSeconds": 2.078185796737671, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event18_fdb13a99ef9477a4228a524b4c155bf4f154add7", "color": "rgb(65 113 183)"}, {"x": 0.8300725221633911, "y": 0.3574218869289325, "startSeconds": 2.1246259212493896, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event19_5312048c1cc987e118afa4ab4c8be624b84c1ae2", "color": "rgb(68 127 153)"}, {"x": 0.8714026808738708, "y": 0.4453124780411599, "startSeconds": 2.6470746994018555, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event20_1a5b9b74238203a29e2bb1072a8ec2f8d2bd896d", "color": "rgb(38 52 118)"}, {"x": 0.8525760769844055, "y": 0.46484373833663994, "startSeconds": 2.763174533843994, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event21_26c77935a1103c11970494e40e947dcbf6bddc44", "color": "rgb(43 32 101)"}, {"x": 0.8718668222427368, "y": 0.48632813268341124, "startSeconds": 2.8908843994140625, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event22_802d35fbcbb9bb8678e7b263c7e7a40f3aaf7667", "color": "rgb(102 84 166)"}, {"x": 0.4154190421104431, "y": 0.24999999541250872, "startSeconds": 1.486077070236206, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event23_c874f8bbbe5dac98a01c6556ac599eaf1b6c1c3e", "color": "rgb(114 118 254)"}, {"x": 0.3500558137893677, "y": 0.011718749158262654, "startSeconds": 0.06965985894203186, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event24_9f18860df9570d27462f5035082b5f4def451397", "color": "rgb(77 87 141)"}, {"x": 0.8620737791061401, "y": 0.48828122662598616, "startSeconds": 2.902494192123413, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event25_4bcc675a8c66c14517071016599a8ee9e57e0145", "color": "rgb(94 72 142)"}, {"x": 0.27145200967788696, "y": 0.009765625134150469, "startSeconds": 0.05804988741874695, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event26_e6ba072c7e765c529e97e8d13059c3cdd70e206c", "color": "rgb(79 99 122)"}, {"x": 0.8583678007125854, "y": 0.3574218869289325, "startSeconds": 2.1246259212493896, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event27_72da5b48d120ea15633ba4cdad2d526f9ece7dd8", "color": "rgb(93 145 146)"}, {"x": 0.11001307517290115, "y": 0.0, "startSeconds": 0.0, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event28_24152e49b791fa64d68d71e5851873c25d1d1020", "color": "rgb(110 114 142)"}, {"x": 1.157753825187683, "y": 0.40429686350762495, "startSeconds": 2.4032652378082275, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event29_8424a44af1f98cbedf40927e8b03fbb15a9d3187", "color": "rgb(65 39 124)"}, {"x": 0.021178536117076874, "y": 0.23632811721654434, "startSeconds": 1.404807209968567, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event30_412916e47d12060db83b209175339549ad43344a", "color": "rgb(90 79 159)"}, {"x": 1.0131752490997314, "y": 0.3105468702415237, "startSeconds": 1.8459863662719727, "duration_seconds": 0, "url": "https://iterative-decomposition-v3.s3.amazonaws.com/event31_6ea806b8b5da15b7e179a6d33872bd70b43d2956", "color": "rgb(59 26 50)"}]'>
+            </scatter-plot>
+
+<code-block language="python">n_samples = 2 ** 17
+
+samples_per_event = 2048
+
+
+
+# this is cut in half since we'll mask out the second half of encoder activations
+
+n_events = (n_samples // samples_per_event) // 2
+
+context_dim = 32
+
+
+
+# the samplerate, in hz, of the audio signal
+
+samplerate = 22050
+
+
+
+# derived, the total number of seconds of audio
+
+n_seconds = n_samples / samplerate
+
+
+
+transform_window_size = 2048
+
+transform_step_size = 256
+
+
+
+n_frames = n_samples // transform_step_size
+
+
+
+from argparse import ArgumentParser
+
+from typing import Dict, Tuple
+
+
+
+import numpy as np
+
+import torch
+
+from sklearn.manifold import TSNE
+
+from torch import nn
+
+
+
+from conjure import S3Collection, \
+
+    conjure_article, CitationComponent, AudioComponent, ImageComponent, \
+
+    CompositeComponent, Logger, ScatterPlotComponent
+
+from data import get_one_audio_segment, AudioIterator
+
+from iterativedecomposition import Model as IterativeDecompositionModel
+
+from modules.eventgenerators.overfitresonance import OverfitResonanceModel
+
+from modules import max_norm, sparse_softmax
+
+
+
+remote_collection_name = 'iterative-decomposition-v3'
+
+
+
+
+
+def to_numpy(x: torch.Tensor):
+
+    return x.data.cpu().numpy()
+
+
+
+
+
+# thanks to https://discuss.pytorch.org/t/how-do-i-check-the-number-of-parameters-of-a-model/4325/9
+
+def count_parameters(model):
+
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+
+
+
+
+def process_events(
+
+        vectors: torch.Tensor,
+
+        times: torch.Tensor,
+
+        total_seconds: float) -> Tuple:
+
+    positions = torch.argmax(times, dim=-1, keepdim=True) / times.shape[-1]
+
+    times = [float(x) for x in (positions * total_seconds).view(-1).data.cpu().numpy()]
+
+
+
+    normalized = vectors.data.cpu().numpy().reshape((-1, context_dim))
+
+    normalized = normalized - normalized.min(axis=0, keepdims=True)
+
+    normalized = normalized / (normalized.max(axis=0, keepdims=True) + 1e-8)
+
+    tsne = TSNE(n_components=1)
+
+    points = tsne.fit_transform(normalized)
+
+
+
+    proj = np.random.uniform(0, 1, (context_dim, 3))
+
+    colors = normalized @ proj
+
+    colors -= colors.min()
+
+    colors /= (colors.max() + 1e-8)
+
+    colors *= 255
+
+    colors = colors.astype(np.uint8)
+
+    colors = [f'rgb({c[0]} {c[1]} {c[2]})' for c in colors]
+
+
+
+    t = np.array(times) / total_seconds
+
+    points = np.concatenate([points.reshape((-1, 1)), t.reshape((-1, 1))], axis=-1)
+
+
+
+    return points, times, colors
+
+
+
+
+
+def load_model(wavetable_device: str = 'cpu') -> nn.Module:
+
+    hidden_channels = 512
+
+
+
+    model = IterativeDecompositionModel(
+
+        in_channels=1024,
+
+        hidden_channels=hidden_channels,
+
+        resonance_model=OverfitResonanceModel(
+
+            n_noise_filters=64,
+
+            noise_expressivity=4,
+
+            noise_filter_samples=128,
+
+            noise_deformations=32,
+
+            instr_expressivity=4,
+
+            n_events=1,
+
+            n_resonances=4096,
+
+            n_envelopes=64,
+
+            n_decays=64,
+
+            n_deformations=64,
+
+            n_samples=n_samples,
+
+            n_frames=n_frames,
+
+            samplerate=samplerate,
+
+            hidden_channels=hidden_channels,
+
+            wavetable_device=wavetable_device,
+
+            fine_positioning=True,
+
+            fft_resonance=True
+
+        ))
+
+
+
+    with open('iterativedecomposition9.dat', 'rb') as f:
+
+        model.load_state_dict(torch.load(f, map_location=lambda storage, loc: storage))
+
+
+
+    print('Total parameters', count_parameters(model))
+
+    print('Encoder parameters', count_parameters(model.encoder))
+
+    print('Decoder parameters', count_parameters(model.resonance))
+
+
+
+    return model
+
+
+
+
+
+def scatterplot_section(logger: Logger) -> ScatterPlotComponent:
+
+    model = load_model()
+
+    ai = AudioIterator(
+
+        batch_size=4,
+
+        n_samples=n_samples,
+
+        samplerate=22050,
+
+        normalize=True,
+
+        as_torch=True)
+
+
+
+    batch = next(iter(ai))
+
+    batch = batch.view(-1, 1, n_samples).to('cpu')
+
+    events, vectors, times = model.iterative(batch)
+
+
+
+    total_seconds = n_samples / samplerate
+
+
+
+    points, times, colors = process_events(vectors, times, total_seconds)
+
+
+
+    events = events.view(-1, n_samples)
+
+
+
+    events = {f'event{i}': events[i: i + 1, :] for i in range(events.shape[0])}
+
+
+
+    scatterplot_srcs = []
+
+
+
+    event_components = {}
+
+    for k, v in events.items():
+
+        _, e = logger.log_sound(k, v)
+
+        scatterplot_srcs.append(e.public_uri)
+
+        event_components[k] = AudioComponent(e.public_uri, height=35, controls=False)
+
+
+
+    scatterplot_component = ScatterPlotComponent(
+
+        scatterplot_srcs,
+
+        width=800,
+
+        height=400,
+
+        radius=0.01,
+
+        points=points,
+
+        times=times,
+
+        colors=colors, )
+
+
+
+    return scatterplot_component
+
+
+
+
+
+def generate_multiple_events(
+
+        model: nn.Module,
+
+        vectors: torch.Tensor,
+
+        times: torch.Tensor) -> torch.Tensor:
+
+    generation_result = torch.cat(
+
+        [model.generate(vectors[:, i:i + 1, :], times[:, i:i + 1, :]) for i in range(n_events)], dim=1)
+
+
+
+    generation_result = torch.sum(generation_result, dim=1, keepdim=True)
+
+    generation_result = max_norm(generation_result)
+
+    return generation_result
+
+
+
+
+
+def generate(
+
+        model: nn.Module,
+
+        vectors: torch.Tensor,
+
+        times: torch.Tensor,
+
+        randomize_events: bool,
+
+        randomize_times: bool) -> torch.Tensor:
+
+    batch, n_events, _ = vectors.shape
+
+
+
+    if randomize_events:
+
+        vectors = torch.zeros_like(vectors).uniform_(vectors.min().item(), vectors.max().item())
+
+
+
+    if randomize_times:
+
+        times = torch.zeros_like(times).uniform_(-1, 1)
+
+        times = sparse_softmax(times, dim=-1, normalize=True) * times
+
+
+
+    generation_result = generate_multiple_events(model, vectors, times)
+
+    return generation_result
+
+
+
+
+
+def streaming_section(logger: Logger) -> CompositeComponent:
+
+    model = load_model()
+
+    samples = get_one_audio_segment(n_samples * 4, samplerate, device='cpu').view(1, 1, -1)
+
+
+
+    with torch.no_grad():
+
+        recon = model.streaming(samples)
+
+        recon = max_norm(recon)
+
+
+
+    _, orig = logger.log_sound(key='streamingorig', audio=samples)
+
+    orig = AudioComponent(orig.public_uri, height=100, controls=True, scale=4)
+
+
+
+    _, recon = logger.log_sound(key='streamingrecon', audio=recon)
+
+    recon = AudioComponent(recon.public_uri, height=100, controls=True, scale=4)
+
+
+
+    return CompositeComponent(
+
+        orig=orig,
+
+        recon=recon,
+
+    )
+
+
+
+
+
+def reconstruction_section(logger: Logger) -> CompositeComponent:
+
+    model = load_model()
+
+
+
+    # get a random audio segment
+
+    samples = get_one_audio_segment(n_samples, samplerate, device='cpu').view(1, 1, n_samples)
+
+    events, vectors, times, residuals = model.iterative(samples, return_all_residuals=True)
+
+
+
+    residuals = residuals.view(n_events, 1024, -1).data.cpu().numpy()
+
+    residuals = residuals[:, ::-1, :]
+
+    residuals = np.log(np.clip(residuals, 0, np.inf) + 1e-6)
+
+    t = residuals.shape[-1]
+
+    residuals = residuals[..., :t // 2]
+
+
+
+    _, movie = logger.log_movie('decomposition', residuals, fps=2)
+
+    movie = ImageComponent(movie.public_uri, height=200, title='decomposition')
+
+
+
+    # generate audio with the same times, but randomized event vectors
+
+    randomized_events = generate(model, vectors, times, randomize_events=True, randomize_times=False)
+
+    _, random_events = logger.log_sound('randomizedevents', randomized_events)
+
+    random_events_component = AudioComponent(random_events.public_uri, height=100, controls=True)
+
+
+
+    # generate audio with the same events, but randomized times
+
+    randomized_times = generate(model, vectors, times, randomize_events=False, randomize_times=True)
+
+    _, random_times = logger.log_sound('randomizedtimes', randomized_times)
+
+    random_times_component = AudioComponent(random_times.public_uri, height=100, controls=True)
+
+
+
+    total_seconds = n_samples / samplerate
+
+
+
+    points, times, colors = process_events(vectors, times, total_seconds)
+
+
+
+    # sum together all events
+
+    summed = torch.sum(events, dim=1, keepdim=True)
+
+    summed = max_norm(summed)
+
+
+
+    _, original = logger.log_sound(f'original', samples)
+
+    _, reconstruction = logger.log_sound(f'reconstruction', summed)
+
+
+
+    orig_audio_component = AudioComponent(original.public_uri, height=100)
+
+    recon_audio_component = AudioComponent(reconstruction.public_uri, height=100)
+
+
+
+    events = {f'event{i}': events[:, i: i + 1, :] for i in range(events.shape[1])}
+
+
+
+    scatterplot_srcs = []
+
+
+
+    event_components = {}
+
+    for k, v in events.items():
+
+        _, e = logger.log_sound(k, v)
+
+        scatterplot_srcs.append(e.public_uri)
+
+        event_components[k] = AudioComponent(e.public_uri, height=15, controls=False)
+
+
+
+    scatterplot_component = ScatterPlotComponent(
+
+        scatterplot_srcs,
+
+        width=600,
+
+        height=300,
+
+        radius=0.01,
+
+        points=points,
+
+        times=times,
+
+        colors=colors, )
+
+
+
+    _, event_vectors = logger.log_matrix_with_cmap('latents', vectors[0].T, cmap='viridis')
+
+    latents = ImageComponent(event_vectors.public_uri, height=200, title='latent event vectors', full_width=False)
+
+
+
+    composite = CompositeComponent(
+
+        orig_audio=orig_audio_component,
+
+        recon_audio=recon_audio_component,
+
+        latents=latents,
+
+        scatterplot=scatterplot_component,
+
+        random_events=random_events_component,
+
+        random_times=random_times_component,
+
+        decomposition=movie,
+
+        **event_components
+
+    )
+
+
+
+    return composite</code-block>
+
+
+<a id="Notes"></a>
+<h1>Notes</h1>
+<p>This blog post is generated from a
+<a href="https://github.com/JohnVinyard/matching-pursuit/blob/main/v3blogpost.py">Python script</a> using
+<a href="https://github.com/JohnVinyard/conjure">conjure</a>.</p>
+
+<code-block language="python">def demo_page_dict() -> Dict[str, any]:
+
+    print(f'Generating article...')
+
+
+
+    remote = S3Collection(
+
+        remote_collection_name, is_public=True, cors_enabled=True)
+
+
+
+    logger = Logger(remote)
+
+
+
+    # print('Creating large scatterplot')
+
+    # large_scatterplot = scatterplot_section(logger)
+
+
+
+    print('Creating streaming section')
+
+    streaming = streaming_section(logger)
+
+
+
+    print('Creating reconstruction examples')
+
+    example_1 = reconstruction_section(logger)
+
+    example_2 = reconstruction_section(logger)
+
+    example_3 = reconstruction_section(logger)
+
+    example_4 = reconstruction_section(logger)
+
+    example_5 = reconstruction_section(logger)
+
+
+
+    citation = CitationComponent(
+
+        tag='johnvinyarditerativedecompositionv3',
+
+        author='Vinyard, John',
+
+        url='https://blog.cochlea.xyz/sparse-interpretable-audio-codec-paper.html',
+
+        header='Toward a Sparse Interpretable Audio Codec',
+
+        year='2025',
+
+    )
+
+
+
+    return dict(
+
+        streaming=streaming,
+
+        example_1=example_1,
+
+        example_2=example_2,
+
+        example_3=example_3,
+
+        example_4=example_4,
+
+        example_5=example_5,
+
+        citation=citation
+
+    )
+
+
+
+
+
+def generate_demo_page():
+
+    display = demo_page_dict()
+
+    conjure_article(
+
+        __file__,
+
+        'html',
+
+        title='Toward a Sparse Interpretable Audio Codec',
+
+        **display)
+
+
+
+
+
+if __name__ == '__main__':
+
+    parser = ArgumentParser()
+
+
+
+    parser.add_argument('--clear', action='store_true')
+
+    parser.add_argument('--list', action='store_true')
+
+
+
+    args = parser.parse_args()
+
+
+
+    if args.list:
+
+        remote = S3Collection(
+
+            remote_collection_name, is_public=True, cors_enabled=True)
+
+        print(remote)
+
+        print('Listing stored keys')
+
+        for key in remote.iter_prefix(start_key=b'', prefix=b''):
+
+            print(key)
+
+
+
+    if args.clear:
+
+        remote = S3Collection(
+
+            remote_collection_name, is_public=True, cors_enabled=True)
+
+        remote.destroy(prefix=b'')
+
+
+
+    generate_demo_page()</code-block>
+
+
+                <a href="#">
+                    <div class="back-to-top">
+                        Back to Top
+                    </div>
+                </a>
+
+            </body>
+            </html>
+    
