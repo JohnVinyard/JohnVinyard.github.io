@@ -79,6 +79,7 @@ export class Instrument extends HTMLElement {
 </div>
 `;
         const start = shadow.getElementById('start-demo');
+        console.log('START BUTTON', start);
         const context = new AudioContext();
         const fetchBinary = (url) => __awaiter(this, void 0, void 0, function* () {
             const resp = yield fetch(url);
@@ -155,6 +156,7 @@ export class Instrument extends HTMLElement {
                 });
             }
         }
+        console.log('CONV UNIT', ConvUnit);
         class Controller {
             constructor(urls) {
                 this.units = urls.reduce((accum, url) => {
@@ -176,14 +178,18 @@ export class Instrument extends HTMLElement {
                 });
             }
         }
+        console.log('Controller', Controller);
         const activeNotes = new Set(['C']);
+        console.log('ACTIVE NOTES', activeNotes);
         const notes = {
             C: 'https://nsynth.s3.amazonaws.com/bass_electronic_018-036-100',
             E: 'https://nsynth.s3.amazonaws.com/bass_electronic_018-040-127',
             G: 'https://nsynth.s3.amazonaws.com/bass_electronic_018-043-100',
             B: 'https://nsynth.s3.amazonaws.com/bass_electronic_018-047-100',
         };
+        console.log('NOTES', notes);
         const unit = new Controller(Object.values(notes));
+        console.log('UNIT', unit);
         const buttons = shadow.querySelectorAll('.big-button');
         console.log('INITIAL BUTTONS', buttons);
         buttons.forEach((button) => {
