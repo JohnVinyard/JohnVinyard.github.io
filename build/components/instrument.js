@@ -111,7 +111,7 @@ export class Instrument extends HTMLElement {
                     console.log('INITIALIZING CONV UNIT');
                     this.initialized = true;
                     try {
-                        yield context.audioWorklet.addModule('whitenoise.js');
+                        yield context.audioWorklet.addModule('/build/components/whitenoise.js');
                     }
                     catch (err) {
                         console.log(`Failed to add module due to ${err}`);
