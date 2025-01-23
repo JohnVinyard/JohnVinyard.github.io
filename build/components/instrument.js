@@ -108,6 +108,7 @@ export class Instrument extends HTMLElement {
             }
             initialize() {
                 return __awaiter(this, void 0, void 0, function* () {
+                    console.log('INITIALIZING CONV UNIT');
                     this.initialized = true;
                     yield context.audioWorklet.addModule('whitenoise.js');
                     const osc = context.createOscillator();
@@ -126,9 +127,13 @@ export class Instrument extends HTMLElement {
                     osc.start();
                     this.gain = gainNode;
                     this.filt = filter;
+                    console.log('DONE initializing', this.gain, this.filt);
                 });
             }
             updateCutoff(hz) {
+                if (!this.filt) {
+                    return;
+                }
                 this.filt.frequency.exponentialRampToValueAtTime(hz, context.currentTime + 0.05);
             }
             trigger(amplitude) {
@@ -136,6 +141,9 @@ export class Instrument extends HTMLElement {
                     if (!this.initialized) {
                         console.log('Initializing');
                         yield this.initialize();
+                    }
+                    if (!this.gain) {
+                        return;
                     }
                     this.gain.gain.exponentialRampToValueAtTime(amplitude, context.currentTime + 0.001);
                     this.gain.gain.exponentialRampToValueAtTime(0.000001, context.currentTime + 0.2);
