@@ -110,9 +110,14 @@ export class Instrument extends HTMLElement {
                 return __awaiter(this, void 0, void 0, function* () {
                     console.log('INITIALIZING CONV UNIT');
                     this.initialized = true;
-                    yield context.audioWorklet.addModule('whitenoise.js');
+                    try {
+                        yield context.audioWorklet.addModule('whitenoise.js');
+                    }
+                    catch (err) {
+                        console.log(`Failed to add module due to ${err}`);
+                    }
                     const osc = context.createOscillator();
-                    const whiteNoise = new AudioWorkletNode(context, 'white-noise');
+                    const whiteNoise = new AudioWorkletNode(context, 'white-noise', {});
                     const gainNode = context.createGain();
                     const conv = context.createConvolver();
                     const filter = context.createBiquadFilter();
