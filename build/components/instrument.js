@@ -109,9 +109,8 @@ export class Instrument extends HTMLElement {
             initialize() {
                 return __awaiter(this, void 0, void 0, function* () {
                     this.initialized = true;
-                    yield context.audioWorklet.addModule('instrument.js');
+                    yield context.audioWorklet.addModule('whitenoise.js');
                     const osc = context.createOscillator();
-                    // const scriptNode = context.createScriptProcessor(512, 1, 1);
                     const whiteNoise = new AudioWorkletNode(context, 'white-noise');
                     const gainNode = context.createGain();
                     const conv = context.createConvolver();
@@ -119,15 +118,6 @@ export class Instrument extends HTMLElement {
                     filter.type = 'lowpass';
                     filter.frequency.setValueAtTime(500, context.currentTime);
                     conv.buffer = yield fetchAudio(this.url, context);
-                    // scriptNode.addEventListener(
-                    //     'audioprocess',
-                    //     ({ inputBuffer, outputBuffer }) => {
-                    //         const output = outputBuffer.getChannelData(0);
-                    //         for (let i = 0; i < output.length; i++) {
-                    //             output[i] = Math.random() * 2 - 1;
-                    //         }
-                    //     }
-                    // );
                     osc.connect(whiteNoise);
                     whiteNoise.connect(gainNode);
                     gainNode.connect(conv);
