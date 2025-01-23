@@ -184,9 +184,11 @@ export class Instrument extends HTMLElement {
             B: 'https://nsynth.s3.amazonaws.com/bass_electronic_018-047-100',
         };
         const unit = new Controller(Object.values(notes));
-        const buttons = document.querySelectorAll('.big-button');
+        const buttons = shadow.querySelectorAll('.big-button');
+        console.log('INITIAL BUTTONS', buttons);
         buttons.forEach((button) => {
             button.addEventListener('click', (event) => {
+                console.log('CLICKED', event);
                 const id = event.target.id;
                 console.log(activeNotes);
                 if (activeNotes.has(id)) {
@@ -202,7 +204,6 @@ export class Instrument extends HTMLElement {
         const useMouse = () => {
             document.addEventListener('mousemove', ({ movementX, movementY, clientX, clientY }) => {
                 if (Math.abs(movementX) > 10 || Math.abs(movementY) > 10) {
-                    // unit.trigger(1);
                     unit.trigger(Array.from(activeNotes).map((an) => notes[an]), 1);
                 }
                 const u = vertical.translateTo(clientY, unitInterval);
@@ -212,9 +213,6 @@ export class Instrument extends HTMLElement {
         };
         const useAcc = () => {
             if (DeviceMotionEvent) {
-                // if (typeof DeviceMotionEvent.requestPermission === 'function') {
-                //     DeviceMotionEvent.requestPermission();
-                // }
                 window.addEventListener('deviceorientationabsolute', (event) => {
                     const u = gamma.translateTo(event.gamma, unitInterval);
                     const hz = unitInterval.translateTo(Math.pow(u, 4), filterCutoff);
