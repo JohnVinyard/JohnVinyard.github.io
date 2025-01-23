@@ -196,6 +196,9 @@ export class Instrument extends HTMLElement {
             button.addEventListener('click', (event) => {
                 console.log('CLICKED', event);
                 const id = event.target.id;
+                if (!id || id === '') {
+                    return;
+                }
                 console.log(activeNotes);
                 if (activeNotes.has(id)) {
                     activeNotes.delete(id);
