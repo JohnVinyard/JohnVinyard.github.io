@@ -1,25 +1,30 @@
 // import { fromNpy } from './numpy';
-import { in_projection, } from './rnn_weights.json';
-export const tanh = (arr) => {
-    return arr.map(Math.tanh);
-};
-export const tanh2d = (arr) => {
-    return arr.map(tanh);
-};
-export const sin = (arr) => {
-    return arr.map(Math.sin);
-};
-export const sin2d = (arr) => {
-    return arr.map(sin);
-};
-const base64ToArrayBuffer = (base64) => {
-    var binaryString = atob(base64);
-    var bytes = new Uint8Array(binaryString.length);
-    for (var i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-    }
-    return bytes.buffer;
-};
+// import {
+//     in_projection,
+//     out_projection,
+//     rnn_in_projection,
+//     rnn_out_projection,
+// } from './rnn_weights.json';
+// export const tanh = (arr: Float32Array): Float32Array => {
+//     return arr.map(Math.tanh);
+// };
+// export const tanh2d = (arr: Float32Array[]): Float32Array[] => {
+//     return arr.map(tanh);
+// };
+// export const sin = (arr: Float32Array): Float32Array => {
+//     return arr.map(Math.sin);
+// };
+// export const sin2d = (arr: Float32Array[]): Float32Array[] => {
+//     return arr.map(sin);
+// };
+// const base64ToArrayBuffer = (base64: string): ArrayBuffer => {
+//     var binaryString = atob(base64);
+//     var bytes = new Uint8Array(binaryString.length);
+//     for (var i = 0; i < binaryString.length; i++) {
+//         bytes[i] = binaryString.charCodeAt(i);
+//     }
+//     return bytes.buffer;
+// };
 // const [inProjection, inProjectionShape] = fromNpy(
 //     base64ToArrayBuffer(in_projection)
 // );
@@ -36,7 +41,7 @@ class Rnn extends AudioWorkletProcessor {
     constructor() {
         super();
         console.log('Constructing RNN Worklet');
-        console.log(in_projection);
+        // console.log(in_projection);
         // console.log(inProjection, inProjectionShape);
         // console.log(outProjection, outProjectionShape);
         // console.log(rnnInProjection, rnnInProjectionShape);

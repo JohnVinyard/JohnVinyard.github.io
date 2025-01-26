@@ -112,19 +112,19 @@ export class Instrument extends HTMLElement {
                     if (!this.initialized) {
                         yield this.initialize();
                     }
-                    this.instrument.port.postMessage(arr);
+                    if (this.instrument.port) {
+                        this.instrument.port.postMessage(arr);
+                    }
                 });
             }
             initialize() {
                 return __awaiter(this, void 0, void 0, function* () {
                     this.initialized = true;
                     try {
-                        // await context.audioWorklet.addModule(
-                        //     '/build/components/whitenoise.js'
-                        // );
                         yield context.audioWorklet.addModule('/build/components/rnn.js');
                     }
                     catch (err) {
+                        console.log('=======================================');
                         console.log(`Failed to add module due to ${err}`);
                     }
                     const osc = context.createOscillator();
