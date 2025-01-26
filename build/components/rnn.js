@@ -52,6 +52,8 @@ class Rnn extends AudioWorkletProcessor {
                 const inp = dotProduct(controlPlane, this.inProjection);
                 const rnnInp = dotProduct(inp, this.rnnInProjection);
                 const rnnHidden = dotProduct(this.rnnHiddenState, this.rnnOutProjection);
+                // update the hidden state for this "instrument"
+                this.rnnHiddenState = rnnHidden;
                 const summed = elementwiseSum(rnnInp, rnnHidden);
                 const nonlinearity = summed.map(Math.tanh);
                 const output = dotProduct(nonlinearity, this.outProjection);
