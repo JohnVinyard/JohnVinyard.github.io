@@ -59,10 +59,10 @@ class Rnn extends AudioWorkletProcessor {
         const output = dotProduct(nonlinearity, this.outProjection);
         const withSin = output.map(Math.sin);
         // channels, set a block , since this is k-rate
-        for (let i = 0; i < left.length; i++) {
-            left[i] = withSin[i];
-        }
-        // left.set(withSin);
+        // for (let i = 0; i < left.length; i++) {
+        //     left[i] = withSin[i];
+        // }
+        left.set(withSin);
         // right.set(withSin);
         return true;
     }
