@@ -46,6 +46,7 @@ class Rnn extends AudioWorkletProcessor {
         for (let i = 0; i < outputs.length; i++) {
             // outputs
             for (let j = 0; j < outputs[i].length; j++) {
+                // see if there's an "event" in the queue
                 const maybeControlPlane = this.eventQueue.shift();
                 // https://pytorch.org/docs/stable/generated/torch.nn.RNN.html
                 const controlPlane = maybeControlPlane !== null && maybeControlPlane !== void 0 ? maybeControlPlane : new Float32Array(this.controlPlaneDim).fill(0);
@@ -59,6 +60,7 @@ class Rnn extends AudioWorkletProcessor {
                 const output = dotProduct(nonlinearity, this.outProjection);
                 const withSin = output.map(Math.sin);
                 // channels, set a block , since this is k-rate
+                console.log(withSin.length, outputs[i][j].length);
                 outputs[i][j].set(withSin);
             }
         }
