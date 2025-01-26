@@ -7,6 +7,32 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+import { fromNpy } from './numpy';
+import { in_projection, out_projection, rnn_in_projection, rnn_out_projection, } from './rnn_weights.json';
+export const tanh = (arr) => {
+    return arr.map(Math.tanh);
+};
+export const tanh2d = (arr) => {
+    return arr.map(tanh);
+};
+export const sin = (arr) => {
+    return arr.map(Math.sin);
+};
+export const sin2d = (arr) => {
+    return arr.map(sin);
+};
+const base64ToArrayBuffer = (base64) => {
+    var binaryString = atob(base64);
+    var bytes = new Uint8Array(binaryString.length);
+    for (var i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes.buffer;
+};
+const [inProjection, inProjectionShape] = fromNpy(base64ToArrayBuffer(in_projection));
+const [outProjection, outProjectionShape] = fromNpy(base64ToArrayBuffer(out_projection));
+const [rnnInProjection, rnnInProjectionShape] = fromNpy(base64ToArrayBuffer(rnn_in_projection));
+const [rnnOutProjection, rnnOutProjectionShape] = fromNpy(base64ToArrayBuffer(rnn_out_projection));
 class Interval {
     constructor(start, end) {
         this.start = start;
@@ -128,7 +154,26 @@ export class Instrument extends HTMLElement {
                         console.log(`Failed to add module due to ${err}`);
                     }
                     const osc = context.createOscillator();
-                    const whiteNoise = new AudioWorkletNode(context, 'rnn-instrument', {});
+                    const whiteNoise = new AudioWorkletNode(context, 'rnn-instrument', {
+                        processorOptions: {
+                            inProjection: {
+                                array: inProjection,
+                                shape: inProjectionShape,
+                            },
+                            outProjection: {
+                                array: outProjection,
+                                shape: outProjectionShape,
+                            },
+                            rnnInProjection: {
+                                array: rnnInProjection,
+                                shape: rnnInProjectionShape,
+                            },
+                            rnnOutProjection: {
+                                array: rnnOutProjection,
+                                shape: rnnOutProjectionShape,
+                            },
+                        },
+                    });
                     const gainNode = context.createGain();
                     const conv = context.createConvolver();
                     const filter = context.createBiquadFilter();
