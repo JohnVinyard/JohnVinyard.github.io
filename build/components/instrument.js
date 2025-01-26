@@ -105,7 +105,9 @@ export class Instrument extends HTMLElement {
 </div>
 `;
         const start = shadow.getElementById('start-demo');
-        const context = new AudioContext();
+        const context = new AudioContext({
+            sampleRate: 22050,
+        });
         const fetchBinary = (url) => __awaiter(this, void 0, void 0, function* () {
             const resp = yield fetch(url);
             return resp.arrayBuffer();
