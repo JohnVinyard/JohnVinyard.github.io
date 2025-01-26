@@ -60,7 +60,8 @@ class Rnn extends AudioWorkletProcessor {
                     const nonlinearity = summed.map(Math.tanh);
                     console.log('NONLINEARITY', nonlinearity.length);
                     const output = dotProduct(nonlinearity, this.outProjection);
-                    console.log('OUPUT', output.length);
+                    const withSin = output.map(Math.sin);
+                    console.log('OUPUT', withSin.length);
                 }
                 // channels
                 outputs[i][j].set([Math.random() * 2 - 1]);
