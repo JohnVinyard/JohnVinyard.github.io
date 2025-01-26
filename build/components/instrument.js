@@ -108,7 +108,12 @@ export class Instrument extends HTMLElement {
                 this.url = url;
             }
             triggerInstrument(arr) {
-                this.instrument.port.postMessage(arr);
+                return __awaiter(this, void 0, void 0, function* () {
+                    if (!this.initialized) {
+                        yield this.initialize();
+                    }
+                    this.instrument.port.postMessage(arr);
+                });
             }
             initialize() {
                 return __awaiter(this, void 0, void 0, function* () {
