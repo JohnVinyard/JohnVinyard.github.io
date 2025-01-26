@@ -270,7 +270,7 @@ export class Instrument extends HTMLElement {
         });
         const useMouse = () => {
             document.addEventListener('click', (event) => {
-                const arr = new Float32Array(32).map((x) => Math.random());
+                const arr = new Float32Array(64).map((x) => Math.random() > 0.9 ? Math.random() * 2 : 0);
                 console.log('OUTER TRIGGER', unit);
                 if (unit) {
                     unit.triggerInstrument(arr);

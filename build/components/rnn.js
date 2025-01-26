@@ -48,23 +48,16 @@ class Rnn extends AudioWorkletProcessor {
             for (let j = 0; j < outputs[i].length; j++) {
                 const maybeControlPlane = this.eventQueue.shift();
                 // https://pytorch.org/docs/stable/generated/torch.nn.RNN.html
-                if (maybeControlPlane) {
-                    const controlPlane = maybeControlPlane !== null && maybeControlPlane !== void 0 ? maybeControlPlane : new Float32Array(this.controlPlaneDim).fill(0);
-                    const inp = dotProduct(controlPlane, this.inProjection);
-                    console.log('INPUT', inp.length);
-                    const rnnInp = dotProduct(inp, this.rnnInProjection);
-                    console.log('RNN IN', rnnInp.length);
-                    const rnnHidden = dotProduct(this.rnnHiddenState, this.rnnOutProjection);
-                    console.log('RNN HIDDEN', rnnHidden.length);
-                    const summed = elementwiseSum(rnnInp, rnnHidden);
-                    const nonlinearity = summed.map(Math.tanh);
-                    console.log('NONLINEARITY', nonlinearity.length);
-                    const output = dotProduct(nonlinearity, this.outProjection);
-                    const withSin = output.map(Math.sin);
-                    console.log('OUPUT', withSin.length);
-                }
-                // channels
-                outputs[i][j].set([Math.random() * 2 - 1]);
+                const controlPlane = maybeControlPlane !== null && maybeControlPlane !== void 0 ? maybeControlPlane : new Float32Array(this.controlPlaneDim).fill(0);
+                const inp = dotProduct(controlPlane, this.inProjection);
+                const rnnInp = dotProduct(inp, this.rnnInProjection);
+                const rnnHidden = dotProduct(this.rnnHiddenState, this.rnnOutProjection);
+                const summed = elementwiseSum(rnnInp, rnnHidden);
+                const nonlinearity = summed.map(Math.tanh);
+                const output = dotProduct(nonlinearity, this.outProjection);
+                const withSin = output.map(Math.sin);
+                // channels, set a block , since this is k-rate
+                outputs[i][j].set(withSin);
             }
         }
         return true;
