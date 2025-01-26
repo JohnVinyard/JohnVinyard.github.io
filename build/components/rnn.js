@@ -1,10 +1,4 @@
-// import { fromNpy } from './numpy';
-// import {
-//     in_projection,
-//     out_projection,
-//     rnn_in_projection,
-//     rnn_out_projection,
-// } from './rnn_weights.json';
+import { in_projection, } from './rnn_weights.json';
 // export const tanh = (arr: Float32Array): Float32Array => {
 //     return arr.map(Math.tanh);
 // };
@@ -41,7 +35,7 @@ class Rnn extends AudioWorkletProcessor {
     constructor() {
         super();
         console.log('Constructing RNN Worklet');
-        // console.log(in_projection);
+        console.log(in_projection);
         // console.log(inProjection, inProjectionShape);
         // console.log(outProjection, outProjectionShape);
         // console.log(rnnInProjection, rnnInProjectionShape);
