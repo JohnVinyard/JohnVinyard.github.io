@@ -176,7 +176,10 @@ export class Instrument extends HTMLElement {
             triggerInstrument(arr) {
                 const key = notes['C'];
                 const convUnit = this.units[key];
-                convUnit.triggerInstrument(arr);
+                console.log('INNER TRIGGER', key, convUnit);
+                if (convUnit) {
+                    convUnit.triggerInstrument(arr);
+                }
             }
             updateCutoff(hz) {
                 for (const key in this.units) {
@@ -216,22 +219,19 @@ export class Instrument extends HTMLElement {
         const useMouse = () => {
             document.addEventListener('click', (event) => {
                 const arr = new Float32Array(32).map((x) => Math.random());
-                unit.triggerInstrument(arr);
+                console.log('OUTER TRIGGER', unit);
+                if (unit) {
+                    unit.triggerInstrument(arr);
+                }
             });
-            // document.addEventListener(
-            //     'mousemove',
-            //     ({ movementX, movementY, clientX, clientY }) => {
-            //         if (Math.abs(movementX) > 10 || Math.abs(movementY) > 10) {
-            //             unit.trigger(
-            //                 Array.from(activeNotes).map((an) => notes[an]),
-            //                 1
-            //             );
-            //         }
-            //         const u = vertical.translateTo(clientY, unitInterval);
-            //         const hz = unitInterval.translateTo(u ** 2, filterCutoff);
-            //         unit.updateCutoff(hz);
-            //     }
-            // );
+            document.addEventListener('mousemove', ({ movementX, movementY, clientX, clientY }) => {
+                if (Math.abs(movementX) > 10 || Math.abs(movementY) > 10) {
+                    unit.trigger(Array.from(activeNotes).map((an) => notes[an]), 1);
+                }
+                const u = vertical.translateTo(clientY, unitInterval);
+                const hz = unitInterval.translateTo(Math.pow(u, 2), filterCutoff);
+                unit.updateCutoff(hz);
+            });
         };
         const useAcc = () => {
             if (DeviceMotionEvent) {
