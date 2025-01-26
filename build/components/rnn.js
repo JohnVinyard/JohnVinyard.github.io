@@ -44,7 +44,7 @@ class Rnn extends AudioWorkletProcessor {
      */
     process(inputs, outputs, parameters) {
         const left = outputs[0][0];
-        const right = outputs[0][1];
+        // const right = outputs[0][1];
         // see if there's an "event" in the queue
         const maybeControlPlane = this.eventQueue.shift();
         // https://pytorch.org/docs/stable/generated/torch.nn.RNN.html
@@ -60,7 +60,7 @@ class Rnn extends AudioWorkletProcessor {
         const withSin = output.map(Math.sin);
         // channels, set a block , since this is k-rate
         left.set(withSin);
-        right.set(withSin);
+        // right.set(withSin);
         return true;
     }
 }
