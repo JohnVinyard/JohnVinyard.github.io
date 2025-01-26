@@ -48,5 +48,5 @@ class Rnn extends AudioWorkletProcessor {
         return true;
     }
 }
-registerProcessor('rnn', Rnn);
+registerProcessor('rnn-instrument', Rnn);
 //# sourceMappingURL=rnn.js.map

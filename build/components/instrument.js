@@ -119,14 +119,16 @@ export class Instrument extends HTMLElement {
                 return __awaiter(this, void 0, void 0, function* () {
                     this.initialized = true;
                     try {
-                        yield context.audioWorklet.addModule('/build/components/whitenoise.js');
+                        // await context.audioWorklet.addModule(
+                        //     '/build/components/whitenoise.js'
+                        // );
                         yield context.audioWorklet.addModule('/build/components/rnn.js');
                     }
                     catch (err) {
                         console.log(`Failed to add module due to ${err}`);
                     }
                     const osc = context.createOscillator();
-                    const whiteNoise = new AudioWorkletNode(context, 'rnn', {});
+                    const whiteNoise = new AudioWorkletNode(context, 'rnn-instrument', {});
                     const gainNode = context.createGain();
                     const conv = context.createConvolver();
                     const filter = context.createBiquadFilter();
