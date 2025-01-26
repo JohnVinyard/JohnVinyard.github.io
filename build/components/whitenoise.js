@@ -1,4 +1,4 @@
-class WhiteNoise extends AudioWorkletProcessor {
+export class WhiteNoise extends AudioWorkletProcessor {
     constructor() {
         super();
     }
