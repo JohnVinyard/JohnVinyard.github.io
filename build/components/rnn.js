@@ -1,5 +1,5 @@
-import { fromNpy } from './numpy';
-import { in_projection, out_projection, rnn_in_projection, rnn_out_projection, } from './rnn_weights.json';
+// import { fromNpy } from './numpy';
+import { in_projection, } from './rnn_weights.json';
 export const tanh = (arr) => {
     return arr.map(Math.tanh);
 };
@@ -20,18 +20,27 @@ const base64ToArrayBuffer = (base64) => {
     }
     return bytes.buffer;
 };
-const [inProjection, inProjectionShape] = fromNpy(base64ToArrayBuffer(in_projection));
-const [outProjection, outProjectionShape] = fromNpy(base64ToArrayBuffer(out_projection));
-const [rnnInProjection, rnnInProjectionShape] = fromNpy(base64ToArrayBuffer(rnn_in_projection));
-const [rnnOutProjection, rnnOutProjectionShape] = fromNpy(base64ToArrayBuffer(rnn_out_projection));
+// const [inProjection, inProjectionShape] = fromNpy(
+//     base64ToArrayBuffer(in_projection)
+// );
+// const [outProjection, outProjectionShape] = fromNpy(
+//     base64ToArrayBuffer(out_projection)
+// );
+// const [rnnInProjection, rnnInProjectionShape] = fromNpy(
+//     base64ToArrayBuffer(rnn_in_projection)
+// );
+// const [rnnOutProjection, rnnOutProjectionShape] = fromNpy(
+//     base64ToArrayBuffer(rnn_out_projection)
+// );
 class Rnn extends AudioWorkletProcessor {
     constructor() {
         super();
         console.log('Constructing RNN Worklet');
-        console.log(inProjection, inProjectionShape);
-        console.log(outProjection, outProjectionShape);
-        console.log(rnnInProjection, rnnInProjectionShape);
-        console.log(rnnOutProjection, rnnOutProjectionShape);
+        console.log(in_projection);
+        // console.log(inProjection, inProjectionShape);
+        // console.log(outProjection, outProjectionShape);
+        // console.log(rnnInProjection, rnnInProjectionShape);
+        // console.log(rnnOutProjection, rnnOutProjectionShape);
         this.port.onmessage = (event) => {
             console.log('PONG', event.data);
         };
