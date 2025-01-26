@@ -24,7 +24,7 @@ const [inProjection, inProjectionShape] = fromNpy(base64ToArrayBuffer(in_project
 const [outProjection, outProjectionShape] = fromNpy(base64ToArrayBuffer(out_projection));
 const [rnnInProjection, rnnInProjectionShape] = fromNpy(base64ToArrayBuffer(rnn_in_projection));
 const [rnnOutProjection, rnnOutProjectionShape] = fromNpy(base64ToArrayBuffer(rnn_out_projection));
-export class Rnn extends AudioWorkletProcessor {
+class Rnn extends AudioWorkletProcessor {
     constructor() {
         super();
         console.log('Constructing RNN Worklet');
