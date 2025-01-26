@@ -121,7 +121,7 @@ export class Instrument extends HTMLElement {
                         console.log(`Failed to add module due to ${err}`);
                     }
                     const osc = context.createOscillator();
-                    const whiteNoise = new AudioWorkletNode(context, 'white-noise', {});
+                    const whiteNoise = new AudioWorkletNode(context, 'rnn', {});
                     const gainNode = context.createGain();
                     const conv = context.createConvolver();
                     const filter = context.createBiquadFilter();
@@ -160,6 +160,12 @@ export class Instrument extends HTMLElement {
                 });
             }
         }
+        const notes = {
+            C: 'https://nsynth.s3.amazonaws.com/bass_electronic_018-036-100',
+            E: 'https://nsynth.s3.amazonaws.com/bass_electronic_018-040-127',
+            G: 'https://nsynth.s3.amazonaws.com/bass_electronic_018-043-100',
+            B: 'https://nsynth.s3.amazonaws.com/bass_electronic_018-047-100',
+        };
         class Controller {
             constructor(urls) {
                 this.units = urls.reduce((accum, url) => {
@@ -168,7 +174,8 @@ export class Instrument extends HTMLElement {
                 }, {});
             }
             triggerInstrument(arr) {
-                const convUnit = this.units['C'];
+                const key = notes['C'];
+                const convUnit = this.units[key];
                 convUnit.triggerInstrument(arr);
             }
             updateCutoff(hz) {
@@ -187,12 +194,6 @@ export class Instrument extends HTMLElement {
         }
         const activeNotes = new Set(['C']);
         console.log('ACTIVE NOTES', activeNotes);
-        const notes = {
-            C: 'https://nsynth.s3.amazonaws.com/bass_electronic_018-036-100',
-            E: 'https://nsynth.s3.amazonaws.com/bass_electronic_018-040-127',
-            G: 'https://nsynth.s3.amazonaws.com/bass_electronic_018-043-100',
-            B: 'https://nsynth.s3.amazonaws.com/bass_electronic_018-047-100',
-        };
         const unit = new Controller(Object.values(notes));
         const buttons = shadow.querySelectorAll('.big-button');
         buttons.forEach((button) => {
@@ -217,14 +218,20 @@ export class Instrument extends HTMLElement {
                 const arr = new Float32Array(32).map((x) => Math.random());
                 unit.triggerInstrument(arr);
             });
-            document.addEventListener('mousemove', ({ movementX, movementY, clientX, clientY }) => {
-                if (Math.abs(movementX) > 10 || Math.abs(movementY) > 10) {
-                    unit.trigger(Array.from(activeNotes).map((an) => notes[an]), 1);
-                }
-                const u = vertical.translateTo(clientY, unitInterval);
-                const hz = unitInterval.translateTo(Math.pow(u, 2), filterCutoff);
-                unit.updateCutoff(hz);
-            });
+            // document.addEventListener(
+            //     'mousemove',
+            //     ({ movementX, movementY, clientX, clientY }) => {
+            //         if (Math.abs(movementX) > 10 || Math.abs(movementY) > 10) {
+            //             unit.trigger(
+            //                 Array.from(activeNotes).map((an) => notes[an]),
+            //                 1
+            //             );
+            //         }
+            //         const u = vertical.translateTo(clientY, unitInterval);
+            //         const hz = unitInterval.translateTo(u ** 2, filterCutoff);
+            //         unit.updateCutoff(hz);
+            //     }
+            // );
         };
         const useAcc = () => {
             if (DeviceMotionEvent) {
