@@ -153,7 +153,7 @@ export class Instrument extends HTMLElement {
                         console.log('=======================================');
                         console.log(`Failed to add module due to ${err}`);
                     }
-                    const osc = context.createOscillator();
+                    // const osc = context.createOscillator();
                     const whiteNoise = new AudioWorkletNode(context, 'rnn-instrument', {
                         processorOptions: {
                             inProjection: {
@@ -174,20 +174,21 @@ export class Instrument extends HTMLElement {
                             },
                         },
                     });
-                    const gainNode = context.createGain();
-                    const conv = context.createConvolver();
-                    const filter = context.createBiquadFilter();
-                    filter.type = 'lowpass';
-                    filter.frequency.setValueAtTime(500, context.currentTime);
-                    conv.buffer = yield fetchAudio(this.url, context);
-                    osc.connect(whiteNoise);
-                    whiteNoise.connect(gainNode);
-                    gainNode.connect(conv);
-                    conv.connect(filter);
-                    filter.connect(context.destination);
-                    osc.start();
-                    this.gain = gainNode;
-                    this.filt = filter;
+                    // const gainNode = context.createGain();
+                    // const conv = context.createConvolver();
+                    // const filter = context.createBiquadFilter();
+                    // filter.type = 'lowpass';
+                    // filter.frequency.setValueAtTime(500, context.currentTime);
+                    // conv.buffer = await fetchAudio(this.url, context);
+                    // osc.connect(whiteNoise);
+                    // whiteNoise.connect(gainNode);
+                    // gainNode.connect(conv);
+                    // conv.connect(filter);
+                    // filter.connect(context.destination);
+                    // osc.start();
+                    whiteNoise.connect(context.destination);
+                    // this.gain = gainNode;
+                    // this.filt = filter;
                     this.instrument = whiteNoise;
                     console.log('DONE initializing', this.gain, this.filt);
                 });
@@ -276,14 +277,20 @@ export class Instrument extends HTMLElement {
                     unit.triggerInstrument(arr);
                 }
             });
-            document.addEventListener('mousemove', ({ movementX, movementY, clientX, clientY }) => {
-                if (Math.abs(movementX) > 10 || Math.abs(movementY) > 10) {
-                    unit.trigger(Array.from(activeNotes).map((an) => notes[an]), 1);
-                }
-                const u = vertical.translateTo(clientY, unitInterval);
-                const hz = unitInterval.translateTo(Math.pow(u, 2), filterCutoff);
-                unit.updateCutoff(hz);
-            });
+            // document.addEventListener(
+            //     'mousemove',
+            //     ({ movementX, movementY, clientX, clientY }) => {
+            //         if (Math.abs(movementX) > 10 || Math.abs(movementY) > 10) {
+            //             unit.trigger(
+            //                 Array.from(activeNotes).map((an) => notes[an]),
+            //                 1
+            //             );
+            //         }
+            //         const u = vertical.translateTo(clientY, unitInterval);
+            //         const hz = unitInterval.translateTo(u ** 2, filterCutoff);
+            //         unit.updateCutoff(hz);
+            //     }
+            // );
         };
         const useAcc = () => {
             if (DeviceMotionEvent) {
