@@ -186,7 +186,8 @@ export class Instrument extends HTMLElement {
         const rnnWeightsUrl = this.url;
         // TODO: Here, we'd like to create a random projection from 2D click location
         // to control-plane space
-        const clickProjectionFlat = new Float32Array(2 * 64).map((x) => Math.random() * 2 - 1);
+        const scale = 10;
+        const clickProjectionFlat = new Float32Array(2 * 64).map((x) => Math.random() * scale - scale / 2);
         const clickProjection = twoDimArray(clickProjectionFlat, [64, 2]);
         class ConvUnit {
             constructor(url) {
