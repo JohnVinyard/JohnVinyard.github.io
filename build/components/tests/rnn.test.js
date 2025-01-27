@@ -1,4 +1,3 @@
-import { sum, twoDimArray, vectorVectorDot } from '../math';
 describe('rnn', () => {
     it('computes dot correctly', () => {
         const a = new Float32Array(4).map((x) => Math.random());
