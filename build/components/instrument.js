@@ -124,22 +124,34 @@ export class Instrument extends HTMLElement {
             shadow = this.attachShadow({ mode: 'open' });
         }
         const currentControlPlaneVector = new Float32Array(64).fill(Math.random() * 1e-3);
-        const render = (currentControlPlaneVector) => {
+        const renderVector = (currentControlPlaneVector) => {
             const currentControlPlaneMin = Math.min(...currentControlPlaneVector);
             const currentControlPlaneMax = Math.max(...currentControlPlaneVector);
             const currentControlPlaneSpan = currentControlPlaneMax - currentControlPlaneMin;
             const normalizedControlPlaneVector = currentControlPlaneVector.map((x) => {
                 const shifted = x - currentControlPlaneMin;
-                const scaled = shifted / currentControlPlaneSpan;
+                const scaled = shifted / (currentControlPlaneSpan + 1e-8);
                 return scaled;
             });
-            const vectorElementHeight = 10;
-            const vectorElementWidth = 10;
+            const vectorElementHeight = 20;
+            const vectorElementWidth = 20;
             const valueToRgb = (x) => {
                 const eightBit = x * 255;
                 return `rgba(${eightBit}, ${eightBit}, ${eightBit}, 1.0)`;
             };
-            return `
+            return `<svg width="${vectorElementWidth * 64}" height="${vectorElementHeight}">
+                ${Array.from(normalizedControlPlaneVector)
+                .map((x, index) => `<rect 
+                                x="${index * vectorElementWidth}" 
+                                y="${0}" 
+                                width="${vectorElementWidth}" 
+                                height="${vectorElementHeight}"
+                                fill="${valueToRgb(x)}"
+                            />`)
+                .join('')}
+            </svg>`;
+        };
+        shadow.innerHTML = `
 <style>
         div {
             margin: 10px;
@@ -153,7 +165,7 @@ export class Instrument extends HTMLElement {
         .current-event-vector {
             position: absolute;
             top: 10px;
-            right: 200px;
+            left: 150px;
         }
 </style>
 <div class="instrument-container">
@@ -161,24 +173,13 @@ export class Instrument extends HTMLElement {
             <button id="start-demo">Start Demo</button>
         </div>
         <div class="current-event-vector">
-            <svg>
-                ${Array.from(normalizedControlPlaneVector)
-                .map((x, index) => `<rect 
-                                x="${index * vectorElementWidth}" 
-                                y="${0}" 
-                                width="${vectorElementWidth}" 
-                                height="${vectorElementHeight}"
-                                fill="${valueToRgb(x)}"
-                            />`)
-                .join('')}
-            </svg>
+            ${renderVector(currentControlPlaneVector)}
         </div>
 </div>
 `;
-        };
-        shadow.innerHTML = render(currentControlPlaneVector);
         const start = shadow.getElementById('start-demo');
         const container = shadow.querySelector('.instrument-container');
+        const eventVectorContainer = shadow.querySelector('.current-event-vector');
         const context = new AudioContext({
             sampleRate: 22050,
         });
@@ -197,11 +198,12 @@ export class Instrument extends HTMLElement {
                 this.url = url;
             }
             triggerInstrument(arr, point) {
+                var _a;
                 return __awaiter(this, void 0, void 0, function* () {
                     if (!this.initialized) {
                         yield this.initialize();
                     }
-                    if (this.instrument.port) {
+                    if ((_a = this.instrument) === null || _a === void 0 ? void 0 : _a.port) {
                         this.instrument.port.postMessage(arr);
                     }
                 });
@@ -215,12 +217,17 @@ export class Instrument extends HTMLElement {
                     catch (err) {
                         console.log(`Failed to add module due to ${err}`);
                     }
-                    const weights = yield fetchRnnWeights(rnnWeightsUrl);
-                    const whiteNoise = new AudioWorkletNode(context, 'rnn-instrument', {
-                        processorOptions: weights,
-                    });
-                    whiteNoise.connect(context.destination);
-                    this.instrument = whiteNoise;
+                    try {
+                        const weights = yield fetchRnnWeights(rnnWeightsUrl);
+                        const whiteNoise = new AudioWorkletNode(context, 'rnn-instrument', {
+                            processorOptions: weights,
+                        });
+                        whiteNoise.connect(context.destination);
+                        this.instrument = whiteNoise;
+                    }
+                    catch (err) {
+                        console.log('Failed to initialize instrument');
+                    }
                 });
             }
             updateCutoff(hz) {
@@ -291,8 +298,7 @@ export class Instrument extends HTMLElement {
                     const pointArr = pointToArray(point);
                     const proj = dotProduct(pointArr, clickProjection);
                     currentControlPlaneVector.set(proj);
-                    console.log('CLICK', currentControlPlaneVector);
-                    shadow.innerHTML = render(currentControlPlaneVector);
+                    eventVectorContainer.innerHTML = renderVector(currentControlPlaneVector);
                     // TODO: I don't actually need to pass the point here, since
                     // the projection is the only thing that matters
                     unit.triggerInstrument(proj, { x, y });
