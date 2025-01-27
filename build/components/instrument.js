@@ -80,10 +80,10 @@ const gamma = new Interval(-90, 90);
 const vertical = new Interval(0, window.innerHeight);
 const unitInterval = new Interval(0, 1);
 export class Instrument extends HTMLElement {
-    constructor(url) {
+    constructor() {
         super();
         this.url = null;
-        this.url = url;
+        this.url = null;
     }
     render() {
         let shadow = this.shadowRoot;
@@ -179,6 +179,7 @@ export class Instrument extends HTMLElement {
                         console.log('=======================================');
                         console.log(`Failed to add module due to ${err}`);
                     }
+                    console.log('FETCHING FROM', this.url);
                     const weights = yield fetchRnnWeights(this.url);
                     console.log('GOT WEIGHTS', weights);
                     const whiteNoise = new AudioWorkletNode(context, 'rnn-instrument', {
