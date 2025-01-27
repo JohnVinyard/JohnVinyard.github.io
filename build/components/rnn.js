@@ -14,6 +14,11 @@ const vectorVectorDot = (a, b) => {
 const elementwiseSum = (a, b) => {
     return a.map((value, index) => value + b[index]);
 };
+const sum = (a) => {
+    return a.reduce((accum, current) => {
+        return accum + current;
+    }, 0);
+};
 /**
  * e.g., if vetor is length 64, and matrix is (128, 64), we'll end up
  * with a new vector of length 128
@@ -58,12 +63,8 @@ class Rnn extends AudioWorkletProcessor {
         const nonlinearity = summed.map(Math.tanh);
         const output = dotProduct(nonlinearity, this.outProjection);
         const withSin = output.map(Math.sin);
-        // channels, set a block , since this is k-rate
-        // for (let i = 0; i < left.length; i++) {
-        //     left[i] = withSin[i];
-        // }
+        console.log('L1 NORM', sum(withSin.map(Math.abs)));
         left.set(withSin);
-        // right.set(withSin);
         return true;
     }
 }
