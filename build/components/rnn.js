@@ -19,6 +19,9 @@ const sum = (a) => {
         return accum + current;
     }, 0);
 };
+const l1Norm = (a) => {
+    return sum(a.map(Math.abs));
+};
 /**
  * e.g., if vetor is length 64, and matrix is (128, 64), we'll end up
  * with a new vector of length 128
@@ -56,14 +59,16 @@ class Rnn extends AudioWorkletProcessor {
         const controlPlane = maybeControlPlane !== null && maybeControlPlane !== void 0 ? maybeControlPlane : new Float32Array(this.controlPlaneDim).fill(0);
         const inp = dotProduct(controlPlane, this.inProjection);
         const rnnInp = dotProduct(inp, this.rnnInProjection);
+        console.log('HIDDEN STORED', l1Norm(this.rnnHiddenState));
         const rnnHidden = dotProduct(this.rnnHiddenState, this.rnnOutProjection);
+        console.log('HIDDEN COMPUTED', l1Norm(rnnHidden));
         // update the hidden state for this "instrument"
         this.rnnHiddenState = rnnHidden;
         const summed = elementwiseSum(rnnInp, rnnHidden);
         const nonlinearity = summed.map(Math.tanh);
         const output = dotProduct(nonlinearity, this.outProjection);
         const withSin = output.map(Math.sin);
-        console.log('L1 NORM', sum(withSin.map(Math.abs)));
+        console.log('L1 NORM', l1Norm(withSin));
         left.set(withSin);
         return true;
     }
