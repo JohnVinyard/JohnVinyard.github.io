@@ -54,6 +54,9 @@ const vectorVectorDot = (a, b) => {
 const dotProduct = (vector, matrix) => {
     return new Float32Array(matrix.map((v) => vectorVectorDot(v, vector)));
 };
+const relu = (vector) => {
+    return vector.map((x) => Math.max(0, x));
+};
 const base64ToArrayBuffer = (base64) => {
     var binaryString = atob(base64);
     var bytes = new Uint8Array(binaryString.length);
@@ -294,11 +297,12 @@ export class Instrument extends HTMLElement {
                     // Get click coordinates in [0, 1]
                     const x = event.offsetX / width;
                     const y = event.offsetY / height;
-                    // Project click location to control plane space
+                    // Project click location to control plane space, followed by RELU
                     const point = { x, y };
                     const pointArr = pointToArray(point);
                     const proj = dotProduct(pointArr, clickProjection);
-                    currentControlPlaneVector.set(proj);
+                    const pos = relu(proj);
+                    currentControlPlaneVector.set(pos);
                     eventVectorContainer.innerHTML = renderVector(currentControlPlaneVector);
                     // TODO: I don't actually need to pass the point here, since
                     // the projection is the only thing that matters
