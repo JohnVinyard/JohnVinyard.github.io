@@ -9,7 +9,7 @@
                 <link rel="preconnect" href="https://fonts.googleapis.com">
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
                 <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet">
-                <script src="https://cdn.jsdelivr.net/gh/JohnVinyard/web-components@0.0.37/build/components/bundle.js"></script>
+                <script src="https://cdn.jsdelivr.net/gh/JohnVinyard/web-components@0.0.38/build/components/bundle.js"></script>
                 <style>
                     body {
                         font-family: "Gowun Batang", serif;
@@ -111,7 +111,7 @@ a state-space model "extracted" from an audio segment.</p>
 <p>Feel free to <a href="#Examples">jump ahead</a> if you're curious to hear all the audio examples first!</p>
 
 <audio-view
-            src="https://state-space-model-demo-2.s3.amazonaws.com/audio_930bf71ab1273972bccc3a496e0f48e9ae9f0ebb"
+            src="https://state-space-model-demo-2.s3.amazonaws.com/audio_fe232d1dba0ef71487ba8069e590e5c801d37414"
             height="200"
             samples="512"
             scale="1"
@@ -120,7 +120,7 @@ a state-space model "extracted" from an audio segment.</p>
         ></audio-view>
 
 <instrument-element 
-                url="https://state-space-model-demo-2.s3.amazonaws.com/rnnweights1_a28347262466fec932b982d0d97a1e2cb3b948e3">
+                url="https://state-space-model-demo-2.s3.amazonaws.com/rnnweights1_fed1f20f8a3ea3ac4edd41a6d4e6763fa2128d6d">
             </instrument-element>
 
 <p>First, we'll set up high-level parameters for the experiment</p>
@@ -730,7 +730,7 @@ def construct_experiment_model(state_dict: Union[None, dict] = None) -> OverfitC
 <p>A random 11.89 seconds segment of audio drawn from the MusicNet dataset</p>
 
         <audio-view
-            src="https://state-space-model-demo-2.s3.amazonaws.com/orig_b28f79f3f5880ca0dfe9bb4fd80a1153c588ed07"
+            src="https://state-space-model-demo-2.s3.amazonaws.com/orig_52ded75dc234ebf5366e9289f7c3c4b12bd205a9"
             height="200"
             samples="512"
             scale="1"
@@ -740,10 +740,10 @@ def construct_experiment_model(state_dict: Union[None, dict] = None) -> OverfitC
 
 <a id="Reconstruction"></a>
 <h3>Reconstruction</h3>
-<p>Reconstruction of the original audio after overfitting the model for 1000 iterations</p>
+<p>Reconstruction of the original audio after overfitting the model for 1500 iterations</p>
 
         <audio-view
-            src="https://state-space-model-demo-2.s3.amazonaws.com/audio_6165faabc6b7bc1784cf6e29dcde68d494926030"
+            src="https://state-space-model-demo-2.s3.amazonaws.com/audio_3c3919b48672f757ec81376abdc0007b46907811"
             height="200"
             samples="512"
             scale="1"
@@ -753,10 +753,10 @@ def construct_experiment_model(state_dict: Union[None, dict] = None) -> OverfitC
 
 <a id="Random Audio"></a>
 <h3>Random Audio</h3>
-<p>Signal produced by a random, sparse control signal after overfitting the model for 1000 iterations</p>
+<p>Signal produced by a random, sparse control signal after overfitting the model for 1500 iterations</p>
 
         <audio-view
-            src="https://state-space-model-demo-2.s3.amazonaws.com/audio_930bf71ab1273972bccc3a496e0f48e9ae9f0ebb"
+            src="https://state-space-model-demo-2.s3.amazonaws.com/audio_fe232d1dba0ef71487ba8069e590e5c801d37414"
             height="200"
             samples="512"
             scale="1"
@@ -769,7 +769,7 @@ def construct_experiment_model(state_dict: Union[None, dict] = None) -> OverfitC
 
 
         <audio-view
-            src="https://state-space-model-demo-2.s3.amazonaws.com/audio_ecbdbb03203f232ddb0e58368802864c173a3a2a"
+            src="https://state-space-model-demo-2.s3.amazonaws.com/audio_88c7387358a396e1e4d2edc63d39ae73c17ec5a6"
             height="200"
             samples="512"
             scale="1"
@@ -779,9 +779,9 @@ def construct_experiment_model(state_dict: Union[None, dict] = None) -> OverfitC
 
 <a id="Control Signal"></a>
 <h3>Control Signal</h3>
-<p>Sparse control signal for the original audio after overfitting the model for 1000 iterations</p>
+<p>Sparse control signal for the original audio after overfitting the model for 1500 iterations</p>
 
-        <img class="full-width" src="https://state-space-model-demo-2.s3.amazonaws.com/controlplane_29cc1eb44a2d446bfe0de2676823ba79621e3c1a" height="200"></img>
+        <img class="full-width" src="https://state-space-model-demo-2.s3.amazonaws.com/controlplane_205883428afee680b8dd2050ae684505c6b89043" height="200"></img>
         
 
 <a id="Interactive Instrument"></a>
@@ -789,7 +789,7 @@ def construct_experiment_model(state_dict: Union[None, dict] = None) -> OverfitC
 <p>We project the 2D coordinates of the click site to the 64-dimension control-plane dimension and trigger an event</p>
 
             <instrument-element 
-                url="https://state-space-model-demo-2.s3.amazonaws.com/rnnweights1_a28347262466fec932b982d0d97a1e2cb3b948e3">
+                url="https://state-space-model-demo-2.s3.amazonaws.com/rnnweights1_fed1f20f8a3ea3ac4edd41a6d4e6763fa2128d6d">
             </instrument-element>
 
 
@@ -801,7 +801,7 @@ def construct_experiment_model(state_dict: Union[None, dict] = None) -> OverfitC
 <p>A random 11.89 seconds segment of audio drawn from the MusicNet dataset</p>
 
         <audio-view
-            src="https://state-space-model-demo-2.s3.amazonaws.com/orig_8dbfebc2b0d824bbc2cb36ed0a642959fbdded24"
+            src="https://state-space-model-demo-2.s3.amazonaws.com/orig_2023995afe0c9ea796b6dffbd019d03e916b57a9"
             height="200"
             samples="512"
             scale="1"
@@ -811,10 +811,10 @@ def construct_experiment_model(state_dict: Union[None, dict] = None) -> OverfitC
 
 <a id="Reconstruction"></a>
 <h3>Reconstruction</h3>
-<p>Reconstruction of the original audio after overfitting the model for 1000 iterations</p>
+<p>Reconstruction of the original audio after overfitting the model for 1500 iterations</p>
 
         <audio-view
-            src="https://state-space-model-demo-2.s3.amazonaws.com/audio_0ee4483f82a7f11d75d2724e5c714fa80080971c"
+            src="https://state-space-model-demo-2.s3.amazonaws.com/audio_cb8b758c91c92bdc58ecf943c3d810105309ab52"
             height="200"
             samples="512"
             scale="1"
@@ -824,10 +824,10 @@ def construct_experiment_model(state_dict: Union[None, dict] = None) -> OverfitC
 
 <a id="Random Audio"></a>
 <h3>Random Audio</h3>
-<p>Signal produced by a random, sparse control signal after overfitting the model for 1000 iterations</p>
+<p>Signal produced by a random, sparse control signal after overfitting the model for 1500 iterations</p>
 
         <audio-view
-            src="https://state-space-model-demo-2.s3.amazonaws.com/audio_aee23986e0d46165de28a2a9c7e7ef8f306726c0"
+            src="https://state-space-model-demo-2.s3.amazonaws.com/audio_4279ccfedf57fc4f1da54f1b65f32c1f0d0422ac"
             height="200"
             samples="512"
             scale="1"
@@ -840,7 +840,7 @@ def construct_experiment_model(state_dict: Union[None, dict] = None) -> OverfitC
 
 
         <audio-view
-            src="https://state-space-model-demo-2.s3.amazonaws.com/audio_01ebfc8e7f0cf984d26720a5271c0f18f322b88b"
+            src="https://state-space-model-demo-2.s3.amazonaws.com/audio_b82a5fff7de56351dc9953fe7c0af43f310b42b8"
             height="200"
             samples="512"
             scale="1"
@@ -850,9 +850,9 @@ def construct_experiment_model(state_dict: Union[None, dict] = None) -> OverfitC
 
 <a id="Control Signal"></a>
 <h3>Control Signal</h3>
-<p>Sparse control signal for the original audio after overfitting the model for 1000 iterations</p>
+<p>Sparse control signal for the original audio after overfitting the model for 1500 iterations</p>
 
-        <img class="full-width" src="https://state-space-model-demo-2.s3.amazonaws.com/controlplane_fb481f34933ec80cc9d12676a853202e21cf7463" height="200"></img>
+        <img class="full-width" src="https://state-space-model-demo-2.s3.amazonaws.com/controlplane_b6195eb17111cc691ec1c1e06f918b54695d22e0" height="200"></img>
         
 
 <a id="Interactive Instrument"></a>
@@ -860,7 +860,7 @@ def construct_experiment_model(state_dict: Union[None, dict] = None) -> OverfitC
 <p>We project the 2D coordinates of the click site to the 64-dimension control-plane dimension and trigger an event</p>
 
             <instrument-element 
-                url="https://state-space-model-demo-2.s3.amazonaws.com/rnnweights2_18469203e51afab95e20da0898bc114b8f0772c2">
+                url="https://state-space-model-demo-2.s3.amazonaws.com/rnnweights2_5163ade9c340f53e703323c07c279d63fd93c008">
             </instrument-element>
 
 
@@ -872,7 +872,7 @@ def construct_experiment_model(state_dict: Union[None, dict] = None) -> OverfitC
 <p>A random 11.89 seconds segment of audio drawn from the MusicNet dataset</p>
 
         <audio-view
-            src="https://state-space-model-demo-2.s3.amazonaws.com/orig_0a384fa3d196640cee9e69cddef287ac297f1e13"
+            src="https://state-space-model-demo-2.s3.amazonaws.com/orig_404d82274becd1051b8b8ebbcece336d7f72f723"
             height="200"
             samples="512"
             scale="1"
@@ -882,10 +882,10 @@ def construct_experiment_model(state_dict: Union[None, dict] = None) -> OverfitC
 
 <a id="Reconstruction"></a>
 <h3>Reconstruction</h3>
-<p>Reconstruction of the original audio after overfitting the model for 1000 iterations</p>
+<p>Reconstruction of the original audio after overfitting the model for 1500 iterations</p>
 
         <audio-view
-            src="https://state-space-model-demo-2.s3.amazonaws.com/audio_11a4b9429fe45d7364177033c122a66e3c2abe9d"
+            src="https://state-space-model-demo-2.s3.amazonaws.com/audio_18844eb532cbe8a9b813b06c2e92f5d056c3e592"
             height="200"
             samples="512"
             scale="1"
@@ -895,10 +895,10 @@ def construct_experiment_model(state_dict: Union[None, dict] = None) -> OverfitC
 
 <a id="Random Audio"></a>
 <h3>Random Audio</h3>
-<p>Signal produced by a random, sparse control signal after overfitting the model for 1000 iterations</p>
+<p>Signal produced by a random, sparse control signal after overfitting the model for 1500 iterations</p>
 
         <audio-view
-            src="https://state-space-model-demo-2.s3.amazonaws.com/audio_05b52447de22fa016b9fea7ad6a17e75ef96874c"
+            src="https://state-space-model-demo-2.s3.amazonaws.com/audio_fda6ceb4601af528f5d64273b9eddacca4ab755b"
             height="200"
             samples="512"
             scale="1"
@@ -911,7 +911,7 @@ def construct_experiment_model(state_dict: Union[None, dict] = None) -> OverfitC
 
 
         <audio-view
-            src="https://state-space-model-demo-2.s3.amazonaws.com/audio_4e97bc928f9c9ded884b12573f3ee6906257d637"
+            src="https://state-space-model-demo-2.s3.amazonaws.com/audio_0e14df3589dd01df15465676969479e5ed0387ea"
             height="200"
             samples="512"
             scale="1"
@@ -921,9 +921,9 @@ def construct_experiment_model(state_dict: Union[None, dict] = None) -> OverfitC
 
 <a id="Control Signal"></a>
 <h3>Control Signal</h3>
-<p>Sparse control signal for the original audio after overfitting the model for 1000 iterations</p>
+<p>Sparse control signal for the original audio after overfitting the model for 1500 iterations</p>
 
-        <img class="full-width" src="https://state-space-model-demo-2.s3.amazonaws.com/controlplane_d7c53a377f3a026cecbdfae3e3ccaa0e99dae32d" height="200"></img>
+        <img class="full-width" src="https://state-space-model-demo-2.s3.amazonaws.com/controlplane_fb933b4f093b8f5d0c64ae672955daf13c6f243b" height="200"></img>
         
 
 <a id="Interactive Instrument"></a>
@@ -931,7 +931,7 @@ def construct_experiment_model(state_dict: Union[None, dict] = None) -> OverfitC
 <p>We project the 2D coordinates of the click site to the 64-dimension control-plane dimension and trigger an event</p>
 
             <instrument-element 
-                url="https://state-space-model-demo-2.s3.amazonaws.com/rnnweights3_f51fdc9a7f8d03bd0c1d2cee34c10861b3abbba0">
+                url="https://state-space-model-demo-2.s3.amazonaws.com/rnnweights3_ceb625be0b30b9154b434ecf45bcf37bb2e1cda7">
             </instrument-element>
 
 
@@ -943,7 +943,7 @@ def construct_experiment_model(state_dict: Union[None, dict] = None) -> OverfitC
 <p>A random 11.89 seconds segment of audio drawn from the MusicNet dataset</p>
 
         <audio-view
-            src="https://state-space-model-demo-2.s3.amazonaws.com/orig_a2cef329f889a4a4493272cf4248d5b55783af71"
+            src="https://state-space-model-demo-2.s3.amazonaws.com/orig_54a6e6b248c26252f32735618cfc18e81ccc673c"
             height="200"
             samples="512"
             scale="1"
@@ -953,10 +953,10 @@ def construct_experiment_model(state_dict: Union[None, dict] = None) -> OverfitC
 
 <a id="Reconstruction"></a>
 <h3>Reconstruction</h3>
-<p>Reconstruction of the original audio after overfitting the model for 1000 iterations</p>
+<p>Reconstruction of the original audio after overfitting the model for 1500 iterations</p>
 
         <audio-view
-            src="https://state-space-model-demo-2.s3.amazonaws.com/audio_ed03e7b19c8967530726fa4961f17f9fdb28499b"
+            src="https://state-space-model-demo-2.s3.amazonaws.com/audio_36ee9f0ac1ba84d8ec6c74dbbdd4c8276ff765ef"
             height="200"
             samples="512"
             scale="1"
@@ -966,10 +966,10 @@ def construct_experiment_model(state_dict: Union[None, dict] = None) -> OverfitC
 
 <a id="Random Audio"></a>
 <h3>Random Audio</h3>
-<p>Signal produced by a random, sparse control signal after overfitting the model for 1000 iterations</p>
+<p>Signal produced by a random, sparse control signal after overfitting the model for 1500 iterations</p>
 
         <audio-view
-            src="https://state-space-model-demo-2.s3.amazonaws.com/audio_82294ba0c334be32c34919074b26d61a4808eb90"
+            src="https://state-space-model-demo-2.s3.amazonaws.com/audio_0f7d4c7d6a2fc1a1961dc1e0c924a9bd94c9bc62"
             height="200"
             samples="512"
             scale="1"
@@ -982,7 +982,7 @@ def construct_experiment_model(state_dict: Union[None, dict] = None) -> OverfitC
 
 
         <audio-view
-            src="https://state-space-model-demo-2.s3.amazonaws.com/audio_01083cc56b941ee53d175aa5e8f7fa9a4abda3a5"
+            src="https://state-space-model-demo-2.s3.amazonaws.com/audio_13a514951fb2a3c95ad0e31c12e2af8f3dfdc927"
             height="200"
             samples="512"
             scale="1"
@@ -992,9 +992,9 @@ def construct_experiment_model(state_dict: Union[None, dict] = None) -> OverfitC
 
 <a id="Control Signal"></a>
 <h3>Control Signal</h3>
-<p>Sparse control signal for the original audio after overfitting the model for 1000 iterations</p>
+<p>Sparse control signal for the original audio after overfitting the model for 1500 iterations</p>
 
-        <img class="full-width" src="https://state-space-model-demo-2.s3.amazonaws.com/controlplane_1895ebd32b259dc3a7bcbaee9453b53184594203" height="200"></img>
+        <img class="full-width" src="https://state-space-model-demo-2.s3.amazonaws.com/controlplane_339a0fc815d03fd03fc8f779c67ea82d1d22758e" height="200"></img>
         
 
 <a id="Interactive Instrument"></a>
@@ -1002,7 +1002,7 @@ def construct_experiment_model(state_dict: Union[None, dict] = None) -> OverfitC
 <p>We project the 2D coordinates of the click site to the 64-dimension control-plane dimension and trigger an event</p>
 
             <instrument-element 
-                url="https://state-space-model-demo-2.s3.amazonaws.com/rnnweights4_b363ab0e4142c22cdf00d120a935c21a3c913eac">
+                url="https://state-space-model-demo-2.s3.amazonaws.com/rnnweights4_3d3d93280ce89efed50bdfc7b6ba643b7028a038">
             </instrument-element>
 
 
@@ -1014,7 +1014,7 @@ def construct_experiment_model(state_dict: Union[None, dict] = None) -> OverfitC
 <p>A random 11.89 seconds segment of audio drawn from the MusicNet dataset</p>
 
         <audio-view
-            src="https://state-space-model-demo-2.s3.amazonaws.com/orig_d775dfc37acc10bc48dd8d545932f8325d1979fb"
+            src="https://state-space-model-demo-2.s3.amazonaws.com/orig_1c705351243042803e53402ad33fdfe3fe2b9d5a"
             height="200"
             samples="512"
             scale="1"
@@ -1024,10 +1024,10 @@ def construct_experiment_model(state_dict: Union[None, dict] = None) -> OverfitC
 
 <a id="Reconstruction"></a>
 <h3>Reconstruction</h3>
-<p>Reconstruction of the original audio after overfitting the model for 1000 iterations</p>
+<p>Reconstruction of the original audio after overfitting the model for 1500 iterations</p>
 
         <audio-view
-            src="https://state-space-model-demo-2.s3.amazonaws.com/audio_8378a800ff971f4126c7fd035e05ee3262794e07"
+            src="https://state-space-model-demo-2.s3.amazonaws.com/audio_57f5e885887a603afeed77ded48f9282919cb6d5"
             height="200"
             samples="512"
             scale="1"
@@ -1037,10 +1037,10 @@ def construct_experiment_model(state_dict: Union[None, dict] = None) -> OverfitC
 
 <a id="Random Audio"></a>
 <h3>Random Audio</h3>
-<p>Signal produced by a random, sparse control signal after overfitting the model for 1000 iterations</p>
+<p>Signal produced by a random, sparse control signal after overfitting the model for 1500 iterations</p>
 
         <audio-view
-            src="https://state-space-model-demo-2.s3.amazonaws.com/audio_ae0730c4d36581eb3c1bd807973c0e5b337fd1c1"
+            src="https://state-space-model-demo-2.s3.amazonaws.com/audio_598b762ef84eb4ab4891d3fd981f9cd382253bcb"
             height="200"
             samples="512"
             scale="1"
@@ -1053,7 +1053,7 @@ def construct_experiment_model(state_dict: Union[None, dict] = None) -> OverfitC
 
 
         <audio-view
-            src="https://state-space-model-demo-2.s3.amazonaws.com/audio_c3ed16dffdfc64384a54d4b546b76bf41ca28377"
+            src="https://state-space-model-demo-2.s3.amazonaws.com/audio_28f6842e2baa72f6e2d709b68c3fa4341368a32d"
             height="200"
             samples="512"
             scale="1"
@@ -1063,9 +1063,9 @@ def construct_experiment_model(state_dict: Union[None, dict] = None) -> OverfitC
 
 <a id="Control Signal"></a>
 <h3>Control Signal</h3>
-<p>Sparse control signal for the original audio after overfitting the model for 1000 iterations</p>
+<p>Sparse control signal for the original audio after overfitting the model for 1500 iterations</p>
 
-        <img class="full-width" src="https://state-space-model-demo-2.s3.amazonaws.com/controlplane_5853ef0c278d62e2c2f3e77b5639e96645b05b3d" height="200"></img>
+        <img class="full-width" src="https://state-space-model-demo-2.s3.amazonaws.com/controlplane_64d8f8f9453ef7e2e1eccd26cb31fd0aa00b7473" height="200"></img>
         
 
 <a id="Interactive Instrument"></a>
@@ -1073,7 +1073,7 @@ def construct_experiment_model(state_dict: Union[None, dict] = None) -> OverfitC
 <p>We project the 2D coordinates of the click site to the 64-dimension control-plane dimension and trigger an event</p>
 
             <instrument-element 
-                url="https://state-space-model-demo-2.s3.amazonaws.com/rnnweights5_9b9d138e9129ebd8d95a0ee2327eaa68746cd6c8">
+                url="https://state-space-model-demo-2.s3.amazonaws.com/rnnweights5_0f00e2697711688e72e3de531e66d23c086423d6">
             </instrument-element>
 
 
