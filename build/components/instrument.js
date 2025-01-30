@@ -31,22 +31,14 @@ const twoDimArray = (data, shape) => {
     }
     return output;
 };
+const zeros = (size) => {
+    return new Float32Array(size).fill(0);
+};
 const vectorVectorDot = (a, b) => {
     return a.reduce((accum, current, index) => {
         return accum + current * b[index];
     }, 0);
 };
-// const elementwiseSum = (a: Float32Array, b: Float32Array): Float32Array => {
-//     return a.map((value, index) => value + b[index]);
-// };
-// const sum = (a: Float32Array): number => {
-//     return a.reduce((accum, current) => {
-//         return accum + current;
-//     }, 0);
-// };
-// const l1Norm = (a: Float32Array): number => {
-//     return sum(a.map(Math.abs));
-// };
 /**
  * e.g., if vetor is length 64, and matrix is (128, 64), we'll end up
  * with a new vector of length 128
@@ -68,11 +60,13 @@ const base64ToArrayBuffer = (base64) => {
 const fetchRnnWeights = (url) => __awaiter(void 0, void 0, void 0, function* () {
     const resp = yield fetch(url);
     const data = yield resp.json();
-    const { in_projection, out_projection, rnn_in_projection, rnn_out_projection, } = data;
+    const { in_projection, out_projection, rnn_in_projection, rnn_out_projection, control_plane_mapping, accelerometer_mapping, } = data;
     const [inProjection, inProjectionShape] = fromNpy(base64ToArrayBuffer(in_projection));
     const [outProjection, outProjectionShape] = fromNpy(base64ToArrayBuffer(out_projection));
     const [rnnInProjection, rnnInProjectionShape] = fromNpy(base64ToArrayBuffer(rnn_in_projection));
     const [rnnOutProjection, rnnOutProjectionShape] = fromNpy(base64ToArrayBuffer(rnn_out_projection));
+    const [controlPlaneMapping, controlPlaneMappingShape] = fromNpy(base64ToArrayBuffer(control_plane_mapping));
+    const [accelerometerMapping, accelerometerMappingShape] = fromNpy(base64ToArrayBuffer(accelerometer_mapping));
     return {
         inProjection: {
             array: inProjection,
@@ -90,31 +84,16 @@ const fetchRnnWeights = (url) => __awaiter(void 0, void 0, void 0, function* () 
             array: rnnOutProjection,
             shape: rnnOutProjectionShape,
         },
+        controlPlaneMapping: {
+            array: controlPlaneMapping,
+            shape: controlPlaneMappingShape,
+        },
+        accelerometerMapping: {
+            array: accelerometerMapping,
+            shape: accelerometerMappingShape,
+        },
     };
 });
-class Interval {
-    constructor(start, end) {
-        this.start = start;
-        this.end = end;
-        this.start = start;
-        this.end = end;
-        this.range = end - start;
-    }
-    toRatio(value) {
-        return (value - this.start) / this.range;
-    }
-    fromRatio(value) {
-        return this.start + value * this.range;
-    }
-    translateTo(value, otherInterval) {
-        const r = this.toRatio(value);
-        const v = otherInterval.fromRatio(r);
-        return v;
-    }
-}
-const filterCutoff = new Interval(500, 22050);
-const gamma = new Interval(-90, 90);
-const unitInterval = new Interval(0, 1);
 export class Instrument extends HTMLElement {
     constructor() {
         super();
@@ -136,8 +115,8 @@ export class Instrument extends HTMLElement {
                 const scaled = shifted / (currentControlPlaneSpan + 1e-8);
                 return scaled;
             });
-            const vectorElementHeight = 20;
-            const vectorElementWidth = 20;
+            const vectorElementHeight = 10;
+            const vectorElementWidth = 10;
             const valueToRgb = (x) => {
                 const eightBit = x * 255;
                 return `rgba(${eightBit}, ${eightBit}, ${eightBit}, 1.0)`;
@@ -161,44 +140,53 @@ export class Instrument extends HTMLElement {
         }
         .instrument-container {
             height: 200px;
-            cursor: crosshair;
-            border: solid 1px #eee;
+            cursor: pointer;
             position: relative;
+            -webkit-box-shadow: 1px 11px 5px 5px rgba(0,0,0,0.23);
+            -moz-box-shadow: 1px 11px 5px 5px rgba(0,0,0,0.23);
+            box-shadow: 1px 11px 5px 5px rgba(0,0,0,0.23);
+        }
+        .instrument-container.initialized {
+            background-color: #00ff00;
         }
         .current-event-vector {
             position: absolute;
             top: 10px;
             left: 150px;
         }
+        p {
+            margin-left: 10px;
+        }
 </style>
 <div class="instrument-container">
         <div>
             <button id="start-demo">Start Demo</button>
+            <button id="stop-demo" disabled>Stop</button>
         </div>
-        <div class="current-event-vector">
+        <p>
+            Sparse control-plane vectors are chosen at random when you click
+        </p>
+        <div class="current-event-vector" title="Most recent control-plane input vector">
             ${renderVector(currentControlPlaneVector)}
         </div>
 </div>
 `;
         const start = shadow.getElementById('start-demo');
+        const stop = shadow.getElementById('stop-demo');
         const container = shadow.querySelector('.instrument-container');
         const eventVectorContainer = shadow.querySelector('.current-event-vector');
         const context = new AudioContext({
             sampleRate: 22050,
         });
         const rnnWeightsUrl = this.url;
-        // TODO: Here, we'd like to create a random projection from 2D click location
-        // to control-plane space
-        const scale = 10;
-        const clickProjectionFlat = new Float32Array(2 * 64).map((x) => Math.random() * scale - scale / 2);
-        const clickProjection = twoDimArray(clickProjectionFlat, [64, 2]);
         class ConvUnit {
             constructor(url) {
                 this.url = url;
                 this.initialized = false;
-                this.gain = null;
-                this.filt = null;
+                // private gain: GainNode | null = null;
+                // private filt: BiquadFilterNode | null = null;
                 this.instrument = null;
+                this.weights = null;
                 this.url = url;
             }
             triggerInstrument(arr, point) {
@@ -212,6 +200,35 @@ export class Instrument extends HTMLElement {
                     }
                 });
             }
+            projectAcceleration(vec) {
+                if (!this.weights) {
+                    return zeros(64);
+                }
+                const proj = dotProduct(vec, this.accelerometerWeights);
+                const sparse = relu(proj);
+                return sparse;
+            }
+            projectClick(clickPoint) {
+                if (!this.weights) {
+                    return zeros(64);
+                }
+                return new Float32Array(64).map((x) => Math.random() > 0.9 ? (Math.random() * 2 - 1) * 10 : 0);
+                // const proj = dotProduct(clickPoint, this.weights);
+                // const sparse = relu(proj);
+                // console.log(
+                //     'CONTROL PLANE',
+                //     sparse,
+                //     this.weights.length,
+                //     this.weights[0].length
+                // );
+                // return sparse;
+            }
+            shutdown() {
+                return __awaiter(this, void 0, void 0, function* () {
+                    this.instrument.disconnect();
+                    this.initialized = false;
+                });
+            }
             initialize() {
                 return __awaiter(this, void 0, void 0, function* () {
                     this.initialized = true;
@@ -220,9 +237,12 @@ export class Instrument extends HTMLElement {
                     }
                     catch (err) {
                         console.log(`Failed to add module due to ${err}`);
+                        alert(`Failed to load module due to ${err}`);
                     }
                     try {
                         const weights = yield fetchRnnWeights(rnnWeightsUrl);
+                        this.weights = twoDimArray(weights.controlPlaneMapping.array, [64, 2]);
+                        this.accelerometerWeights = twoDimArray(weights.accelerometerMapping.array, [64, 3]);
                         const whiteNoise = new AudioWorkletNode(context, 'rnn-instrument', {
                             processorOptions: weights,
                         });
@@ -231,25 +251,9 @@ export class Instrument extends HTMLElement {
                     }
                     catch (err) {
                         console.log('Failed to initialize instrument');
+                        alert(`Failed to initialize instrument due to ${err}`);
                     }
-                });
-            }
-            updateCutoff(hz) {
-                if (!this.filt) {
-                    return;
-                }
-                this.filt.frequency.exponentialRampToValueAtTime(hz, context.currentTime + 0.05);
-            }
-            trigger(amplitude) {
-                return __awaiter(this, void 0, void 0, function* () {
-                    if (!this.initialized) {
-                        yield this.initialize();
-                    }
-                    if (!this.gain) {
-                        return;
-                    }
-                    this.gain.gain.exponentialRampToValueAtTime(amplitude, context.currentTime + 0.001);
-                    this.gain.gain.exponentialRampToValueAtTime(0.000001, context.currentTime + 0.2);
+                    container.classList.add('initialized');
                 });
             }
         }
@@ -266,6 +270,22 @@ export class Instrument extends HTMLElement {
                     return accum;
                 }, {});
             }
+            projectAcceleration(vec) {
+                const key = notes['C'];
+                const convUnit = this.units[key];
+                if (convUnit) {
+                    return convUnit.projectAcceleration(vec);
+                }
+                return zeros(64);
+            }
+            projectClick(point) {
+                const key = notes['C'];
+                const convUnit = this.units[key];
+                if (convUnit) {
+                    return convUnit.projectClick(point);
+                }
+                return zeros(64);
+            }
             triggerInstrument(arr, point) {
                 const key = notes['C'];
                 const convUnit = this.units[key];
@@ -273,42 +293,31 @@ export class Instrument extends HTMLElement {
                     convUnit.triggerInstrument(arr, point);
                 }
             }
-            updateCutoff(hz) {
-                for (const key in this.units) {
-                    const u = this.units[key];
-                    u.updateCutoff(hz);
-                }
-            }
-            trigger(urls, amplitude) {
-                return __awaiter(this, void 0, void 0, function* () {
-                    urls.forEach((url) => {
-                        this.units[url].trigger(amplitude);
-                    });
-                });
-            }
         }
-        const activeNotes = new Set(['C']);
+        // const activeNotes = new Set(['C']);
         const unit = new Controller(Object.values(notes));
+        const clickHandler = (event) => {
+            console.log('CLICKED WITH', unit);
+            if (unit) {
+                const width = container.clientWidth;
+                const height = container.clientHeight;
+                // // Get click coordinates in [0, 1]
+                const x = event.offsetX / width;
+                const y = event.offsetY / height;
+                // // Project click location to control plane space, followed by RELU
+                const point = { x, y };
+                const pointArr = pointToArray(point);
+                console.log(pointArr);
+                const pos = unit.projectClick(pointArr);
+                currentControlPlaneVector.set(pos);
+                eventVectorContainer.innerHTML = renderVector(currentControlPlaneVector);
+                // TODO: I don't actually need to pass the point here, since
+                // the projection is the only thing that matters
+                unit.triggerInstrument(pos, { x, y });
+            }
+        };
         const useMouse = () => {
-            container.addEventListener('click', (event) => {
-                if (unit) {
-                    const width = container.clientWidth;
-                    const height = container.clientHeight;
-                    // Get click coordinates in [0, 1]
-                    const x = event.offsetX / width;
-                    const y = event.offsetY / height;
-                    // Project click location to control plane space, followed by RELU
-                    const point = { x, y };
-                    const pointArr = pointToArray(point);
-                    const proj = dotProduct(pointArr, clickProjection);
-                    const pos = relu(proj);
-                    currentControlPlaneVector.set(pos);
-                    eventVectorContainer.innerHTML = renderVector(currentControlPlaneVector);
-                    // TODO: I don't actually need to pass the point here, since
-                    // the projection is the only thing that matters
-                    unit.triggerInstrument(proj, { x, y });
-                }
-            });
+            container.addEventListener('click', clickHandler);
             // document.addEventListener(
             //     'mousemove',
             //     ({ movementX, movementY, clientX, clientY }) => {
@@ -326,21 +335,51 @@ export class Instrument extends HTMLElement {
         };
         const useAcc = () => {
             if (DeviceMotionEvent) {
-                window.addEventListener('deviceorientationabsolute', (event) => {
-                    const u = gamma.translateTo(event.gamma, unitInterval);
-                    const hz = unitInterval.translateTo(Math.pow(u, 4), filterCutoff);
-                    unit.updateCutoff(hz);
-                });
+                // window.addEventListener(
+                //     'deviceorientationabsolute',
+                //     (event) => {
+                //         const u = gamma.translateTo(event.gamma, unitInterval);
+                //         const hz = unitInterval.translateTo(
+                //             u ** 4,
+                //             filterCutoff
+                //         );
+                //         // unit.updateCutoff(hz);
+                //     }
+                // );
                 window.addEventListener('devicemotion', (event) => {
                     const threshold = 4;
+                    /**
+                     * TODO:
+                     *
+                     * - settable thresholds for spacing in time as well as norm of motion
+                     * - project the 3D acceleration vector
+                     */
                     // TODO: maybe this trigger condition should be the norm as well?
                     if (Math.abs(event.acceleration.x) > threshold ||
                         Math.abs(event.acceleration.y) > threshold ||
                         Math.abs(event.acceleration.z) > threshold) {
-                        const norm = Math.sqrt(Math.pow(event.acceleration.x, 2) +
-                            Math.pow(event.acceleration.y, 2) +
-                            Math.pow(event.acceleration.z, 2));
-                        unit.trigger(Array.from(activeNotes).map((an) => notes[an]), norm * 0.2);
+                        // const norm = Math.sqrt(
+                        //     event.acceleration.x ** 2 +
+                        //         event.acceleration.y ** 2 +
+                        //         event.acceleration.z ** 2
+                        // );
+                        const accelerationVector = new Float32Array([
+                            event.acceleration.x,
+                            event.acceleration.y,
+                            event.acceleration.z,
+                        ]);
+                        const controlPlane = unit.projectAcceleration(accelerationVector);
+                        currentControlPlaneVector.set(controlPlane);
+                        eventVectorContainer.innerHTML = renderVector(currentControlPlaneVector);
+                        // TODO: This is unused/unnecessary
+                        unit.triggerInstrument(controlPlane, {
+                            x: 0,
+                            y: 0,
+                        });
+                        // unit.trigger(
+                        //     Array.from(activeNotes).map((an) => notes[an]),
+                        //     norm * 0.2
+                        // );
                     }
                 }, true);
             }
@@ -350,12 +389,18 @@ export class Instrument extends HTMLElement {
             }
         };
         start.addEventListener('click', (event) => __awaiter(this, void 0, void 0, function* () {
-            // useAcc();
+            useAcc();
             console.log('BEGINNING MONITORIING');
             useMouse();
             // TODO: How do I get to the button element here?
             // @ts-ignore
             event.target.disabled = true;
+            stop.disabled = false;
+        }));
+        stop.addEventListener('click', (event) => __awaiter(this, void 0, void 0, function* () {
+            stop.disabled = true;
+            start.disabled = false;
+            container.removeEventListener('click', clickHandler);
         }));
     }
     connectedCallback() {
