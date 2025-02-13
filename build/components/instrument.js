@@ -23,6 +23,12 @@ export const sin = (arr) => {
 export const sin2d = (arr) => {
     return arr.map(sin);
 };
+const elementwiseSum = (a, b) => {
+    return a.map((value, index) => value + b[index]);
+};
+const multiply = (a, b) => {
+    return a.map((value, index) => value * b);
+};
 const twoDimArray = (data, shape) => {
     const [x, y] = shape;
     const output = [];
@@ -175,9 +181,6 @@ export class Instrument extends HTMLElement {
         const stop = shadow.getElementById('stop-demo');
         const container = shadow.querySelector('.instrument-container');
         const eventVectorContainer = shadow.querySelector('.current-event-vector');
-        const context = new AudioContext({
-            sampleRate: 22050,
-        });
         const rnnWeightsUrl = this.url;
         class ConvUnit {
             constructor(url) {
@@ -232,8 +235,13 @@ export class Instrument extends HTMLElement {
             initialize() {
                 return __awaiter(this, void 0, void 0, function* () {
                     this.initialized = true;
+                    const context = new AudioContext({
+                        sampleRate: 22050,
+                    });
                     try {
-                        yield context.audioWorklet.addModule('/build/components/rnn.js');
+                        yield context.audioWorklet.addModule(
+                        // '/build/components/rnn.js'
+                        'https://cdn.jsdelivr.net/gh/JohnVinyard/web-components@0.0.57/build/components/rnn.js');
                     }
                     catch (err) {
                         console.log(`Failed to add module due to ${err}`);
@@ -347,13 +355,14 @@ export class Instrument extends HTMLElement {
                 //     }
                 // );
                 window.addEventListener('devicemotion', (event) => {
-                    const threshold = 4;
+                    const threshold = 10;
                     /**
                      * TODO:
                      *
                      * - settable thresholds for spacing in time as well as norm of motion
                      * - project the 3D acceleration vector
                      */
+                    // threshold falls linearly, with a floor of 4
                     // TODO: maybe this trigger condition should be the norm as well?
                     if (Math.abs(event.acceleration.x) > threshold ||
                         Math.abs(event.acceleration.y) > threshold ||
@@ -363,6 +372,8 @@ export class Instrument extends HTMLElement {
                         //         event.acceleration.y ** 2 +
                         //         event.acceleration.z ** 2
                         // );
+                        // unit threshold goes up when triggered, like a refractory
+                        // period
                         const accelerationVector = new Float32Array([
                             event.acceleration.x,
                             event.acceleration.y,
@@ -371,7 +382,7 @@ export class Instrument extends HTMLElement {
                         const controlPlane = unit.projectAcceleration(accelerationVector);
                         currentControlPlaneVector.set(controlPlane);
                         eventVectorContainer.innerHTML = renderVector(currentControlPlaneVector);
-                        // TODO: This is unused/unnecessary
+                        // TODO: The point argument is unused/unnecessary
                         unit.triggerInstrument(controlPlane, {
                             x: 0,
                             y: 0,
