@@ -1,31 +1,57 @@
+// TODO: for-loop and out parameter
 const elementwiseDifference = (a, b) => {
     return a.map((x, i) => x - b[i]);
 };
+// TODO: for-loop and out parameter
 const elementwiseAdd = (a, b) => {
     return a.map((x, i) => x + b[i]);
 };
 const zerosLike = (x) => {
     return new Float32Array(x.length).fill(0);
 };
+// TODO: re-implement as for-loop
 const vectorSum = (vec) => {
-    return vec.reduce((accum, current) => accum + current, 0);
+    // return vec.reduce((accum, current) => accum + current, 0);
+    let total = 0;
+    for (let i = 0; i < vec.length; i++) {
+        total += vec[i];
+    }
+    return total;
 };
 const vectorScalarDivide = (vec, scalar) => {
-    return vec.map((x) => x / scalar);
+    for (let i = 0; i < vec.length; i++) {
+        vec[i] = vec[i] / scalar;
+    }
+    return vec;
 };
 const vectorScalarMultiply = (vec, scalar) => {
-    return vec.map((x) => x * scalar);
+    for (let i = 0; i < vec.length; i++) {
+        vec[i] = vec[i] * scalar;
+    }
+    return vec;
 };
 const l2Norm = (vec) => {
-    const squared = vec.map((x) => Math.pow(x, 2));
-    return Math.sqrt(vectorSum(squared));
+    let norm = 0;
+    for (let i = 0; i < vec.length; i++) {
+        norm += Math.pow(vec[i], 2);
+    }
+    return Math.sqrt(norm);
 };
 const el1Norm = (vec) => {
-    return vectorSum(vec.map(Math.abs));
+    let norm = 0;
+    for (let i = 0; i < vec.length; i++) {
+        norm += Math.abs(vec[i]);
+    }
+    return norm;
 };
 const distance = (a, b) => {
-    const diff = elementwiseDifference(a, b);
-    return l2Norm(diff);
+    // const diff = elementwiseDifference(a, b);
+    // return l2Norm(diff);
+    let distance = 0;
+    for (let i = 0; i < a.length; i++) {
+        distance += Math.pow((a[i] - b[i]), 2);
+    }
+    return Math.sqrt(distance);
 };
 const clamp = (value, min, max) => {
     if (value < min) {
@@ -37,6 +63,7 @@ const clamp = (value, min, max) => {
     return value;
 };
 class Mass {
+    // TODO: damping should be a single value Float32Array
     constructor(id, position, mass, damping, fixed = false) {
         this.id = id;
         this.position = position;
@@ -50,27 +77,34 @@ class Mass {
         this.acceleration = zerosLike(position);
         this.velocity = zerosLike(position);
     }
+    // TODO: this allocates a new array each time.  Create a diff
+    // instance variable, update and return it here
     get diff() {
         return elementwiseDifference(this.position, this.origPosition);
     }
+    // TODO: This allocates a new array each time, update acceleration in place
     applyForce(force) {
         this.acceleration = elementwiseAdd(this.acceleration, vectorScalarDivide(force, this.mass));
     }
+    // TODO: This allocates a new array each time, update velocity in place
     updateVelocity() {
         this.velocity = elementwiseAdd(this.velocity, this.acceleration);
     }
+    // TODO: This allocates a new array each time, update in place
     updatePosition() {
         if (this.fixed) {
             return;
         }
         this.position = elementwiseAdd(this.position, this.velocity);
     }
+    // TODO: This allocates a new array each time, update velocity in place
     clear() {
         this.velocity = vectorScalarMultiply(this.velocity, this.damping);
         this.acceleration = this.acceleration.fill(0);
     }
 }
 class Spring {
+    // TODO: tension should be a single-value, Float32Array
     constructor(m1, m2, tension) {
         this.m1 = m1;
         this.m2 = m2;
@@ -81,6 +115,9 @@ class Spring {
     get masses() {
         return [this.m2, this.m2];
     }
+    // TODO: current and c2 should be symmetric, thereforce, I should be able to just
+    // invert the sign, I think?
+    // TODO: private instance variable scratchpad for current and c2 to avoid memory allocation
     updateForces() {
         // compute for m1
         const current = elementwiseDifference(this.m1.position, this.m2.position);
@@ -138,63 +175,32 @@ class SpringMesh {
             spring.updateForces();
         }
     }
-    updateVelocities() {
+    secondPass() {
         for (const mass of this.masses) {
             mass.updateVelocity();
-        }
-    }
-    updatePositions() {
-        for (const mass of this.masses) {
             mass.updatePosition();
-        }
-    }
-    clear() {
-        for (const mass of this.masses) {
             mass.clear();
         }
     }
     simulationStep(force) {
         if (force !== null) {
+            // compute any force applied from outside the system
             const nearest = this.findNearestMass(force);
-            console.log('NEAREST', nearest);
             nearest.applyForce(force.force);
         }
+        // TODO: update forces needs to happen at once, but everything after that only depends
+        // on the forces already applied, so could be collapsed into a single loop.  Right now,
+        // this loops over all masses four times in total.  We only need two passes.
         this.updateForces();
-        this.updateVelocities();
-        this.updatePositions();
-        this.clear();
-        const outputSample = this.masses.reduce((accum, mass) => {
-            return accum + el1Norm(mass.diff);
-        }, 0);
+        this.secondPass();
+        let outputSample = 0;
+        for (let i = 0; i < this.masses.length; i++) {
+            outputSample += el1Norm(this.masses[i].diff);
+        }
         return outputSample;
     }
 }
-/**
- * def build_string():
-    mass = 10
-    tension = 0.9
-    damping = 0.9998
-    n_masses = 100
-
-    x_pos = np.linspace(0, 1, num=n_masses)
-    positions = np.zeros((n_masses, 3))
-    positions[:, 0] = x_pos
-
-    masses = [
-        Mass(str(i), pos, mass, damping, fixed=i == 0 or i == n_masses - 1)
-        for i, pos in enumerate(positions)
-    ]
-
-    springs = [
-        Spring(masses[i], masses[i + 1], tension)
-        for i in range(n_masses - 1)
-    ]
-
-    mesh = SpringMesh(springs)
-    return mesh
-
- */
-const buildString = (mass = 10, tension = 0.5, damping = 0.9998, nMasses = 16) => {
+const buildString = (mass = 10, tension = 0.5, damping = 0.9998, nMasses = 32) => {
     // Create the masses
     let masses = [];
     for (let i = 0; i < nMasses; i++) {
@@ -238,19 +244,23 @@ class Physical extends AudioWorkletProcessor {
     process(inputs, outputs, parameters) {
         const left = outputs[0][0];
         const nSteps = left.length;
+        // TODO: remove this, temporarily, to see if it affects the number
+        // of nodes I can compute
         const f = this.eventQueue.shift();
-        const output = new Float32Array(nSteps);
         for (let i = 0; i < nSteps; i++) {
             if (i === 0 && f !== undefined) {
+                // TODO: don't allocate this at all, or make it a mutable instance
+                // variable
                 const frce = new Force(f.location, f.force);
-                output[i] = this.mesh.simulationStep(frce);
+                left[i] = this.mesh.simulationStep(frce);
             }
             else {
-                output[i] = this.mesh.simulationStep(null);
+                left[i] = this.mesh.simulationStep(null);
             }
             this.samplesComputed += 1;
         }
-        left.set(output);
+        // TODO: Is it possible to remove this from the process loop
+        // by making it a private async instance method?
         if (this.samplesComputed % 1024 === 0) {
             this.port.postMessage(this.mesh.toMeshInfo());
         }
