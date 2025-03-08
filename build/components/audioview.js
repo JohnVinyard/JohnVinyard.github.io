@@ -46,7 +46,7 @@ const fetchBinary = (url) => __awaiter(void 0, void 0, void 0, function* () {
     return resp.arrayBuffer();
 });
 const audioCache = {};
-const fetchAudio = (url, context) => __awaiter(void 0, void 0, void 0, function* () {
+export const fetchAudio = (url, context) => __awaiter(void 0, void 0, void 0, function* () {
     const cached = audioCache[url];
     if (cached !== undefined) {
         return cached;
@@ -279,6 +279,16 @@ export class AudioView extends HTMLElement {
             const duration = this.currentEndTimeSeconds !== null
                 ? this.currentEndTimeSeconds - startSeconds
                 : durationSeconds;
+            const playedEvent = new CustomEvent('audio-view-played', {
+                cancelable: true,
+                bubbles: true,
+                detail: {
+                    url,
+                    startSeconds,
+                    durationSeconds,
+                },
+            });
+            this.dispatchEvent(playedEvent);
             // start at second 1 and play for 5 seconds
             this.playingBuffer = yield playAudio(url, context, startSeconds, duration);
             this.isPlaying = true;
@@ -313,6 +323,12 @@ export class AudioView extends HTMLElement {
             fetchAudio(newValue, context).then((buf) => {
                 this.buffer = buf;
                 this.render();
+                const loadedEvent = new CustomEvent('audio-view-loaded', {
+                    bubbles: true,
+                    cancelable: true,
+                    detail: { url: this.src },
+                });
+                this.dispatchEvent(loadedEvent);
             });
             return;
         }

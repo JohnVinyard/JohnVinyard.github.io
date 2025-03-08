@@ -1,4 +1,4 @@
-import { playAudio, context } from './audioview';
+import { playAudio, context, fetchAudio } from './audioview';
 export class AudioTimeline extends HTMLElement {
     constructor() {
         super();
@@ -74,6 +74,16 @@ export class AudioTimeline extends HTMLElement {
             element.addEventListener('click', (evt) => {
                 evt.stopPropagation();
                 const event = events[index];
+                const playedEvent = new CustomEvent('audio-view-played', {
+                    cancelable: true,
+                    bubbles: true,
+                    detail: {
+                        url: event.audioUrl,
+                        startSeconds: event.offset,
+                        durationSeconds: event.eventDuration,
+                    },
+                });
+                this.dispatchEvent(playedEvent);
                 playAudio(event.audioUrl, context, event.offset, event.eventDuration);
             });
         });
@@ -87,6 +97,20 @@ export class AudioTimeline extends HTMLElement {
         }
         this[property] = newValue;
         if (AudioTimeline.observedAttributes.some((x) => x === property)) {
+            if (property === 'events') {
+                Promise.all(this.eventData.map(({ audioUrl }) => {
+                    return fetchAudio(audioUrl, context);
+                })).then((results) => {
+                    const event = new CustomEvent('audio-view-loaded', {
+                        bubbles: true,
+                        cancelable: true,
+                        detail: {
+                            timeline: true,
+                        },
+                    });
+                    this.dispatchEvent(event);
+                });
+            }
             this.render();
         }
     }
