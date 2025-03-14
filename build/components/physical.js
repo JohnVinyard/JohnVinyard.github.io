@@ -207,6 +207,22 @@ class SpringMesh {
         return Math.tanh(outputSample);
     }
 }
+const buildRandom = (mass = 20, tension = 0.1, damping = 0.9998, nMasses = 64) => {
+    const masses = [];
+    for (let i = 0; i < nMasses; i++) {
+        const position = new Float32Array([Math.random(), Math.random()]);
+        const m = new Mass(i.toString(), position, mass, damping, Math.random() > 0.9);
+        masses.push(m);
+    }
+    const springs = [];
+    for (let i = 0; i < nMasses * 2; i++) {
+        const m1 = masses[Math.floor(Math.random() * nMasses)];
+        const m2 = masses[Math.floor(Math.random() * nMasses)];
+        const spring = new Spring(m1, m2, tension);
+        springs.push(spring);
+    }
+    return new SpringMesh(springs);
+};
 const buildPlate = (mass = 20, tension = 0.1, damping = 0.9998, width = 6) => {
     const isBoundary = (index) => index === 0 || index === width - 1;
     const isOutOfBounds = (index) => index < 0 || index >= width;
@@ -312,8 +328,14 @@ class Physical extends AudioWorkletProcessor {
                 if (value === 'plate') {
                     this.mesh = buildPlate();
                 }
-                else {
+                else if (value === 'string') {
                     this.mesh = buildString();
+                }
+                else if (value === 'random') {
+                    this.mesh = buildRandom();
+                }
+                else {
+                    throw new Error('Unsupported model type');
                 }
             }
         };

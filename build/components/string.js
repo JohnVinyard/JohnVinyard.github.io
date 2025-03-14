@@ -20,6 +20,10 @@ export class PhysicalStringSimulation extends HTMLElement {
         }
         shadow.innerHTML = `
         <style>
+            body {
+                overflow: hidden;
+            }
+
             #click-area {
                 width: 100%;
                 height: 50vh;
@@ -67,6 +71,7 @@ export class PhysicalStringSimulation extends HTMLElement {
             <select name="model-type" id="model-type">
                 <option value="string" selected>String</option>
                 <option value="plate">Plate</option>
+                <option value="random">Random</option>
             </select>
         </div>
         <div class="control">
@@ -204,7 +209,7 @@ export class PhysicalStringSimulation extends HTMLElement {
                     value: newValue,
                 };
                 this.node.port.postMessage(message);
-                if (newValue === 'string') {
+                if (newValue === 'string' || newValue === 'random') {
                     massSlider.value = '10';
                     tensionSlider.value = '0.5';
                     dampingSlider.value = '0.9998';
@@ -227,7 +232,7 @@ export class PhysicalStringSimulation extends HTMLElement {
                 location: currentModel === 'plate'
                     ? new Float32Array([xPos, yPos])
                     : new Float32Array([0, xPos]),
-                force: currentModel === 'plate'
+                force: currentModel === 'plate' || currentModel === 'random'
                     ? new Float32Array([
                         Math.random() * 0.5,
                         Math.random() * 0.5,
