@@ -247,7 +247,7 @@ export class PhysicalStringSimulation extends HTMLElement {
                 }
             }
         });
-        const injectForce = (xPos, yPos) => {
+        const injectForce = (xPos, yPos, magnitude = 1) => {
             var _a;
             const currentModel = modelTypeSelect.value;
             const force = {
@@ -256,10 +256,13 @@ export class PhysicalStringSimulation extends HTMLElement {
                     : new Float32Array([0, yPos]),
                 force: currentModel === 'plate' || currentModel === 'random'
                     ? new Float32Array([
-                        Math.random() * 0.5,
-                        Math.random() * 0.5,
+                        Math.random() * 0.5 * magnitude,
+                        Math.random() * 0.5 * magnitude,
                     ])
-                    : new Float32Array([0.1 + Math.random() * 0.5, 0]),
+                    : new Float32Array([
+                        0.1 + Math.random() * 0.5 * magnitude,
+                        0 * magnitude,
+                    ]),
                 type: 'force-injection',
             };
             if ((_a = this.node) === null || _a === void 0 ? void 0 : _a.port) {
@@ -279,14 +282,18 @@ export class PhysicalStringSimulation extends HTMLElement {
                     if (!this.isUsingAccelerometer) {
                         return;
                     }
-                    const threshold = 10;
-                    const thresholdExceeded = Math.abs(event.acceleration.x) > threshold ||
-                        Math.abs(event.acceleration.y) > threshold ||
-                        Math.abs(event.acceleration.z) > threshold;
+                    const threshold = 4;
+                    const xAcc = Math.abs(event.acceleration.x);
+                    const yAcc = Math.abs(event.acceleration.y);
+                    const zAcc = Math.abs(event.acceleration.z);
+                    const thresholdExceeded = xAcc > threshold ||
+                        yAcc > threshold ||
+                        zAcc > threshold;
                     if (thresholdExceeded &&
                         this.isUsingAccelerometer &&
                         this.mostRecentlyStruck) {
-                        injectForce(this.mostRecentlyStruck[0], this.mostRecentlyStruck[1]);
+                        const magnitude = Math.max(xAcc, yAcc, zAcc) / 4;
+                        injectForce(this.mostRecentlyStruck[0], this.mostRecentlyStruck[1], magnitude);
                     }
                 }, true);
             }
