@@ -10,15 +10,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 const pointsEqual = (p1, p2) => {
     return p1[0] == p2[0] && p1[1] == p2[1];
 };
-// type CommunicationEvent =
-//     | ForceInjectionEvent
-//     | AdjustParameterEvent
-//     | ChangeModelTypeEvent;
 export class PhysicalStringSimulation extends HTMLElement {
     constructor() {
         super();
         this.initialized = false;
         this.node = null;
+        this.isUsingAccelerometer = false;
     }
     render() {
         let shadow = this.shadowRoot;
@@ -117,6 +114,14 @@ export class PhysicalStringSimulation extends HTMLElement {
                 step="0.0001"
             />
         </div>
+        <div class="control">
+            <label for="use-accelerometer">Use Accelerometer</label>
+            <input 
+                type="checkbox"
+                id="use-accelerometer" 
+                name="use-accelerometer" 
+            />
+        </div>
         `;
         const clickArea = shadow.getElementById('click-area');
         const initialize = () => __awaiter(this, void 0, void 0, function* () {
@@ -129,9 +134,7 @@ export class PhysicalStringSimulation extends HTMLElement {
                 latencyHint: 'interactive',
             });
             try {
-                yield context.audioWorklet.addModule(
-                // '/build/components/physical.js'
-                'build/components/physical.js');
+                yield context.audioWorklet.addModule('build/components/physical.js');
             }
             catch (err) {
                 console.log(`Failed to add module due to ${err}`);
@@ -142,6 +145,7 @@ export class PhysicalStringSimulation extends HTMLElement {
             physicalStringSim.connect(context.destination);
             this.node.port.onmessage = (event) => {
                 const { masses, springs, struck } = event.data;
+                this.mostRecentlyStruck = struck;
                 const elements = masses.map((m) => `<circle 
                             cx="${m.position[1]}" 
                             cy="${m.position[0]}" 
@@ -243,12 +247,8 @@ export class PhysicalStringSimulation extends HTMLElement {
                 }
             }
         });
-        clickArea.addEventListener('click', (event) => __awaiter(this, void 0, void 0, function* () {
+        const injectForce = (xPos, yPos) => {
             var _a;
-            yield initialize();
-            const rect = clickArea.getBoundingClientRect();
-            const yPos = (event.pageX - rect.left) / rect.width;
-            const xPos = (event.pageY - rect.top) / rect.height;
             const currentModel = modelTypeSelect.value;
             const force = {
                 location: currentModel === 'plate' || currentModel === 'random'
@@ -265,7 +265,43 @@ export class PhysicalStringSimulation extends HTMLElement {
             if ((_a = this.node) === null || _a === void 0 ? void 0 : _a.port) {
                 this.node.port.postMessage(force);
             }
+        };
+        clickArea.addEventListener('click', (event) => __awaiter(this, void 0, void 0, function* () {
+            yield initialize();
+            const rect = clickArea.getBoundingClientRect();
+            const yPos = (event.pageX - rect.left) / rect.width;
+            const xPos = (event.pageY - rect.top) / rect.height;
+            injectForce(xPos, yPos);
         }));
+        const useAcc = () => {
+            if (DeviceMotionEvent) {
+                window.addEventListener('devicemotion', (event) => {
+                    if (!this.isUsingAccelerometer) {
+                        return;
+                    }
+                    const threshold = 10;
+                    const thresholdExceeded = Math.abs(event.acceleration.x) > threshold ||
+                        Math.abs(event.acceleration.y) > threshold ||
+                        Math.abs(event.acceleration.z) > threshold;
+                    if (thresholdExceeded &&
+                        this.isUsingAccelerometer &&
+                        this.mostRecentlyStruck) {
+                        injectForce(this.mostRecentlyStruck[0], this.mostRecentlyStruck[1]);
+                    }
+                }, true);
+            }
+            else {
+                console.log('Device motion not supported');
+                alert('device motion not supported');
+            }
+        };
+        const useAccelerometerCheckbox = shadow.getElementById('use-accelerometer');
+        useAccelerometerCheckbox.addEventListener('change', (event) => {
+            // @ts-ignore
+            this.isUsingAccelerometer = event.target.checked;
+            console.log('USING', this.isUsingAccelerometer);
+        });
+        useAcc();
     }
     connectedCallback() {
         this.render();

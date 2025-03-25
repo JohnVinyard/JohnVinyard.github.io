@@ -6,6 +6,10 @@ export class AudioTimeline extends HTMLElement {
         this.duration = '';
         this.width = '';
         this.height = '';
+        this.play = 'true';
+    }
+    get shouldPlayOnClick() {
+        return this.play.toLowerCase() === 'true';
     }
     get eventData() {
         const parsed = JSON.parse(this.events);
@@ -25,7 +29,8 @@ export class AudioTimeline extends HTMLElement {
         // establish bounds for x and y axes
         const events = this.eventData;
         const eventComponent = (event) => {
-            const step = event.eventDuration / event.eventEnvelope.length;
+            var _a;
+            const step = ((_a = event.eventDuration) !== null && _a !== void 0 ? _a : 0.5) / event.eventEnvelope.length;
             const maxValue = Math.max(...event.eventEnvelope);
             const elementHeight = 0.05;
             const barHeight = (x) => {
@@ -81,15 +86,19 @@ export class AudioTimeline extends HTMLElement {
                         url: event.audioUrl,
                         startSeconds: event.offset,
                         durationSeconds: event.eventDuration,
+                        eventTime: evt.timeStamp / 1000,
+                        patternStartTime: event.eventTime,
                     },
                 });
                 this.dispatchEvent(playedEvent);
-                playAudio(event.audioUrl, context, event.offset, event.eventDuration);
+                if (this.shouldPlayOnClick) {
+                    playAudio(event.audioUrl, context, event.offset, event.eventDuration);
+                }
             });
         });
     }
     static get observedAttributes() {
-        return ['events', 'duration', 'width', 'height'];
+        return ['events', 'duration', 'width', 'height', 'play'];
     }
     attributeChangedCallback(property, oldValue, newValue) {
         if (newValue === oldValue) {
