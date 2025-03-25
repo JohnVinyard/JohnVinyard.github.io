@@ -16,7 +16,7 @@ const zerosLike = (x) => {
     return new Float32Array(x.length).fill(0);
 };
 const randomLike = (x, magnitude = 1) => {
-    return zerosLike(x).map((x) => Math.random() * magnitude);
+    return zerosLike(x).map((x) => Math.random() * magnitude - magnitude / 2);
 };
 // TODO: re-implement as for-loop
 const vectorSum = (vec) => {
@@ -364,15 +364,11 @@ class Physical extends AudioWorkletProcessor {
         // TODO: remove this, temporarily, to see if it affects the number
         // of nodes I can compute
         const f = this.eventQueue.shift();
-        const scratchpad = f !== undefined ? zerosLike(f.force) : null;
         for (let i = 0; i < nSteps; i++) {
-            let magnitude = 1;
-            const decay = 0.9998;
-            if ( /*i === 0 &&  */f !== undefined) {
-                magnitude *= decay;
+            if (i === 0 && f !== undefined) {
                 // TODO: don't allocate this at all, or make it a mutable instance
                 // variable
-                const frce = new Force(f.location, elementwiseAdd(f.force, randomLike(f.force, magnitude / (nSteps * 2)), scratchpad));
+                const frce = new Force(f.location, f.force);
                 left[i] = this.mesh.simulationStep(frce);
             }
             else {
