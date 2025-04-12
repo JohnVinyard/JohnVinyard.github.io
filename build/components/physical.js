@@ -153,6 +153,12 @@ class SpringMesh {
             return accum;
         }, {}));
     }
+    static compose(meshes) {
+        const allSprings = meshes.reduce((accum, current) => {
+            return [...accum, ...current.springs];
+        }, []);
+        return new SpringMesh(allSprings);
+    }
     toMeshInfo() {
         var _a, _b;
         return {
@@ -302,11 +308,11 @@ const buildPlate = (mass = 20, tension = 0.1, damping = 0.9998, width = 8) => {
     const mesh = new SpringMesh(springs);
     return mesh;
 };
-const buildString = (mass = 10, tension = 0.5, damping = 0.9998, nMasses = 64) => {
+const buildString = (mass = 10, tension = 0.5, damping = 0.9998, nMasses = 64, xPos = 0.5, lengthCoefficient = 1, idPrefix = '') => {
     // Create the masses
     let masses = [];
     for (let i = 0; i < nMasses; i++) {
-        const newMass = new Mass(i.toString(), new Float32Array([0.5, i / nMasses]), mass, damping, i === 0 || i === nMasses - 1);
+        const newMass = new Mass(`${idPrefix}${i.toString()}`, new Float32Array([xPos, (i / nMasses) * lengthCoefficient]), mass, damping, i === 0 || i === nMasses - 1);
         masses.push(newMass);
     }
     let springs = [];
@@ -316,6 +322,18 @@ const buildString = (mass = 10, tension = 0.5, damping = 0.9998, nMasses = 64) =
     }
     const mesh = new SpringMesh(springs);
     return mesh;
+};
+const buildMultiString = (mass = 10, tension = 0.5, damping = 0.9998, massesPerString = 8, nStrings = 8) => {
+    const meshes = [];
+    for (let i = 0; i < nStrings; i++) {
+        const xPos = i / nStrings;
+        const lengthCoeff = (i + 1) / nStrings;
+        const sm = buildString(mass, tension, damping, 3 + i, xPos, lengthCoeff, `string${i}`);
+        meshes.push(sm);
+    }
+    const result = SpringMesh.compose(meshes);
+    console.log(result.masses);
+    return result;
 };
 class Physical extends AudioWorkletProcessor {
     constructor(options) {
@@ -351,6 +369,9 @@ class Physical extends AudioWorkletProcessor {
                 }
                 else if (value === 'random') {
                     this.mesh = buildRandom();
+                }
+                else if (value === 'multi-string') {
+                    this.mesh = buildMultiString();
                 }
                 else {
                     throw new Error('Unsupported model type');
