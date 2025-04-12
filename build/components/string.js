@@ -64,7 +64,18 @@ export class PhysicalStringSimulation extends HTMLElement {
                 font-size: 1.2em;
                 padding: 5px;
             }
+            
+            #position {
+                position: absolute;
+                top: 2px;
+                right: 2px;
+                height: 20px;
+                width: 100px;
+                background-color: #eee;
+            }
         </style>
+        <div id="position">
+        </div>
         <div id="click-area">
             <div id="intro">
                 <h5>Click to Start</h5>
@@ -124,6 +135,7 @@ export class PhysicalStringSimulation extends HTMLElement {
             />
         </div>
         `;
+        const position = shadow.getElementById('position');
         const clickArea = shadow.getElementById('click-area');
         const initialize = () => __awaiter(this, void 0, void 0, function* () {
             if (this.initialized) {
@@ -284,6 +296,11 @@ export class PhysicalStringSimulation extends HTMLElement {
             const xPos = (event.pageY - rect.top) / rect.height;
             injectForce(xPos, yPos);
         }));
+        const pos = new Float32Array([0, 0, 0]);
+        position.innerHTML = `[${pos[0].toFixed(1)},
+            ${pos[1].toFixed(1)},
+            ${pos[2].toFixed(1)}
+        ]`;
         const useAcc = () => {
             if (DeviceMotionEvent) {
                 window.addEventListener('devicemotion', (event) => {
@@ -291,6 +308,12 @@ export class PhysicalStringSimulation extends HTMLElement {
                         return;
                     }
                     const threshold = 4;
+                    pos[0] += event.acceleration.x;
+                    pos[1] += event.acceleration.y;
+                    pos[2] += event.acceleration.z;
+                    position.innerHTML = `[${(pos[0].toFixed(1),
+                        pos[1].toFixed(1),
+                        pos[2].toFixed(1))}]`;
                     const xAcc = Math.abs(event.acceleration.x);
                     const yAcc = Math.abs(event.acceleration.y);
                     const zAcc = Math.abs(event.acceleration.z);
