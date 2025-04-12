@@ -69,8 +69,9 @@ export class PhysicalStringSimulation extends HTMLElement {
                 position: absolute;
                 top: 2px;
                 right: 2px;
-                height: 20px;
-                width: 100px;
+                height: 40px;
+                width: 200px;
+                font-size: 2em;
                 background-color: #eee;
             }
         </style>
@@ -297,10 +298,13 @@ export class PhysicalStringSimulation extends HTMLElement {
             injectForce(xPos, yPos);
         }));
         const pos = new Float32Array([0, 0, 0]);
-        position.innerHTML = `[${pos[0].toFixed(1)},
-            ${pos[1].toFixed(1)},
-            ${pos[2].toFixed(1)}
-        ]`;
+        const setPositionDisplay = (p) => {
+            position.innerHTML = `[${p[0].toFixed(1)},
+                ${p[1].toFixed(1)},
+                ${p[2].toFixed(1)}
+            ]`;
+        };
+        setPositionDisplay(pos);
         const useAcc = () => {
             if (DeviceMotionEvent) {
                 window.addEventListener('devicemotion', (event) => {
@@ -311,9 +315,7 @@ export class PhysicalStringSimulation extends HTMLElement {
                     pos[0] += event.acceleration.x;
                     pos[1] += event.acceleration.y;
                     pos[2] += event.acceleration.z;
-                    position.innerHTML = `[${(pos[0].toFixed(1),
-                        pos[1].toFixed(1),
-                        pos[2].toFixed(1))}]`;
+                    setPositionDisplay(pos);
                     const xAcc = Math.abs(event.acceleration.x);
                     const yAcc = Math.abs(event.acceleration.y);
                     const zAcc = Math.abs(event.acceleration.z);
