@@ -1,83 +1,124 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link
-            href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
-            rel="stylesheet"
-        />
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
+      rel="stylesheet"
+    />
 
-        <title>Web Component Demo</title>
-        <script src="build/components/bundle.js"></script>
+    <title>Web Component Demo</title>
+    <script src="build/components/bundle.js"></script>
 
-        <style>
-            body {
-                font-family: 'Roboto', sans-serif;
-                background-color: #222;
-                color: #eee;
-                line-height: 1.5em;
-                font-size: 1.2em;
-            }
+    <style>
+      body {
+        font-family: "Roboto", sans-serif;
+        background-color: #222;
+        color: #eee;
+        line-height: 1.5em;
+        font-size: 1.2em;
+      }
 
-            h1 {
-                font-size: 2em;
-            }
+      h1 {
+        font-size: 2em;
+      }
 
-            hr {
-                display: block;
-            }
+      hr {
+        display: block;
+      }
 
-            .container {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                align-content: center;
-                margin-right: 25vw;
-                margin-left: 25vw;
-            }
-        </style>
-    </head>
+      .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        align-content: center;
+        margin-right: 25vw;
+        margin-left: 25vw;
+      }
+    </style>
+    <template id="demo-template">
+      <div>
+        <instrument-element
+          url="https://state-space-model-demo-3.s3.amazonaws.com/rnnweights1_5362df743be8105f6de3e0f664c899fca81c5f82"
+        >
+        </instrument-element>
+      </div>
+    </template>
 
-    <body>
-        <section class="container">
-            <section class="item">
-                <h1>Recurrent Neural Network Instrument</h1>
-            </section>
-            <section class="item">
-                <h2>About</h2>
-                <p>
-                    First, we overfit a single-layer RNN, factoring a short
-                    segment of classical music into two components:
-                </p>
-                <ul>
-                    <li>a sparse "control-signal"</li>
-                    <li>
-                        a recurrent network that models the resonances of the
-                        instrument(s) being played.
-                    </li>
-                </ul>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const tryItLink = document.getElementById("try-it-link");
 
-                <p>
-                    Then we map MediaPipe
-                    <a
-                        href="https://mediapipe.readthedocs.io/en/latest/solutions/hands.html#hand-landmark-model"
-                        >hand-tracking landmarks</a
-                    >
-                    into the RNN's input space so that the learned network can
-                    be "played" via hand-movement.
-                </p>
-                <p>
-                    Training details can be explored in more detail
-                    <a href="https://blog.cochlea.xyz/rnn.html">here</a>
-                </p>
-            </section>
-            <instrument-element
-                url="https://state-space-model-demo-3.s3.amazonaws.com/rnnweights1_5362df743be8105f6de3e0f664c899fca81c5f82"
-            >
-            </instrument-element>
-        </section>
-    </body>
+        tryItLink.addEventListener("click", () => {
+          const tmp = document.getElementById("demo-template");
+          const container = document.getElementById("demo-container");
+          const clone = document.importNode(tmp.content, true);
+          container.appendChild(clone);
+
+          const video = document.querySelector("video");
+          video.remove();
+
+          const tryItLink = document.getElementById("try-it-link");
+          tryItLink.style.display = "none";
+
+          container.style.height = "600px";
+        });
+      });
+    </script>
+  </head>
+
+  <body>
+    <section class="container">
+      <section class="item">
+        <h1>Recurrent Neural Network Instrument</h1>
+      </section>
+      <section class="item" id="demo-placeholder">
+        <video
+          preload="metadata"
+          src="https://state-space-model-demo-3.s3.us-east-1.amazonaws.com/rnn-instr-demo.mp4#t=14.5"
+          height="500"
+          width="500"
+          controls
+        ></video>
+      </section>
+      <section class="item">
+        <a id="try-it-link" href="#demo-anchor"
+          ><h3>Try It (requires webcam permissions)</h3></a
+        >
+      </section>
+      <section class="item" id="demo-container">
+        <a id="demo-anchor"></a>
+      </section>
+      <section class="item">
+        <h2>About</h2>
+        <p>
+          First, we overfit a single-layer RNN, factoring a short segment of
+          classical music into two components:
+        </p>
+        <ul>
+          <li>a sparse "control-signal"</li>
+          <li>
+            a recurrent network that models the resonances of the instrument(s)
+            being played.
+          </li>
+        </ul>
+        <p>
+          Then we map MediaPipe
+          <a
+            href="https://mediapipe.readthedocs.io/en/latest/solutions/hands.html#hand-landmark-model"
+            >hand-tracking landmarks</a
+          >
+          into the RNN's input space so that the learned network can be "played"
+          via hand-movement.
+        </p>
+        <p>
+          Training details can be explored further
+          <a href="https://blog.cochlea.xyz/rnn.html">here</a>
+        </p>
+      </section>
+    </section>
+  </body>
 </html>
