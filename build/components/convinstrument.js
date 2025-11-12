@@ -58,13 +58,14 @@ const relu = (vector) => {
 const fetchWeights = (url) => __awaiter(void 0, void 0, void 0, function* () {
     const resp = yield fetch(url);
     const data = yield resp.json();
-    const { gains, router, resonances, hand, attacks } = data;
+    const { gains, router, resonances, hand, attacks, mix } = data;
     return {
         gains: toContainer(gains),
         router: toContainer(router),
         resonances: toContainer(resonances),
         hand: toContainer(hand),
         attacks: toContainer(attacks),
+        mix: toContainer(mix),
     };
 });
 const l2Norm = (vec) => {
@@ -103,23 +104,17 @@ const createHandLandmarker = () => __awaiter(void 0, void 0, void 0, function* (
     });
     return handLandmarker;
 });
-const enableCam = (shadowRoot
-// video: HTMLVideoElement,
-// predictWebcam: () => void
-) => __awaiter(void 0, void 0, void 0, function* () {
+const enableCam = (shadowRoot) => __awaiter(void 0, void 0, void 0, function* () {
     const stream = yield navigator.mediaDevices.getUserMedia({
         video: true,
         audio: false,
     });
     const video = shadowRoot.querySelector('video');
     video.srcObject = stream;
-    // video.addEventListener('loadeddata', () => {
-    //     predictWebcam();
-    // });
 });
 let lastVideoTime = 0;
 let lastPosition = new Float32Array(21 * 3);
-const PROJECTION_MATRIX = randomProjectionMatrix([16, 21 * 3], -0.5, 0.5, 0.5);
+const DEFORMATION_PROJECTION_MATRIX = randomProjectionMatrix([2, 21 * 3], -1, 1);
 const colorScheme = [
     // Coral / Pink Tones
     'rgb(255, 99, 130)',
@@ -150,11 +145,12 @@ const colorScheme = [
     // Accent
     'rgb(255, 255, 255)', // White (highlight or background contrast)
 ];
-const predictWebcamLoop = (shadowRoot, handLandmarker, canvas, ctx, deltaThreshold, unit, 
-// projectionMatrix: Float32Array[],
-inputTrigger) => {
+const predictWebcamLoop = (shadowRoot, handLandmarker, canvas, ctx, deltaThreshold, deltaMax, unit, inputTrigger, defUpdate) => {
     const predictWebcam = () => {
         const video = shadowRoot.querySelector('video');
+        if (!video) {
+            return 0;
+        }
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -169,16 +165,21 @@ inputTrigger) => {
             // Process and draw landmarks from 'detections'
             if (detections.landmarks) {
                 const newPosition = new Float32Array(21 * 3);
+                let zPos = 0;
                 let vecPos = 0;
                 for (let i = 0; i < detections.landmarks.length; i++) {
                     const landmarks = detections.landmarks[i];
-                    const wl = detections.worldLandmarks[i];
+                    const wlm = detections.worldLandmarks[i];
                     for (let j = 0; j < landmarks.length; j++) {
                         const landmark = landmarks[j];
-                        const wll = wl[j];
+                        const wl = wlm[j];
+                        if (j === 8) {
+                            // Z position of index finger
+                            zPos = landmark.z;
+                        }
                         // TODO: This determines whether we're using
                         // screen-space or world-space
-                        const mappingVector = landmark;
+                        const mappingVector = wl;
                         // TODO: This is assuming values in [0, 1]
                         newPosition[vecPos] = mappingVector.x * 2 - 1;
                         newPosition[vecPos + 1] = mappingVector.y * 2 - 1;
@@ -194,26 +195,35 @@ inputTrigger) => {
                 }
                 const delta = elementwiseDifference(newPosition, lastPosition, output);
                 const deltaNorm = l2Norm(delta);
-                // TODO: threshold should be based on movement of individual points
-                // rather than the norm of the delta
-                if (deltaNorm > deltaThreshold) {
+                // Ensure that an event is triggered and that it won't
+                // be overly-loud
+                if (deltaNorm > deltaThreshold && deltaNorm < deltaMax) {
+                    // console.log('Z', zPos);
+                    // trigger an event if the delta is large enough
                     const matrix = unit.hand;
                     if (matrix) {
                         // project the position of all points to the rnn input
                         // dimensions
                         const rnnInput = dotProduct(delta, matrix);
-                        // console.log(delta.length, rnnInput.length, matrix.length, matrix[0].length);
-                        // console.log(rnnInput);
-                        const scaled = vectorScalarMultiply(rnnInput, 10);
+                        const scaled = vectorScalarMultiply(rnnInput, 30);
                         const sp = relu(scaled);
                         inputTrigger(sp);
                     }
+                }
+                if (unit.deformation) {
+                    // always trigger a deformation
+                    // const defInput = dotProduct(delta, unit.deformation);
+                    // defUpdate(defInput);
+                    defUpdate(new Float32Array([
+                        Math.abs(0.5 - Math.abs(zPos)) * 10,
+                        Math.abs(0 - Math.abs(zPos)) * 10,
+                    ]));
                 }
                 lastPosition = newPosition;
             }
             lastVideoTime = video.currentTime;
         }
-        requestAnimationFrame(predictWebcam);
+        return requestAnimationFrame(predictWebcam);
     };
     return predictWebcam;
 };
@@ -235,8 +245,8 @@ class Mixer {
             gain.connect(node, undefined, channel);
         }
     }
-    acceptConnection(node, channel) {
-        node.connect(this.nodes[channel]);
+    acceptConnection(node, mixerChannel, outgoingNodeChannel = undefined) {
+        node.connect(this.nodes[mixerChannel], outgoingNodeChannel);
     }
     randomGains() {
         const vec = new Float32Array(this.nodes.length);
@@ -251,10 +261,14 @@ class Mixer {
     adjust(gainValues) {
         const vec = new Float32Array(gainValues.length);
         const sm = softmax(gainValues, vec);
-        console.log(`Setting gains ${sm}`);
         for (let i = 0; i < this.nodes.length; i++) {
-            const node = this.nodes[i];
-            node.gain.value = sm[i];
+            try {
+                const node = this.nodes[i];
+                node.gain.value = sm[i];
+            }
+            catch (err) {
+                console.log(`Failed to set gain with ${sm[i]}`);
+            }
         }
     }
     oneHot(index) {
@@ -280,55 +294,41 @@ const truncate = (arr, threshold, count) => {
             run = 0;
         }
         if (run >= count) {
-            // console.log(`Was ${arr.length} now ${i}, ${i / arr.length}`);
             return arr.slice(0, i);
         }
     }
     return arr;
 };
-// const computeStats = (arr: Float32Array): void => {
-//     let mx = 0;
-//     let mn = Number.MAX_VALUE;
-//     let mean = 0;
-//     let sparse = 0;
-//     for (let i = 0; i < arr.length; i++) {
-//         const value = Math.abs(arr[i]);
-//         if (value > mx) {
-//             mx = value;
-//         }
-//         if (value < mn) {
-//             mn = value;
-//         }
-//         mean += value / arr.length;
-//         if (value < 1e-6) {
-//             sparse += 1;
-//         }
-//     }
-//     console.log(mx, mn, mean, sparse / arr.length);
-//     // console.log(`stats: ${Math.max(...arr)}, ${Math.min(...arr)}`);
-//     // return count / arr.length;
-// };
+const CLOSE_COMMAND = { command: 'close' };
 class Instrument {
     constructor(context, params, expressivity) {
         this.context = context;
         this.params = params;
         this.expressivity = expressivity;
         this.controlPlane = null;
+        this.tanhGain = null;
         this.gains = params.gains.array;
         this.router = twoDimArray(params.router.array, params.router.shape);
         this.resonances = twoDimArray(params.resonances.array, params.resonances.shape);
         this.hand = twoDimArray(params.hand.array, params.hand.shape);
         this.attackContainer = params.attacks;
         this.attacks = twoDimArray(params.attacks.array, params.attacks.shape);
-        for (const attack of this.attacks) {
-            console.log(attack);
-        }
+        this.mix = twoDimArray(params.mix.array, params.mix.shape);
+    }
+    close() {
+        return __awaiter(this, void 0, void 0, function* () {
+            this.tanhGain.port.postMessage(CLOSE_COMMAND);
+            this.controlPlane.port.postMessage(CLOSE_COMMAND);
+            this.tanhGain.disconnect();
+            this.controlPlane.disconnect();
+            this.context.close();
+        });
     }
     static fromURL(url, context, expressivity) {
         return __awaiter(this, void 0, void 0, function* () {
             const params = yield fetchWeights(url);
             const instr = new Instrument(context, params, expressivity);
-            yield instr.buildNetwork();
+            yield instr.buildAudioNetwork();
             return instr;
         });
     }
@@ -344,21 +344,26 @@ class Instrument {
     get totalResonances() {
         return this.resonances.length;
     }
-    buildNetwork() {
+    buildAudioNetwork() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                yield this.context.audioWorklet.addModule('https://cdn.jsdelivr.net/gh/JohnVinyard/web-components@0.0.87/build/components/tanh.js');
+                yield this.context.audioWorklet.addModule('https://cdn.jsdelivr.net/gh/JohnVinyard/web-components@0.0.93/build/components/tanh.js');
             }
             catch (err) {
                 console.log(`Failed to add module due to ${err}`);
                 alert(`Failed to load module due to ${err}`);
             }
             try {
-                yield this.context.audioWorklet.addModule('https://cdn.jsdelivr.net/gh/JohnVinyard/web-components@0.0.87/build/components/attackenvelopes.js');
+                yield this.context.audioWorklet.addModule('https://cdn.jsdelivr.net/gh/JohnVinyard/web-components@0.0.93/build/components/attackenvelopes.js');
             }
             catch (err) {
                 console.log(`Failed to add module due to ${err}`);
                 alert(`Failed to load module due to ${err}`);
+            }
+            const OUTPUT_NOISE_CHANNEL = 0;
+            const OUTPUT_RESONANCE_CHANNEL = 1;
+            if (this.controlPlaneDim !== this.nResonances) {
+                throw new Error(`Currently cannot construct audio network when control plane dim and n resonances are not equal, they were ${this.controlPlaneDim} and ${this.nResonances}, respectively`);
             }
             const attackEnvelopes = new AudioWorkletNode(this.context, 'attack-envelopes', {
                 processorOptions: {
@@ -371,10 +376,17 @@ class Instrument {
                 channelInterpretation: 'discrete',
             });
             this.controlPlane = attackEnvelopes;
-            // debugging
-            // for (let i = 0; i < this.controlPlaneDim; i++) {
-            //     attackEnvelopes.connect(this.context.destination, i);
-            // }
+            // There is a noise/resonance mix for each channel
+            const noiseResonanceMixers = [];
+            for (let i = 0; i < this.nResonances; i++) {
+                const m = Mixer.mixerWithNChannels(this.context, 2);
+                // Set the mix for this resonance channel;  it won't change over time
+                m.adjust(this.mix[i]);
+                noiseResonanceMixers.push(m);
+                m.connectTo(this.context.destination);
+                // connect attack directly to the noise side of the output mixer
+                m.acceptConnection(attackEnvelopes, OUTPUT_NOISE_CHANNEL, i);
+            }
             const tanhGain = new AudioWorkletNode(this.context, 'tanh-gain', {
                 processorOptions: {
                     gains: this.gains,
@@ -386,58 +398,46 @@ class Instrument {
                 channelCountMode: 'explicit',
                 channelInterpretation: 'discrete',
             });
+            // for (let i = 0; i < this.nResonances; i++) {
+            //     tanhGain.connect(this.context.destination, i);
+            // }
             // Build the last leg;  resonances, each group of which is connected
             // to an outgoing mixer
             const resonances = [];
-            const mixers = [];
+            const expressivityMixers = [];
             for (let i = 0; i < this.totalResonances; i += this.expressivity) {
                 const m = Mixer.mixerWithNChannels(this.context, this.expressivity);
                 m.oneHot(0);
-                mixers.push(m);
+                expressivityMixers.push(m);
+                const currentChannel = i / this.expressivity;
                 for (let j = 0; j < this.expressivity; j++) {
                     const c = this.context.createConvolver();
+                    // The default here is true, but we've already scaled
+                    // the resonances the way we'd like them
+                    c.normalize = false;
                     const buffer = this.context.createBuffer(1, this.nSamples, 22050);
                     const res = this.resonances[i + j];
-                    const truncated = truncate(res, 1e-5, 32);
+                    const truncated = truncate(res, 1e-12, 32);
                     buffer.getChannelData(0).set(truncated);
                     c.buffer = buffer;
+                    attackEnvelopes.connect(c, currentChannel);
                     resonances.push(c);
                     m.acceptConnection(c, j);
                 }
-                const currentChannel = i / this.expressivity;
-                // m.connectTo(this.context.destination);
                 m.connectTo(tanhGain, currentChannel);
-                tanhGain.connect(this.context.destination, currentChannel);
+                // Connect the gain channel to the resonance side of the output mixer
+                noiseResonanceMixers[currentChannel].acceptConnection(tanhGain, OUTPUT_RESONANCE_CHANNEL, currentChannel);
             }
-            this.mixers = mixers;
-            // const gains: GainNode[] = [];
-            for (let i = 0; i < this.controlPlaneDim; i++) {
-                // const g = this.context.createGain();
-                // g.gain.value = 0.0001;
-                // whiteNoise.connect(g);
-                const r = this.router[i];
-                for (let j = 0; j < this.nResonances; j++) {
-                    const z = this.context.createGain();
-                    z.gain.value = r[j];
-                    attackEnvelopes.connect(z, i);
-                    // g.connect(z);
-                    const startIndex = j * this.expressivity;
-                    const stopIndex = startIndex + this.expressivity;
-                    for (let k = startIndex; k < stopIndex; k += 1) {
-                        z.connect(resonances[k]);
-                    }
-                }
-            }
+            this.expressivityMixers = expressivityMixers;
         });
     }
     trigger(input) {
         this.controlPlane.port.postMessage(input);
     }
-    deform(mixes) {
-        for (let i = 0; i < this.totalResonances; i += this.expressivity) {
-            const slice = mixes.slice(i, i + this.expressivity);
-            const mixerIndex = i / this.expressivity;
-            this.mixers[mixerIndex].adjust(slice);
+    deform(mix) {
+        // The resonance mixes are tied across all channels/routes
+        for (let i = 0; i < this.nResonances; i += 1) {
+            this.expressivityMixers[i].adjust(mix);
         }
     }
     randomDeformation() {
@@ -495,13 +495,30 @@ export class ConvInstrument extends HTMLElement {
         this.context = null;
         this.videoInitialized = false;
         this.instrumentInitialized = false;
+        this.animationLoopHandle = null;
         this.url = null;
         this.hand = null;
+        this.open = 'false';
+    }
+    get isOpen() {
+        return this.open === 'true';
     }
     render() {
         let shadow = this.shadowRoot;
         if (!shadow) {
             shadow = this.attachShadow({ mode: 'open' });
+        }
+        if (!this.isOpen) {
+            shadow.innerHTML = `
+                <button id="start">Open Hand-Controlled Instrument</button>
+            `;
+            const startButton = shadow.getElementById('start');
+            startButton.addEventListener('click', () => {
+                this.setAttribute('open', 'true');
+            });
+            this.videoInitialized = false;
+            this.instrumentInitialized = false;
+            return;
         }
         const renderVector = (currentControlPlaneVector) => {
             const currentControlPlaneMin = Math.min(...currentControlPlaneVector);
@@ -534,6 +551,11 @@ export class ConvInstrument extends HTMLElement {
         shadow.innerHTML = `
             <style>
 
+                dialog {
+                    height: 90vh;
+                    padding: 20px;
+                }
+
                 #video-container {
                     position: relative;
                 }
@@ -558,48 +580,52 @@ export class ConvInstrument extends HTMLElement {
                     left: 20px;
                 }
 
-                #deform {
+                #close {
                     position: absolute;
                     top: 500px;
-                    left: 100px;
+                    left: 200px;
+                }
+
+                ::backdrop {
+                    background-color: #333;
+                    opacity: 0.75;
                 }
 
                 
         </style>
-        <div class="instrument-container">
-                <div class="current-event-vector" title="Most recent control-plane input vector">
-                    ${renderVector(zeros(64))}
-                </div>
-                <div id="video-container">
-                    <video autoplay playsinline id="video-element"></video>
-                    <canvas id="canvas-element" width="800" height="800"></canvas>
-                </div>
-                
-        </div>
-        <button id="start">Start Audio</button>
-        <button id="deform">Deform</button>
+        <dialog>
+            <div class="instrument-container">
+                    <div class="current-event-vector" title="Most recent control-plane input vector">
+                        ${renderVector(zeros(64))}
+                    </div>
+                    <div id="video-container">
+                        <video autoplay playsinline id="video-element"></video>
+                        <canvas id="canvas-element" width="800" height="800"></canvas>
+                    </div>
+                    
+            </div>
+            <button id="start">Start Audio</button>
+            <button id="close">Close</button>
+        </dialog>
 `;
+        const dialog = shadow.querySelector('dialog');
+        dialog.showModal();
         const startButton = shadow.getElementById('start');
         startButton.addEventListener('click', () => {
             this.initialize();
         });
-        const deformButton = shadow.getElementById('deform');
-        deformButton.addEventListener('click', () => {
-            if (this.instrument) {
-                this.instrument.randomDeformation();
+        const closeButton = shadow.getElementById('close');
+        closeButton.addEventListener('click', () => __awaiter(this, void 0, void 0, function* () {
+            this.setAttribute('open', 'false');
+            yield this.instrument.close();
+            this.instrument = null;
+            this.videoInitialized = false;
+            this.instrumentInitialized = false;
+            if (this.animationLoopHandle) {
+                cancelAnimationFrame(this.animationLoopHandle);
             }
-        });
-        deformButton.addEventListener('onkeydown', (event) => {
-            if (event.key === 'd') {
-                if (this.instrument) {
-                    this.instrument.randomDeformation();
-                }
-            }
-        });
-        // const container = shadow.querySelector('.instrument-container');
-        // const eventVectorContainer = shadow.querySelector(
-        //     '.current-event-vector'
-        // );
+            this.animationLoopHandle = null;
+        }));
         const prepareForVideo = () => __awaiter(this, void 0, void 0, function* () {
             const landmarker = yield createHandLandmarker();
             const canvas = shadow.querySelector('canvas');
@@ -610,10 +636,16 @@ export class ConvInstrument extends HTMLElement {
                 const eventVectorContainer = shadow.querySelector('.current-event-vector');
                 eventVectorContainer.innerHTML = renderVector(vec);
             };
-            const loop = predictWebcamLoop(shadow, landmarker, canvas, ctx, 0.25, this, onTrigger);
+            const loop = predictWebcamLoop(shadow, landmarker, canvas, ctx, 0.1, // norm threshold
+            1.0, // norm max (to prevent overly loud sounds)
+            this, onTrigger, (weights) => {
+                if (this.instrument) {
+                    this.instrument.deform(weights);
+                }
+            });
             const video = shadow.querySelector('video');
             video.addEventListener('loadeddata', () => {
-                loop();
+                this.animationLoopHandle = loop();
             });
         });
         if (!this.videoInitialized) {
@@ -641,7 +673,7 @@ export class ConvInstrument extends HTMLElement {
             this.context = context;
             this.instrument = yield Instrument.fromURL(this.url, context, 2);
             this.hand = this.instrument.hand;
-            // this.hand = PROJECTION_MATRIX;
+            this.deformation = DEFORMATION_PROJECTION_MATRIX;
             this.instrumentInitialized = true;
         });
     }
@@ -649,7 +681,7 @@ export class ConvInstrument extends HTMLElement {
         this.render();
     }
     static get observedAttributes() {
-        return ['url'];
+        return ['url', 'open'];
     }
     attributeChangedCallback(property, oldValue, newValue) {
         if (newValue === oldValue) {
