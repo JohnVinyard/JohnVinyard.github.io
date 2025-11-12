@@ -5,7 +5,7 @@
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <meta http-equiv="X-UA-Compatible" content="ie=edge">
-                <title>Learning Playable WebAudio Instruments from Audio Examples</title>
+                <title>Extracting Playable Instrument Models from Short Audio Examples</title>
                 <link rel="preconnect" href="https://fonts.googleapis.com">
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
                 <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet">
@@ -63,7 +63,7 @@
             <body>
                 <div class="page-wrapper">
                     
-    <h1>Learning Playable WebAudio Instruments from Audio Examples</h1>
+    <h1>Extracting Playable Instrument Models from Short Audio Examples</h1>
 <details>
     <summary>
         <caption>Table of Contents</caption>
@@ -120,7 +120,7 @@ hand-tracking interface.</p>
 
 <video
           preload="metadata"
-          src="https://state-space-model-demo-3.s3.us-east-1.amazonaws.com/rnn-instr-demo.mp4#t=14.5#t=1.4"
+          src="https://resonancemodel.s3.us-east-1.amazonaws.com/resonancemodel.mp4"
           height="500"
           width="500"
           controls
@@ -156,7 +156,7 @@ simple model of physics and resonance.</p>
 <a href="https://blog.cochlea.xyz/ssm.html">single-layer recurrent neural network to model the instrument</a>.  This yielded some 
 limited success, but the frame-based approach caused many audible artifacts that I wasn't happy with.</p>
 <p>In this new experiment, the control signal is a 16-dimensional time-varying vector running at ~20hz.  This signal is first
-convolved with a small set "attack envelopes", which are multiplied with uniform (white) noise.  These attacks are then 
+convolved with a small set of "attack envelopes", which are multiplied with uniform (white) noise.  These attacks are then 
 routed to and convolved with some number of resonances, parameterized by a set of 
 <a href="https://phys.libretexts.org/Bookshelves/University_Physics/University_Physics_(OpenStax)/Book%3A_University_Physics_I_-_Mechanics_Sound_Oscillations_and_Waves_(OpenStax)/15%3A_Oscillations/15.06%3A_Damped_Oscillations">damped harmonic oscillators</a>.<br />
 Finally, the resonance output is multiplied by a learnable gain, followed by a non-linearity (<code>tanh</code>) to simulate subtle 
@@ -230,7 +230,7 @@ future versions, to save disk space.</p>
 <h2>Original Audio</h2>
 
         <audio-view
-            src="https://resonancemodel.s3.amazonaws.com/orig_6bbd1903777f630334a6bca14b64255aaf34b8c8"
+            src="https://resonancemodel.s3.amazonaws.com/orig_123a325e541756ab077c18041cbaa73385072fb4"
             height="200"
             samples="256"
             scale="1"
@@ -242,7 +242,7 @@ future versions, to save disk space.</p>
 <h2>Reconstruction</h2>
 
         <audio-view
-            src="https://resonancemodel.s3.amazonaws.com/recon_99be313e14b3e95d918ca99178fa7575bdb9ab03"
+            src="https://resonancemodel.s3.amazonaws.com/recon_fd845c9d1f979ad4fc17b764b2d74298f9de1d57"
             height="200"
             samples="256"
             scale="1"
@@ -253,14 +253,14 @@ future versions, to save disk space.</p>
 <a id="Sparse Control Signal"></a>
 <h2>Sparse Control Signal</h2>
 
-        <img class="full-width" src="https://resonancemodel.s3.amazonaws.com/cs_e017b1c93172a4bad64c2d7e5f91cc169349b6b5" height="200"></img>
+        <img class="full-width" src="https://resonancemodel.s3.amazonaws.com/cs_b43a9fc57d0109f75e1bfdf60fb7214e284df3e2" height="200"></img>
         
 
 <a id="Random Audio"></a>
 <h2>Random Audio</h2>
 
         <audio-view
-            src="https://resonancemodel.s3.amazonaws.com/rand_384c9e207fcf1f2a09f566ce348b3430747e3dc1"
+            src="https://resonancemodel.s3.amazonaws.com/rand_ce2b837e450983f93e18335839ab3e4d28b1d42e"
             height="200"
             samples="256"
             scale="1"
@@ -272,7 +272,7 @@ future versions, to save disk space.</p>
 <h2>Hand-Controlled Instrument</h2>
 
             <conv-instrument 
-                url="https://resonancemodel.s3.amazonaws.com/model_6e11d1a07c5ffe99fd07db22c05a79cb75d36898">
+                url="https://resonancemodel.s3.amazonaws.com/model_5caebd7a6950bba2782ad513702eb34c2b7091af">
             </conv-instrument>
         
 
@@ -283,7 +283,7 @@ future versions, to save disk space.</p>
 <h2>Original Audio</h2>
 
         <audio-view
-            src="https://resonancemodel.s3.amazonaws.com/orig_63064038dd2e8517387a5bdc5fb290b27fa70488"
+            src="https://resonancemodel.s3.amazonaws.com/orig_e897d7ef650eb9fdeb28b216dfc67fb9713753db"
             height="200"
             samples="256"
             scale="1"
@@ -295,7 +295,7 @@ future versions, to save disk space.</p>
 <h2>Reconstruction</h2>
 
         <audio-view
-            src="https://resonancemodel.s3.amazonaws.com/recon_cd8922b8621dffe1f6304d9beb724e30796e4e8c"
+            src="https://resonancemodel.s3.amazonaws.com/recon_dff6290cfc396d0aa74c7d41d177ff0daf40a7a9"
             height="200"
             samples="256"
             scale="1"
@@ -306,14 +306,14 @@ future versions, to save disk space.</p>
 <a id="Sparse Control Signal"></a>
 <h2>Sparse Control Signal</h2>
 
-        <img class="full-width" src="https://resonancemodel.s3.amazonaws.com/cs_7b9b4477868606dbf3905e40335bf5c072969c82" height="200"></img>
+        <img class="full-width" src="https://resonancemodel.s3.amazonaws.com/cs_3b19b3a87c37bd53aa1793ce1a0aa282e08c4bdc" height="200"></img>
         
 
 <a id="Random Audio"></a>
 <h2>Random Audio</h2>
 
         <audio-view
-            src="https://resonancemodel.s3.amazonaws.com/rand_17b1ef72df6500f57d448fd9226080c9c1fc99e1"
+            src="https://resonancemodel.s3.amazonaws.com/rand_5a76b17e8db43a9583db6e56c3865831ebd38c4a"
             height="200"
             samples="256"
             scale="1"
@@ -325,7 +325,7 @@ future versions, to save disk space.</p>
 <h2>Hand-Controlled Instrument</h2>
 
             <conv-instrument 
-                url="https://resonancemodel.s3.amazonaws.com/model_294a4e1efa0f72e14405ccb5aec65a897e722939">
+                url="https://resonancemodel.s3.amazonaws.com/model_f2c13558f910ac073097ca0dff8e5298b0dac38a">
             </conv-instrument>
         
 
@@ -336,7 +336,7 @@ future versions, to save disk space.</p>
 <h2>Original Audio</h2>
 
         <audio-view
-            src="https://resonancemodel.s3.amazonaws.com/orig_8a3e17f14785f7599cf7c31c3a64d6f005fc2e27"
+            src="https://resonancemodel.s3.amazonaws.com/orig_99d120018a8eaf423ec67abf995519456d26f71e"
             height="200"
             samples="256"
             scale="1"
@@ -348,7 +348,7 @@ future versions, to save disk space.</p>
 <h2>Reconstruction</h2>
 
         <audio-view
-            src="https://resonancemodel.s3.amazonaws.com/recon_cf80a127e27a125da708411ae8ad28fb95ea75d6"
+            src="https://resonancemodel.s3.amazonaws.com/recon_d7cce2f6d74eb7f577ba56f37d355a096520457c"
             height="200"
             samples="256"
             scale="1"
@@ -359,14 +359,14 @@ future versions, to save disk space.</p>
 <a id="Sparse Control Signal"></a>
 <h2>Sparse Control Signal</h2>
 
-        <img class="full-width" src="https://resonancemodel.s3.amazonaws.com/cs_b69803f33d07dd85a5a383c94fce4d2c9debe18d" height="200"></img>
+        <img class="full-width" src="https://resonancemodel.s3.amazonaws.com/cs_737e587d2ec4dc7576475df6f3b6486d05301dce" height="200"></img>
         
 
 <a id="Random Audio"></a>
 <h2>Random Audio</h2>
 
         <audio-view
-            src="https://resonancemodel.s3.amazonaws.com/rand_69f06ba104fcc587d28568b5aa3600b9796469dd"
+            src="https://resonancemodel.s3.amazonaws.com/rand_e986c47610568bc34ff656878b9c02bfaa416f79"
             height="200"
             samples="256"
             scale="1"
@@ -378,7 +378,7 @@ future versions, to save disk space.</p>
 <h2>Hand-Controlled Instrument</h2>
 
             <conv-instrument 
-                url="https://resonancemodel.s3.amazonaws.com/model_52c86426e3c4a0ad4a77dffc518cc2ec481d1859">
+                url="https://resonancemodel.s3.amazonaws.com/model_97caba8e6ad2d027aaec75eab955ddaad19eaae0">
             </conv-instrument>
 
 <p>Thanks for reading!</p>
@@ -386,14 +386,14 @@ future versions, to save disk space.</p>
 <a id="Future Work"></a>
 <h1>Future Work</h1>
 <p>The approach is promising, but there are many questions left to explore:</p>
-<ul>
-<li>how to create an efficient implementation using JS and the WebAudio API such that we can use larger 
-    control planes, more resonances, and more expressivity?</li>
+<ol>
+<li>how to create an efficient implementation using JavaScript and the WebAudio API such that we can use larger 
+    control planes, more resonances, and more expressivity/deform-ability?</li>
 <li>the control-plane representation is overly-simplistic.  Are there better models?</li>
 <li>This work <em>seems</em> to be driving toward physical modelling synthesis.  Can we just create a differentiable physics simulation?</li>
 <li>what is a good, natural, intuitive set of sensor data that is readily available using smartphones or some other 
     pervasive technology that can be mapped on the control-plane dimensions in natural and fun ways?</li>
-</ul>
+</ol>
 
 
 <a id="Citation"></a>
@@ -438,7 +438,7 @@ from conjure import serve_conjure, SupportedContentType, NumpyDeserializer, Nump
 
 from data import get_one_audio_segment
 
-from modules import max_norm, interpolate_last_axis, sparsify, unit_norm, flattened_multiband_spectrogram, stft
+from modules import max_norm, interpolate_last_axis, sparsify, unit_norm, stft
 
 from modules.transfer import fft_convolve
 
@@ -447,8 +447,6 @@ from modules.upsample import upsample_with_holes, ensure_last_axis_length
 from util import device, encode_audio, make_initializer
 
 import argparse
-
-from modules.decompose import fft_resample
 
 
 
@@ -1564,10 +1562,6 @@ class OverfitResonanceStack(nn.Module):
 
 
 
-        # print(mixes.data.cpu().numpy())
-
-        # print(torch.softmax(mixes, dim=-1).data.cpu().numpy())
-
 
 
         serializer = NumpySerializer()
@@ -1639,8 +1633,6 @@ class OverfitModelResult:
 def transform(x: torch.Tensor) -> torch.Tensor:
 
     return stft(x, 2048, 256, pad=True)
-
-    # return flattened_multiband_spectrogram(x, { 'xs': (64, 16)})
 
 
 
@@ -1950,7 +1942,7 @@ def conv_instrument_dict(
 
         videoexample=VideoComponent(
 
-            src='https://state-space-model-demo-3.s3.us-east-1.amazonaws.com/rnn-instr-demo.mp4#t=14.5',
+            src='https://resonancemodel.s3.us-east-1.amazonaws.com/resonancemodel.mp4',
 
             width=500,
 
@@ -2022,7 +2014,7 @@ def generate_article(n_iteraations: int, n_examples: int):
 
         'html',
 
-        title='Learning Playable WebAudio Instruments from Audio Examples',
+        title='Extracting Playable Instrument Models from Short Audio Examples',
 
         web_components_version=web_components_version,
 
@@ -2159,14 +2151,6 @@ def overfit_model():
             c(model.control_signal[0, 0])
 
 
-
-            # x = stft(target, 2048, 256, pad=True)
-
-            # y = stft(recon, 2048, 256, pad=True)
-
-            #
-
-            # loss = torch.abs(x - y).sum() #+ torch.abs(cp).sum()
 
 
 
