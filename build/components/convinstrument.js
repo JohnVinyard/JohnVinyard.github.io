@@ -39,12 +39,18 @@ const twoDimArray = (data, shape) => {
     return output;
 };
 const vectorVectorDot = (a, b) => {
-    return a.reduce((accum, current, index) => {
-        return accum + current * b[index];
-    }, 0);
+    let product = 0;
+    for (let i = 0; i < a.length; i++) {
+        product += a[i] * b[i];
+    }
+    return product;
 };
 const dotProduct = (vector, matrix) => {
-    return new Float32Array(matrix.map((v) => vectorVectorDot(v, vector)));
+    const output = new Float32Array(matrix.length);
+    for (let i = 0; i < matrix.length; i++) {
+        output[i] = vectorVectorDot(vector, matrix[i]);
+    }
+    return output;
 };
 const elementwiseDifference = (a, b, out) => {
     for (let i = 0; i < a.length; i++) {
@@ -58,14 +64,17 @@ const relu = (vector) => {
 const fetchWeights = (url) => __awaiter(void 0, void 0, void 0, function* () {
     const resp = yield fetch(url);
     const data = yield resp.json();
-    const { gains, router, resonances, hand, attacks, mix } = data;
+    const { gains, router, resonances, hand, attacks, mix, room_impulse_response, reverb_mix, screen, } = data;
     return {
         gains: toContainer(gains),
         router: toContainer(router),
         resonances: toContainer(resonances),
         hand: toContainer(hand),
+        screen: toContainer(screen),
         attacks: toContainer(attacks),
         mix: toContainer(mix),
+        roomImpulseResponse: toContainer(room_impulse_response),
+        reverbMix: toContainer(reverb_mix),
     };
 });
 const l2Norm = (vec) => {
@@ -83,6 +92,12 @@ const vectorScalarMultiply = (vec, scalar) => {
         vec[i] = vec[i] * scalar;
     }
     return vec;
+};
+const sign = (vec, out) => {
+    for (let i = 0; i < vec.length; i++) {
+        out[i] = Math.sign(vec[i]);
+    }
+    return out;
 };
 const randomProjectionMatrix = (shape, uniformDistributionMin, uniformDistributionMax, probability = 0.97) => {
     const totalElements = shape[0] * shape[1];
@@ -153,7 +168,7 @@ const predictWebcamLoop = (shadowRoot, handLandmarker, canvas, ctx, deltaThresho
         }
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // ctx.clearRect(0, 0, canvas.width, canvas.height);
         const output = zerosLike(lastPosition);
         let startTimeMs = performance.now();
         if (lastVideoTime !== video.currentTime) {
@@ -177,7 +192,6 @@ const predictWebcamLoop = (shadowRoot, handLandmarker, canvas, ctx, deltaThresho
                             // Z position of index finger
                             zPos = landmark.z;
                         }
-                        // TODO: This determines whether we're using
                         // screen-space or world-space
                         const mappingVector = wl;
                         // TODO: This is assuming values in [0, 1]
@@ -205,7 +219,7 @@ const predictWebcamLoop = (shadowRoot, handLandmarker, canvas, ctx, deltaThresho
                         // project the position of all points to the rnn input
                         // dimensions
                         const rnnInput = dotProduct(delta, matrix);
-                        const scaled = vectorScalarMultiply(rnnInput, 30);
+                        const scaled = vectorScalarMultiply(rnnInput, 20);
                         const sp = relu(scaled);
                         inputTrigger(sp);
                     }
@@ -245,6 +259,9 @@ class Mixer {
             gain.connect(node, undefined, channel);
         }
     }
+    gainNode(channel) {
+        return this.nodes[channel];
+    }
     acceptConnection(node, mixerChannel, outgoingNodeChannel = undefined) {
         node.connect(this.nodes[mixerChannel], outgoingNodeChannel);
     }
@@ -257,6 +274,12 @@ class Mixer {
         const vec = new Float32Array(this.nodes.length);
         const random = sparse(0.05, vec);
         this.adjust(random);
+    }
+    multiply(gain) {
+        for (let i = 0; i < this.nodes.length; i++) {
+            const node = this.nodes[i];
+            node.gain.value = node.gain.value * gain;
+        }
     }
     adjust(gainValues) {
         const vec = new Float32Array(gainValues.length);
@@ -311,6 +334,7 @@ class Instrument {
         this.router = twoDimArray(params.router.array, params.router.shape);
         this.resonances = twoDimArray(params.resonances.array, params.resonances.shape);
         this.hand = twoDimArray(params.hand.array, params.hand.shape);
+        this.screen = twoDimArray(params.screen.array, params.screen.shape);
         this.attackContainer = params.attacks;
         this.attacks = twoDimArray(params.attacks.array, params.attacks.shape);
         this.mix = twoDimArray(params.mix.array, params.mix.shape);
@@ -378,12 +402,27 @@ class Instrument {
             this.controlPlane = attackEnvelopes;
             // There is a noise/resonance mix for each channel
             const noiseResonanceMixers = [];
+            // Final room impulse response
+            const reverb = this.context.createConvolver();
+            reverb.normalize = false;
+            const reverbBuffer = this.context.createBuffer(1, this.params.roomImpulseResponse.shape[0], this.context.sampleRate);
+            reverb.buffer = reverbBuffer;
+            // Mixer for dry and room impulse convolved
+            const dryWetMixer = Mixer.mixerWithNChannels(this.context, 2);
+            dryWetMixer.acceptConnection(reverb, 0);
+            dryWetMixer.connectTo(this.context.destination);
+            dryWetMixer.adjust(this.params.reverbMix.array);
+            // KLUDGE: Why do I need to adjust this "manually"?
+            // It isn't based on any model parameters.
+            dryWetMixer.multiply(15);
             for (let i = 0; i < this.nResonances; i++) {
                 const m = Mixer.mixerWithNChannels(this.context, 2);
                 // Set the mix for this resonance channel;  it won't change over time
                 m.adjust(this.mix[i]);
                 noiseResonanceMixers.push(m);
-                m.connectTo(this.context.destination);
+                m.connectTo(reverb);
+                m.connectTo(dryWetMixer.gainNode(1));
+                // m.connectTo(this.context.destination);
                 // connect attack directly to the noise side of the output mixer
                 m.acceptConnection(attackEnvelopes, OUTPUT_NOISE_CHANNEL, i);
             }
@@ -398,9 +437,6 @@ class Instrument {
                 channelCountMode: 'explicit',
                 channelInterpretation: 'discrete',
             });
-            // for (let i = 0; i < this.nResonances; i++) {
-            //     tanhGain.connect(this.context.destination, i);
-            // }
             // Build the last leg;  resonances, each group of which is connected
             // to an outgoing mixer
             const resonances = [];
@@ -591,6 +627,15 @@ export class ConvInstrument extends HTMLElement {
                     opacity: 0.75;
                 }
 
+                #twod-plane {
+                    width: 500px;
+                    height: 500px;
+                    margin-top: 500px;
+                    border: solid 1px black;
+                    background-color: #aaa;
+                    cursor: pointer;
+                }
+
                 
         </style>
         <dialog>
@@ -606,8 +651,19 @@ export class ConvInstrument extends HTMLElement {
             </div>
             <button id="start">Start Audio</button>
             <button id="close">Close</button>
+            <div id="twod-plane">
+            </div>
         </dialog>
 `;
+        const twodPlane = shadow.querySelector('#twod-plane');
+        twodPlane.addEventListener('click', (e) => {
+            const normalizedX = e.x / twodPlane.clientWidth;
+            const normalizedY = e.y / twodPlane.clientHeight;
+            const mapped = dotProduct(new Float32Array([normalizedX, normalizedY]), this.instrument.screen);
+            this.instrument.trigger(mapped);
+            const eventVectorContainer = shadow.querySelector('.current-event-vector');
+            eventVectorContainer.innerHTML = renderVector(mapped);
+        });
         const dialog = shadow.querySelector('dialog');
         dialog.showModal();
         const startButton = shadow.getElementById('start');

@@ -18,12 +18,8 @@ const vvd = (a, b) => {
         result += a[i] * b[i];
     }
     return result;
-    // return a.reduce((accum, current, index) => {
-    //     return accum + current * b[index];
-    // }, 0);
 };
 const dot = (vector, matrix) => {
-    // return new Float32Array(matrix.map((v) => vvd(v, vector)));
     const output = new Float32Array(matrix.length);
     for (let i = 0; i < matrix.length; i++) {
         output[i] = vvd(vector, matrix[i]);
@@ -70,9 +66,12 @@ class AttackEnvelope extends AudioWorkletProcessor {
                     // block of samples
                     // read out the curent position in this envelope, multiplying
                     // it by the specified gain and noise
+                    // ch[sample] +=
+                    //     this.attack[channel][event.sample + sample] *
+                    //     (Math.random() * 2 - 1) *
+                    //     gains[channel];
                     ch[sample] +=
                         this.attack[channel][event.sample + sample] *
-                            (Math.random() * 2 - 1) *
                             gains[channel];
                 }
             }
