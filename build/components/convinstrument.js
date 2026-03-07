@@ -626,7 +626,6 @@ export class ConvInstrument extends HTMLElement {
                     background-color: #333;
                     opacity: 0.75;
                 }
-
                 #twod-plane {
                     width: 500px;
                     height: 500px;
@@ -635,7 +634,6 @@ export class ConvInstrument extends HTMLElement {
                     background-color: #aaa;
                     cursor: pointer;
                 }
-
                 
         </style>
         <dialog>
