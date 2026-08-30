@@ -7,8 +7,8 @@ let dryGain = null;
 let wetGain = null;
 
 const state = {
-  n1: 4,
-  n2: 4,
+  n1: 8,
+  n2: 8,
   sparsity: 0.5,
   strategy: 'random',
   excitationMode: 'sustained',
@@ -1056,7 +1056,24 @@ function drawScope() {
   draw();
 }
 
+function wireTabs() {
+  const buttons = document.querySelectorAll('.tab-btn');
+  const panels = {
+    play: document.getElementById('tab-play'),
+    params: document.getElementById('tab-params'),
+  };
+  buttons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.tab;
+      buttons.forEach((b) => b.classList.toggle('active', b === btn));
+      for (const [key, el] of Object.entries(panels)) el.hidden = key !== target;
+    });
+  });
+}
+
 function wireControls() {
+  wireTabs();
+
   const startBtn = document.getElementById('startBtn');
   const randomizeBtn = document.getElementById('randomizeBtn');
   const n1Slider = document.getElementById('n1Slider');

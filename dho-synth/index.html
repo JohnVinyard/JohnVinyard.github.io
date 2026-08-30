@@ -31,12 +31,35 @@
       text-transform: uppercase;
       margin: 0 0 4px;
     }
-    p.sub {
+    .tabs {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+      max-width: 560px;
+      margin: 12px 0 4px;
+    }
+    .tab-btn {
+      flex: 1;
+      background: var(--panel);
+      border: 1px solid #232838;
       color: var(--muted);
+      padding: 8px 12px;
+      border-radius: 8px;
       font-size: 0.85rem;
-      margin: 0 0 20px;
-      text-align: center;
-      max-width: 480px;
+      cursor: pointer;
+    }
+    .tab-btn.active {
+      color: var(--text);
+      border-color: var(--accent);
+    }
+    .tab-content {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .tab-content[hidden] {
+      display: none;
     }
     .scope-wrap {
       position: relative;
@@ -77,14 +100,6 @@
     .plane.active {
       border-color: var(--accent);
     }
-    .plane .zone-label {
-      position: absolute;
-      left: 0;
-      right: 0;
-      text-align: center;
-      pointer-events: none;
-      letter-spacing: 0.02em;
-    }
     .plane .node-marker {
       position: absolute;
       top: calc(50% + 8px);
@@ -97,11 +112,8 @@
       pointer-events: none;
     }
     .plane { height: 100px; }
-    .plane.energy .zone-label { color: var(--accent); }
     .plane.energy .node-marker { background: var(--accent); }
-    .plane.damp .zone-label { color: #ff8a5c; }
     .plane.damp .node-marker { background: #ff8a5c; }
-    .plane .zone-label { top: 8px; }
 
     /* dual-zone planes (the two damping strips): damping on top, tension-mod
        ("deformation" -- press to raise tension/pitch) along the bottom */
@@ -114,14 +126,11 @@
       border-top: 1px dashed #232838;
       pointer-events: none;
     }
-    .plane.dual .zone-label.top { top: 8px; bottom: auto; }
-    .plane.dual .zone-label.bottom { bottom: 8px; top: auto; }
     .plane.dual .node-marker.top { top: 28px; }
     .plane.dual .node-marker.bottom {
       top: calc(100% - 28px);
       background: #b892ff;
     }
-    .plane.dual .zone-label.bottom { color: #b892ff; }
     .controls {
       width: 100%;
       max-width: 560px;
@@ -212,18 +221,13 @@
 </head>
 <body>
   <h1>Stacked DHO Synth</h1>
-  <p class="sub">
-    Two layers of damped harmonic oscillators. Layer 1's raw output is routed,
-    node-to-node, into layer 2's tension &mdash; an FM-like chain built from a
-    pseudo-physics spring approximation instead of sinusoidal operators. The
-    control strips below are ordered bottom-to-top along the signal flow:
-    inject energy into layer 1 at the bottom, then layer 1's and layer 2's own
-    strips above that &mdash; each split top (damping, quicker decay) and
-    bottom (tension mod: press to raise tension/pitch, release to return to
-    base, like deforming a spring). Press and hold to target the nearest
-    node, drag to sweep between neighbors, or use multiple fingers on a touch
-    device for several at once.
-  </p>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="play">Play</button>
+    <button class="tab-btn" data-tab="params">Parameters</button>
+  </div>
+
+  <div id="tab-play" class="tab-content">
 
   <div class="scope-wrap">
     <canvas id="scope" width="1000" height="280"></canvas>
@@ -231,20 +235,14 @@
   </div>
 
   <div id="layer2DampPlane" class="plane damp dual">
-    <span class="zone-label top">layer 2 damping (quicker decay)</span>
     <div class="divider"></div>
-    <span class="zone-label bottom">layer 2 tension mod (deform)</span>
   </div>
 
   <div id="layer1DampPlane" class="plane damp dual">
-    <span class="zone-label top">layer 1 damping (quicker decay)</span>
     <div class="divider"></div>
-    <span class="zone-label bottom">layer 1 tension mod (deform)</span>
   </div>
 
-  <div id="energyPlane" class="plane energy">
-    <span class="zone-label">inject energy (layer 1 input)</span>
-  </div>
+  <div id="energyPlane" class="plane energy"></div>
 
   <div class="controls">
     <div class="row full">
@@ -268,12 +266,12 @@
       <input id="pulseRateSlider" type="range" min="20" max="400" step="1" value="100" />
     </div>
     <div class="row">
-      <label>Layer 1 nodes <span id="n1Label">4</span></label>
-      <input id="n1Slider" type="range" min="1" max="16" step="1" value="4" />
+      <label>Layer 1 nodes <span id="n1Label">8</span></label>
+      <input id="n1Slider" type="range" min="1" max="16" step="1" value="8" />
     </div>
     <div class="row">
-      <label>Layer 2 nodes <span id="n2Label">4</span></label>
-      <input id="n2Slider" type="range" min="1" max="16" step="1" value="4" />
+      <label>Layer 2 nodes <span id="n2Label">8</span></label>
+      <input id="n2Slider" type="range" min="1" max="16" step="1" value="8" />
     </div>
     <div class="row">
       <label>Volume</label>
@@ -299,12 +297,18 @@
     <button id="shareBtn">Share</button>
   </div>
 
+  </div>
+
+  <div id="tab-params" class="tab-content" hidden>
+
   <div class="params-panel">
     <div id="layer1Table" class="full-width"></div>
     <div id="layer2Table" class="full-width"></div>
     <div id="tensionRouterGrid"></div>
     <div id="forceRouterGrid"></div>
     <div id="reverbInfo" class="full-width"></div>
+  </div>
+
   </div>
 
   <script src="main.js"></script>

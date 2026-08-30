@@ -148,8 +148,8 @@ class DHOProcessor extends AudioWorkletProcessor {
   constructor() {
     super();
 
-    this.n1 = 4;
-    this.n2 = 4;
+    this.n1 = 8;
+    this.n2 = 8;
     this.layer1 = makeNodes(this.n1);
     this.layer2 = makeNodes(this.n2);
     // tensionRouter[k][j]: influence of layer1 node j's output on layer2 node k's tension
