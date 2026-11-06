@@ -14,6 +14,9 @@ const state = {
   excitationMode: 'sustained',
   pulseRate: 100,
   reverb: { file: null, mix: 0, loading: false },
+  // read live by mic-input.js each frame -- live-adjustable via micGainSlider
+  // (wireMicInput()) whether or not mic input is currently active
+  micGain: 3,
 };
 
 // A single-IR convolution reverb (rather than mixing many, as parallel.py's
@@ -1157,8 +1160,17 @@ function wireARMode() {
 // tension-mod planes keep working exactly as before, via the normal 2D UI.
 function wireMicInput() {
   const toggleBtn = document.getElementById('micInputBtn');
+  const gainSlider = document.getElementById('micGainSlider');
+  const gainLabel = document.getElementById('micGainLabel');
   let micModule = null;
   let active = false;
+
+  gainLabel.textContent = state.micGain.toFixed(1);
+  gainSlider.value = state.micGain;
+  gainSlider.addEventListener('input', () => {
+    state.micGain = parseFloat(gainSlider.value);
+    gainLabel.textContent = state.micGain.toFixed(1);
+  });
 
   toggleBtn.addEventListener('click', async () => {
     micModule = micModule || await import('./mic-input.js');
