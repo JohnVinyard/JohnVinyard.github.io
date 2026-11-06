@@ -890,7 +890,9 @@ function buildPlanes() {
   window.DHOSynth = {
     planes: { energyPlane, dampingPlane, tensionModPlane },
     state,
+    ensureAudio,
     getWorkletNode: () => workletNode,
+    getAudioContext: () => audioCtx,
   };
 }
 
@@ -1147,9 +1149,34 @@ function wireARMode() {
   });
 }
 
+// Mic input (mic-input.js) is a separate module, loaded lazily via dynamic
+// import only when actually enabled, following the same pattern as AR mode.
+// Unlike AR mode it's not a full-screen takeover: it's a toggle that hands
+// the *energy* plane over to a live microphone's spectrogram (random-
+// projected down to n1 dimensions, see mic-input.js) while the damping and
+// tension-mod planes keep working exactly as before, via the normal 2D UI.
+function wireMicInput() {
+  const toggleBtn = document.getElementById('micInputBtn');
+  let micModule = null;
+  let active = false;
+
+  toggleBtn.addEventListener('click', async () => {
+    micModule = micModule || await import('./mic-input.js');
+    if (active) {
+      micModule.stopMicInput();
+      toggleBtn.textContent = 'Enable Mic Input';
+    } else {
+      await micModule.startMicInput();
+      toggleBtn.textContent = 'Disable Mic Input';
+    }
+    active = !active;
+  });
+}
+
 function wireControls() {
   wireTabs();
   wireARMode();
+  wireMicInput();
 
   const startBtn = document.getElementById('startBtn');
   const randomizeBtn = document.getElementById('randomizeBtn');

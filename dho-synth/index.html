@@ -114,6 +114,13 @@
     .plane.active {
       border-color: var(--accent);
     }
+    /* energyPlane while mic-input.js has taken it over -- pointer events
+       are disabled on it at the same time (see mic-input.js), so this is
+       purely a "this is now driven by audio, not touch" indicator */
+    .plane.mic-driven {
+      opacity: 0.5;
+      cursor: default;
+    }
     .plane .node-marker {
       position: absolute;
       top: calc(50% + 8px);
@@ -342,6 +349,7 @@
     <button id="randomizeBtn">Randomize</button>
     <button id="shareBtn">Share</button>
     <button id="enterArBtn">Enter AR Mode</button>
+    <button id="micInputBtn">Enable Mic Input</button>
   </div>
 
   </div>
