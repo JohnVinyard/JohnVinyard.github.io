@@ -36,10 +36,14 @@ const ROW_DEFS = [
   { id: 'energy', color: 0x7fd3ff, plane: 'energyPlane', zone: null, count: (s) => s.n1 },
 ];
 
-const ROW_SPACING = 0.14; // meters between adjacent row centers
-const ROW_WIDTH = 0.5; // meters, world-space span of a row's node line
+// Sized so the whole 5-row layout sits well inside the camera's view
+// frustum at PLANE_Z (comfortably under half its height/width, even at a
+// narrow/portrait aspect), with real margin to spare rather than touching
+// the edges.
+const ROW_SPACING = 0.045; // meters between adjacent row centers
+const ROW_WIDTH = 0.18; // meters, world-space span of a row's node line
 const ROW_BAND_HALF = ROW_SPACING * 0.45; // vertical hit-test half-height
-const ROW_BAND_HYSTERESIS = 0.02; // extra tolerance for the row a finger is already bound to, so it doesn't flicker between rows near a boundary
+const ROW_BAND_HYSTERESIS = ROW_SPACING * 0.15; // extra tolerance (proportional to spacing) for the row a finger is already bound to, so it doesn't flicker between rows near a boundary
 const PLANE_Z = -0.6; // depth of the control rows (and the video backdrop), in front of the camera at the origin
 
 // Same tent-kernel math as main.js's tentWeights/nodePositions (duplicated
@@ -156,7 +160,7 @@ export async function startAR(overlayEl) {
     row.spheres = [];
 
     const n = row.def.count(bridge.state);
-    const radius = Math.min(0.035, (ROW_WIDTH / n) * 0.4);
+    const radius = Math.min(0.012, (ROW_WIDTH / n) * 0.35);
     const geometry = new THREE.SphereGeometry(radius, 16, 12);
     for (const normX of nodePositions(n)) {
       const material = new THREE.MeshStandardMaterial({
