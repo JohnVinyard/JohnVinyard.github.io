@@ -629,10 +629,11 @@ async function ensureAudio() {
 // "tent" kernel centered on the pointer's X position -- a single click
 // targets one node, dragging sweeps/crossfades between neighbors, and
 // multiple simultaneous touches (independent pointerIds) can target several
-// nodes at once. Three fully independent, single-purpose planes exist, one
-// per stage of the signal flow (energy into layer 1, then layer 1's own
-// damping, then layer 2's damping) -- see buildPlanes() below for how they're
-// wired up and ordered on the page.
+// nodes at once. Three planes exist, grouped by control *type* rather than
+// mirroring the network's per-layer structure: energy (into layer 1), and
+// one dual-zone plane each for damping and tension-mod, each zoned by layer
+// (layer 1 on top, layer 2 on the bottom) -- see buildPlanes() below for how
+// they're wired up and ordered on the page.
 const STRIKE_PEAK = 1.6;
 
 function nodePositions(n) {
@@ -641,22 +642,35 @@ function nodePositions(n) {
   return positions;
 }
 
+// The "tent kernel": one active point at normalized x contributes a weight to
+// every node, falling off linearly to zero at the node's neighbors. Shared by
+// createPlane and createDualZonePlane (each sums this over all their active
+// points), and reused as-is by AR mode's 3D hand tracking -- a tracked
+// fingertip's position along a row is just another point fed into the same
+// math, so touching a sphere has exactly the same effect as a mouse/touch
+// press.
+function tentWeights(x, n) {
+  const positions = nodePositions(n);
+  const halfWidth = 1 / n;
+  const weights = new Array(n).fill(0);
+  for (let j = 0; j < n; j++) {
+    const dist = Math.abs(x - positions[j]);
+    weights[j] = Math.max(0, 1 - dist / halfWidth) * STRIKE_PEAK;
+  }
+  return weights;
+}
+
 function createPlane(elementId, getNodeCount, sendMessage, onCrossing) {
   const el = document.getElementById(elementId);
-  const pointers = new Map(); // pointerId -> normalized x in [0, 1]
-  const lastCell = new Map(); // pointerId -> nearest node index, for onCrossing
+  const pointers = new Map(); // id -> normalized x in [0, 1]
+  const lastCell = new Map(); // id -> nearest node index, for onCrossing
 
   function computeWeights() {
     const n = getNodeCount();
-    const positions = nodePositions(n);
-    const halfWidth = 1 / n;
     const weights = new Array(n).fill(0);
     for (const x of pointers.values()) {
-      for (let j = 0; j < n; j++) {
-        const dist = Math.abs(x - positions[j]);
-        const tent = Math.max(0, 1 - dist / halfWidth);
-        weights[j] += tent * STRIKE_PEAK;
-      }
+      const tent = tentWeights(x, n);
+      for (let j = 0; j < n; j++) weights[j] += tent[j];
     }
     return weights;
   }
@@ -667,17 +681,33 @@ function createPlane(elementId, getNodeCount, sendMessage, onCrossing) {
     updateMarkerRow(`#${elementId} .node-marker`, weights);
   }
 
-  // Fires whenever a pointer newly lands, or drags across into a different
+  // Fires whenever a point newly lands, or drags across into a different
   // nearest node -- an edge-triggered "you just struck this node" event, as
   // opposed to `send()`'s continuous "here's the current weight level."
-  function checkCrossing(pointerId, x) {
+  function checkCrossing(id, x) {
     if (!onCrossing) return;
     const n = getNodeCount();
     const cell = n > 1 ? Math.round(x * (n - 1)) : 0;
-    if (lastCell.get(pointerId) !== cell) {
-      lastCell.set(pointerId, cell);
+    if (lastCell.get(id) !== cell) {
+      lastCell.set(id, cell);
       onCrossing(computeWeights());
     }
+  }
+
+  // The single entry point for "a point (a real PointerEvent, or a synthetic
+  // id for an AR-tracked fingertip) is active at normalized x" -- both input
+  // sources funnel through here, so there's exactly one path for weight
+  // computation, message-sending and marker updates.
+  function setPointer(id, x) {
+    pointers.set(id, x);
+    checkCrossing(id, x);
+    send();
+  }
+
+  function clearPointer(id) {
+    pointers.delete(id);
+    lastCell.delete(id);
+    send();
   }
 
   function normalizedX(e) {
@@ -688,30 +718,27 @@ function createPlane(elementId, getNodeCount, sendMessage, onCrossing) {
   el.addEventListener('pointerdown', (e) => {
     e.preventDefault();
     el.setPointerCapture(e.pointerId);
-    const x = normalizedX(e);
-    pointers.set(e.pointerId, x);
     el.classList.add('active');
-    checkCrossing(e.pointerId, x);
-    send();
+    setPointer(e.pointerId, normalizedX(e));
   });
   el.addEventListener('pointermove', (e) => {
     if (!pointers.has(e.pointerId)) return;
-    const x = normalizedX(e);
-    pointers.set(e.pointerId, x);
-    checkCrossing(e.pointerId, x);
-    send();
+    setPointer(e.pointerId, normalizedX(e));
   });
   const release = (e) => {
-    pointers.delete(e.pointerId);
-    lastCell.delete(e.pointerId);
+    clearPointer(e.pointerId);
     if (pointers.size === 0) el.classList.remove('active');
-    send();
   };
   el.addEventListener('pointerup', release);
   el.addEventListener('pointercancel', release);
 
   return {
-    clearPointers: () => pointers.clear(),
+    setPointer,
+    clearPointer,
+    clearPointers: () => {
+      pointers.clear();
+      lastCell.clear();
+    },
     rebuildMarkers() {
       el.querySelectorAll('.node-marker').forEach((m) => m.remove());
       for (const pos of nodePositions(getNodeCount())) {
@@ -726,26 +753,24 @@ function createPlane(elementId, getNodeCount, sendMessage, onCrossing) {
 
 // Same tent-kernel X-axis targeting as createPlane, but splits the plane
 // into two independent zones (top/bottom, like the original control plane
-// before it was split into single-purpose strips) -- each damping strip
-// needs both a damping zone and a tension-mod ("deformation") zone sharing
-// the same node layout. A pointer's zone is fixed at wherever its gesture
-// started, even if it later drags across the divider.
-function createDualZonePlane(elementId, getNodeCount, sendTop, sendBottom) {
+// before it was split into single-purpose strips). Grouped by control
+// *type* rather than by layer: one plane per type (damping, tension-mod),
+// its top zone targeting layer 1's nodes and its bottom zone layer 2's --
+// so, unlike the very first version of this split, the two zones can have
+// different node counts and send to different targets. A pointer's zone is
+// fixed at wherever its gesture started, even if it later drags across the
+// divider.
+function createDualZonePlane(elementId, getTopNodeCount, sendTop, getBottomNodeCount, sendBottom) {
   const el = document.getElementById(elementId);
-  const pointers = new Map(); // pointerId -> { zone: 'top' | 'bottom', x }
+  const pointers = new Map(); // id -> { zone: 'top' | 'bottom', x }
 
   function computeZoneWeights(zone) {
-    const n = getNodeCount();
-    const positions = nodePositions(n);
-    const halfWidth = 1 / n;
+    const n = zone === 'top' ? getTopNodeCount() : getBottomNodeCount();
     const weights = new Array(n).fill(0);
     for (const p of pointers.values()) {
       if (p.zone !== zone) continue;
-      for (let j = 0; j < n; j++) {
-        const dist = Math.abs(p.x - positions[j]);
-        const tent = Math.max(0, 1 - dist / halfWidth);
-        weights[j] += tent * STRIKE_PEAK;
-      }
+      const tent = tentWeights(p.x, n);
+      for (let j = 0; j < n; j++) weights[j] += tent[j];
     }
     return weights;
   }
@@ -761,6 +786,22 @@ function createDualZonePlane(elementId, getNodeCount, sendTop, sendBottom) {
     updateMarkerRow(`#${elementId} .node-marker.bottom`, bottomWeights);
   }
 
+  // The single entry point for "a point is active at normalized x within
+  // `zone`" -- real PointerEvents (zone fixed at gesture start, see below)
+  // and AR hand-tracking (zone re-evaluated every frame from 3D row
+  // position) both funnel through here. `zone` is optional so a pointermove-
+  // style update (position changed, zone unchanged) can omit it.
+  function setPointer(id, x, zone) {
+    const existing = pointers.get(id);
+    pointers.set(id, { zone: zone ?? existing?.zone ?? 'top', x });
+    send();
+  }
+
+  function clearPointer(id) {
+    pointers.delete(id);
+    send();
+  }
+
   function normalizedX(e, rect) {
     return Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
   }
@@ -773,30 +814,29 @@ function createDualZonePlane(elementId, getNodeCount, sendTop, sendBottom) {
     e.preventDefault();
     const rect = el.getBoundingClientRect();
     el.setPointerCapture(e.pointerId);
-    pointers.set(e.pointerId, { zone: zoneFor(e, rect), x: normalizedX(e, rect) });
     el.classList.add('active');
-    send();
+    setPointer(e.pointerId, normalizedX(e, rect), zoneFor(e, rect));
   });
   el.addEventListener('pointermove', (e) => {
-    const p = pointers.get(e.pointerId);
-    if (!p) return;
-    p.x = normalizedX(e, el.getBoundingClientRect());
-    send();
+    if (!pointers.has(e.pointerId)) return;
+    // zone omitted -- stays fixed at whatever pointerdown set it to
+    setPointer(e.pointerId, normalizedX(e, el.getBoundingClientRect()));
   });
   const release = (e) => {
-    pointers.delete(e.pointerId);
+    clearPointer(e.pointerId);
     if (pointers.size === 0) el.classList.remove('active');
-    send();
   };
   el.addEventListener('pointerup', release);
   el.addEventListener('pointercancel', release);
 
   return {
+    setPointer,
+    clearPointer,
     clearPointers: () => pointers.clear(),
     rebuildMarkers() {
       el.querySelectorAll('.node-marker').forEach((m) => m.remove());
-      for (const pos of nodePositions(getNodeCount())) {
-        for (const zone of ['top', 'bottom']) {
+      for (const [zone, getNodeCount] of [['top', getTopNodeCount], ['bottom', getBottomNodeCount]]) {
+        for (const pos of nodePositions(getNodeCount())) {
           const marker = document.createElement('div');
           marker.className = `node-marker ${zone}`;
           marker.style.left = `${pos * 100}%`;
@@ -825,20 +865,33 @@ function buildPlanes() {
       }
     },
   );
-  const layer1DampPlane = createDualZonePlane(
-    'layer1DampPlane',
+  const dampingPlane = createDualZonePlane(
+    'dampingPlane',
     () => state.n1,
     (weights) => workletNode.port.postMessage({ type: 'dampen', layer: 1, weights }),
-    (weights) => workletNode.port.postMessage({ type: 'tensionmod', layer: 1, weights }),
-  );
-  const layer2DampPlane = createDualZonePlane(
-    'layer2DampPlane',
     () => state.n2,
     (weights) => workletNode.port.postMessage({ type: 'dampen', layer: 2, weights }),
+  );
+  const tensionModPlane = createDualZonePlane(
+    'tensionModPlane',
+    () => state.n1,
+    (weights) => workletNode.port.postMessage({ type: 'tensionmod', layer: 1, weights }),
+    () => state.n2,
     (weights) => workletNode.port.postMessage({ type: 'tensionmod', layer: 2, weights }),
   );
-  planes = [energyPlane, layer1DampPlane, layer2DampPlane];
+  planes = [energyPlane, dampingPlane, tensionModPlane];
   for (const plane of planes) plane.rebuildMarkers();
+
+  // Minimal bridge for ar-mode.js (a classic script, main.js, can't export
+  // anything an ES module could `import`) to reach the plane objects and
+  // shared state/worklet it needs to drive the same setPointer/clearPointer
+  // entry points real pointer events use -- intentionally just these three
+  // things, not a general API.
+  window.DHOSynth = {
+    planes: { energyPlane, dampingPlane, tensionModPlane },
+    state,
+    getWorkletNode: () => workletNode,
+  };
 }
 
 function resetPlanes() {
@@ -1071,8 +1124,32 @@ function wireTabs() {
   });
 }
 
+// AR mode (ar-mode.js) is a separate ES module, loaded lazily via dynamic
+// import only when actually opened, so its three.js/MediaPipe cost is never
+// paid by default. It drives the existing plane objects' setPointer/
+// clearPointer entry points (via window.DHOSynth, set in buildPlanes())
+// exactly as real pointer events do -- it never touches worklet messages,
+// markers, or the tent kernel directly.
+function wireARMode() {
+  const enterBtn = document.getElementById('enterArBtn');
+  const overlay = document.getElementById('ar-overlay');
+  const exitBtn = document.getElementById('ar-exit');
+  let arModule = null;
+
+  enterBtn.addEventListener('click', async () => {
+    overlay.hidden = false;
+    arModule = arModule || await import('./ar-mode.js');
+    await arModule.startAR(overlay);
+  });
+  exitBtn.addEventListener('click', () => {
+    arModule?.stopAR();
+    overlay.hidden = true;
+  });
+}
+
 function wireControls() {
   wireTabs();
+  wireARMode();
 
   const startBtn = document.getElementById('startBtn');
   const randomizeBtn = document.getElementById('randomizeBtn');
