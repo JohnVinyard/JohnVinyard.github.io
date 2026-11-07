@@ -24,16 +24,16 @@ import { FilesetResolver, HandLandmarker } from 'https://cdn.jsdelivr.net/npm/@m
 const FINGERTIPS = [4, 8, 12, 16, 20];
 
 // Row layout, top-to-bottom, mirroring the 2D UI's color convention
-// (index.html: --accent cyan = energy, #ff8a5c orange = damping,
-// #b892ff purple = tension-mod -- both zones of a type share that type's
-// color). `plane`/`zone` say which window.DHOSynth.planes entry and zone
-// (null for the single-zone energy plane) a row's touches feed into.
+// (index.html: --accent teal = energy, --rust = damping, --mustard =
+// tension-mod -- both zones of a type share that type's color). `plane`/
+// `zone` say which window.DHOSynth.planes entry and zone (null for the
+// single-zone energy plane) a row's touches feed into.
 const ROW_DEFS = [
-  { id: 'tensionModL1', color: 0xb892ff, plane: 'tensionModPlane', zone: 'top', count: (s) => s.n1 },
-  { id: 'tensionModL2', color: 0xb892ff, plane: 'tensionModPlane', zone: 'bottom', count: (s) => s.n2 },
-  { id: 'dampingL1', color: 0xff8a5c, plane: 'dampingPlane', zone: 'top', count: (s) => s.n1 },
-  { id: 'dampingL2', color: 0xff8a5c, plane: 'dampingPlane', zone: 'bottom', count: (s) => s.n2 },
-  { id: 'energy', color: 0x7fd3ff, plane: 'energyPlane', zone: null, count: (s) => s.n1 },
+  { id: 'tensionModL1', color: 0xd6a53f, plane: 'tensionModPlane', zone: 'top', count: (s) => s.n1 },
+  { id: 'tensionModL2', color: 0xd6a53f, plane: 'tensionModPlane', zone: 'bottom', count: (s) => s.n2 },
+  { id: 'dampingL1', color: 0xc3693f, plane: 'dampingPlane', zone: 'top', count: (s) => s.n1 },
+  { id: 'dampingL2', color: 0xc3693f, plane: 'dampingPlane', zone: 'bottom', count: (s) => s.n2 },
+  { id: 'energy', color: 0x5aa89a, plane: 'energyPlane', zone: null, count: (s) => s.n1 },
 ];
 
 // Sized so the whole 5-row layout sits well inside the camera's view
@@ -122,6 +122,13 @@ export async function startAR(overlayEl) {
   // live (mirrored) webcam feed, so tracked fingertip markers visually
   // line up with the user's real hand.
   const videoTexture = new THREE.VideoTexture(video);
+  // THREE.VideoTexture samples the raw (un-mirrored) camera frame -- CSS
+  // transforms on the <video> element itself have no effect on it, and that
+  // <video> element is fully covered by this canvas anyway. Flip the
+  // texture's U coordinate here instead, so the rendered backdrop is
+  // mirrored to match the fingertips' own mirrored (ndcX) mapping below.
+  videoTexture.repeat.x = -1;
+  videoTexture.offset.x = 1;
   const videoMaterial = new THREE.MeshBasicMaterial({ map: videoTexture, depthWrite: false });
   const videoPlane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), videoMaterial);
   videoPlane.position.z = PLANE_Z - 0.05;

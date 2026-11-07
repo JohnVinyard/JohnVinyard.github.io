@@ -6,14 +6,26 @@
   <script type="importmap">
     { "imports": { "three": "https://unpkg.com/three@0.164.1/build/three.module.js" } }
   </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Nunito+Sans:wght@400;600&display=swap" rel="stylesheet">
   <style>
+    /* Flat, matte, organic/midcentury-modern palette: warm cocoa background,
+       no gradients or glow -- solid fills, soft rounded shapes, a toasted
+       teal/rust/mustard trio standing in for the old cyan/orange/purple. */
     :root {
       color-scheme: dark;
-      --bg: #0b0c10;
-      --panel: #12141a;
-      --accent: #7fd3ff;
-      --text: #e8ecf1;
-      --muted: #8b93a3;
+      --bg: #2b2520;
+      --panel: #3a332a;
+      --panel-raised: #453d32;
+      --accent: #5aa89a;
+      --accent-ink: #16211e;
+      --text: #f2e8d8;
+      --muted: #a4937c;
+      --border: #4d4436;
+      --rust: #c3693f;
+      --mustard: #d6a53f;
+      --error: #c1583f;
     }
     * {
       box-sizing: border-box;
@@ -28,7 +40,7 @@
     }
     body {
       margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       background: var(--bg);
       color: var(--text);
       display: flex;
@@ -37,11 +49,11 @@
       padding: 24px 16px 48px;
     }
     h1 {
-      font-size: 1.1rem;
-      font-weight: 600;
-      letter-spacing: 0.02em;
-      color: var(--muted);
-      text-transform: uppercase;
+      font-family: 'Quicksand', 'Nunito Sans', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      color: var(--text);
       margin: 0 0 4px;
     }
     .tabs {
@@ -49,21 +61,23 @@
       gap: 8px;
       width: 100%;
       max-width: 560px;
-      margin: 12px 0 4px;
+      margin: 16px 0 4px;
     }
     .tab-btn {
       flex: 1;
       background: var(--panel);
-      border: 1px solid #232838;
+      border: none;
       color: var(--muted);
-      padding: 8px 12px;
-      border-radius: 8px;
+      padding: 9px 12px;
+      border-radius: 999px;
+      font-family: inherit;
+      font-weight: 600;
       font-size: 0.85rem;
       cursor: pointer;
     }
     .tab-btn.active {
-      color: var(--text);
-      border-color: var(--accent);
+      background: var(--accent);
+      color: var(--accent-ink);
     }
     .tab-content {
       width: 100%;
@@ -82,37 +96,37 @@
     canvas#scope {
       width: 100%;
       height: 140px;
-      border-radius: 10px;
+      border-radius: 18px;
       background: var(--panel);
       display: block;
     }
     #scopeModeBtn {
       position: absolute;
-      top: 8px;
-      right: 8px;
-      padding: 4px 10px;
+      top: 10px;
+      right: 10px;
+      padding: 5px 12px;
       font-size: 0.72rem;
-      background: rgba(18, 20, 26, 0.75);
+      background: var(--panel-raised);
     }
     .plane {
       position: relative;
       width: 100%;
       max-width: 560px;
       margin-top: 16px;
-      border-radius: 14px;
-      background: linear-gradient(180deg, #182234, #101520);
-      border: 1px solid #232838;
+      border-radius: 28px 28px 32px 32px;
+      background: var(--panel);
+      border: none;
       color: var(--muted);
       font-size: 0.8rem;
       user-select: none;
       touch-action: none;
       cursor: pointer;
       outline: none;
-      transition: background 0.08s ease, border-color 0.08s ease;
+      transition: background 0.08s ease;
       overflow: hidden;
     }
     .plane.active {
-      border-color: var(--accent);
+      background: var(--panel-raised);
     }
     /* energyPlane while mic-input.js has taken it over -- pointer events
        are disabled on it at the same time (see mic-input.js), so this is
@@ -124,18 +138,18 @@
     .plane .node-marker {
       position: absolute;
       top: calc(50% + 8px);
-      width: 14px;
-      height: 14px;
+      width: 15px;
+      height: 15px;
       border-radius: 50%;
-      opacity: 0.3;
+      opacity: 0.35;
       transform: translate(-50%, -50%);
       transition: opacity 0.05s linear, transform 0.05s linear;
       pointer-events: none;
     }
     .plane { height: 100px; }
     .plane.energy .node-marker { background: var(--accent); }
-    .plane.damp .node-marker { background: #ff8a5c; }
-    .plane.tensionmod .node-marker { background: #b892ff; }
+    .plane.damp .node-marker { background: var(--rust); }
+    .plane.tensionmod .node-marker { background: var(--mustard); }
 
     /* dual-zone planes: one plane per control *type* (damping, tension-mod
        -- "deformation", press to raise tension/pitch), each split into a
@@ -145,10 +159,10 @@
     .plane.dual { height: 190px; }
     .plane.dual .divider {
       position: absolute;
-      left: 0;
-      right: 0;
+      left: 16px;
+      right: 16px;
       top: 50%;
-      border-top: 1px dashed #232838;
+      border-top: 1px dashed var(--border);
       pointer-events: none;
     }
     .plane.dual .node-marker.top { top: 28px; }
@@ -175,32 +189,42 @@
       display: flex;
       justify-content: space-between;
     }
-    input[type="range"] { width: 100%; }
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
     select {
       background: var(--panel);
       color: var(--text);
-      border: 1px solid #232838;
-      border-radius: 6px;
-      padding: 6px 8px;
+      border: none;
+      border-radius: 10px;
+      padding: 7px 10px;
+      font-family: inherit;
       font-size: 0.85rem;
     }
     select option:disabled { color: var(--muted); }
     .buttons {
       margin-top: 20px;
       display: flex;
+      flex-wrap: wrap;
       gap: 12px;
     }
     button {
       background: var(--panel);
-      border: 1px solid #232838;
+      border: none;
       color: var(--text);
-      padding: 10px 18px;
-      border-radius: 8px;
+      padding: 11px 20px;
+      border-radius: 999px;
+      font-family: inherit;
+      font-weight: 600;
       font-size: 0.9rem;
       cursor: pointer;
+      transition: background 0.1s ease;
     }
-    button:hover { border-color: var(--accent); }
+    button:hover { background: var(--panel-raised); }
     button:disabled { opacity: 0.5; cursor: default; }
+    #startBtn { background: var(--accent); color: var(--accent-ink); }
+    #startBtn:hover { background: var(--accent); filter: brightness(1.08); }
 
     .params-panel {
       width: 100%;
@@ -215,9 +239,8 @@
       overflow-x: auto;
     }
     .params-panel h3 {
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
+      font-family: 'Quicksand', sans-serif;
+      font-size: 0.8rem;
       color: var(--muted);
       margin: 0 0 8px;
       font-weight: 600;
@@ -231,13 +254,13 @@
     .params-panel th, .params-panel td {
       padding: 4px 6px;
       text-align: right;
-      border-bottom: 1px solid #1c2030;
+      border-bottom: 1px solid var(--border);
     }
     .params-panel th:first-child, .params-panel td:first-child { text-align: left; }
     .params-panel table.matrix td {
       text-align: center;
-      border: 1px solid #1c2030;
-      color: #e8ecf1;
+      border: 1px solid var(--border);
+      color: var(--text);
     }
 
     /* Full-screen AR overlay: a 3D (three.js) rendering of the same five
