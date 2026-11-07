@@ -925,8 +925,8 @@ function filterSparkline(taps) {
     })
     .join(' ');
   return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
-    <line x1="0" y1="${h / 2}" x2="${w}" y2="${h / 2}" stroke="#4d4436" stroke-width="1" />
-    <polyline points="${points}" fill="none" stroke="#5aa89a" stroke-width="1.2" />
+    <line x1="0" y1="${h / 2}" x2="${w}" y2="${h / 2}" stroke="#d3c4a3" stroke-width="1" />
+    <polyline points="${points}" fill="none" stroke="#3f8a7d" stroke-width="1.2" />
   </svg>`;
 }
 
@@ -947,7 +947,7 @@ function renderNodeTable(container, title, nodeParams, showFilter) {
         <td>${f0Hz(p.tensionExp).toFixed(1)}</td>
         <td>${p.dampLambda.toFixed(2)}</td>
         <td>${p.excitationGain.toFixed(2)}</td>
-        <td style="color: ${p.gain > 1 ? '#d6a53f' : 'inherit'}">${p.gain.toFixed(2)}</td>
+        <td style="color: ${p.gain > 1 ? '#8c6a1a' : 'inherit'}">${p.gain.toFixed(2)}</td>
         ${filterCells}
       </tr>`;
     })
@@ -969,7 +969,8 @@ function renderMatrix(container, title, matrix, lo, hi, decimals = 2) {
         .map((v) => {
           const t = (v - lo) / (hi - lo);
           const hue = 18 + t * 156; // rust (low) -> mustard -> teal (high)
-          return `<td style="background:hsl(${hue},40%,${20 + t * 16}%)">${v.toFixed(decimals)}</td>`;
+          // pale tints (high lightness), so --text (now dark ink) stays readable on top
+          return `<td style="background:hsl(${hue},45%,${82 - t * 14}%)">${v.toFixed(decimals)}</td>`;
         })
         .join('')}</tr>`)
     .join('');
@@ -994,7 +995,7 @@ function renderReverbInfo() {
   const status = loading
     ? ' <span style="color:var(--muted)">(loading...)</span>'
     : error
-      ? ' <span style="color:#c1583f">(failed to load -- dry only)</span>'
+      ? ' <span style="color:var(--error)">(failed to load -- dry only)</span>'
       : '';
   container.innerHTML = `
     <h3>Reverb</h3>
@@ -1025,7 +1026,7 @@ let scopeMode = 'waveform';
 function clearScope() {
   const canvas = document.getElementById('scope');
   const ctx = canvas.getContext('2d');
-  ctx.fillStyle = '#3a332a';
+  ctx.fillStyle = '#e9dfcd';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
@@ -1043,9 +1044,9 @@ const SPECTROGRAM_MIN_FREQ = 20;
 function freqBinColor(value) {
   // 0 -> panel background, 255 -> accent teal; a single-hue intensity ramp
   const t = value / 255;
-  const r = Math.round(0x3a + t * (0x5a - 0x3a));
-  const g = Math.round(0x33 + t * (0xa8 - 0x33));
-  const b = Math.round(0x2a + t * (0x9a - 0x2a));
+  const r = Math.round(0xe9 + t * (0x3f - 0xe9));
+  const g = Math.round(0xdf + t * (0x8a - 0xdf));
+  const b = Math.round(0xcd + t * (0x7d - 0xcd));
   return `rgb(${r},${g},${b})`;
 }
 
@@ -1060,10 +1061,10 @@ function drawScope() {
 
   function drawWaveformFrame() {
     analyser.getFloatTimeDomainData(timeData);
-    canvasCtx.fillStyle = '#3a332a';
+    canvasCtx.fillStyle = '#e9dfcd';
     canvasCtx.fillRect(0, 0, w, h);
     canvasCtx.lineWidth = 2;
-    canvasCtx.strokeStyle = '#5aa89a';
+    canvasCtx.strokeStyle = '#3f8a7d';
     canvasCtx.beginPath();
     for (let i = 0; i < timeData.length; i++) {
       const x = (i / timeData.length) * w;
@@ -1080,12 +1081,12 @@ function drawScope() {
       if (f >= nyquist) continue;
       const t = (Math.log10(f) - logMin) / (logMax - logMin);
       const y = (1 - t) * (h - 1);
-      canvasCtx.strokeStyle = 'rgba(242,232,216,0.2)';
+      canvasCtx.strokeStyle = 'rgba(43,35,24,0.2)';
       canvasCtx.beginPath();
       canvasCtx.moveTo(0, y);
       canvasCtx.lineTo(w, y);
       canvasCtx.stroke();
-      canvasCtx.fillStyle = 'rgba(242,232,216,0.6)';
+      canvasCtx.fillStyle = 'rgba(43,35,24,0.6)';
       canvasCtx.fillText(f >= 1000 ? `${f / 1000}kHz` : `${f}Hz`, 4, y - 2);
     }
   }
