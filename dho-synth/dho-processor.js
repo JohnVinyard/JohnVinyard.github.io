@@ -1,7 +1,12 @@
 // AudioWorkletProcessor implementing a two-layer bank of damped harmonic
 // oscillators (DHOs), where layer 1's raw output modulates layer 2's tension
 // through a learned-style routing matrix -- a lightweight, pseudo-physics
-// stand-in for spring-mass FM synthesis.
+// stand-in for spring-mass FM synthesis. The raw control-plane weights that
+// drive excitation are themselves routed through a per-layer n x n matrix
+// before reaching each layer's nodes (forceRouter1 for layer 1, forceRouter2
+// for layer 2's cross-layer excitation) -- mirroring parallel.py, where
+// every layer (not just the last) routes the shared control signal through
+// its own force_router, rather than layer 1 getting a direct, unrouted pass.
 //
 // Per-node recurrence (mirrors `damped_harmonic_oscillator` /
 // `execute_parallel_layer` in parallel.py), adapted for real-time use:
@@ -154,6 +159,12 @@ class DHOProcessor extends AudioWorkletProcessor {
     this.layer2 = makeNodes(this.n2);
     // tensionRouter[k][j]: influence of layer1 node j's output on layer2 node k's tension
     this.tensionRouter = this.layer2.map(() => this.layer1.map(() => 0));
+    // forceRouter1[k][j]: layer 1's own self-routing -- how much raw control
+    // weight j (the same weight every layer routes from) drives layer-1
+    // node k's own excitation. Mirrors parallel.py, where *every* layer
+    // (not just the last) routes the shared control signal through its own
+    // n x n force_router.
+    this.forceRouter1 = this.layer1.map(() => this.layer1.map(() => 0));
     // forceRouter2[k][j]: how much pressing/targeting layer1 node j drives layer2 node k's excitation
     this.forceRouter2 = this.layer2.map(() => this.layer1.map(() => 0));
 
@@ -186,6 +197,7 @@ class DHOProcessor extends AudioWorkletProcessor {
       this.layer1 = makeNodes(this.n1);
       this.layer2 = makeNodes(this.n2);
       this.tensionRouter = this.layer2.map(() => this.layer1.map(() => 0));
+      this.forceRouter1 = this.layer1.map(() => this.layer1.map(() => 0));
       this.forceRouter2 = this.layer2.map(() => this.layer1.map(() => 0));
       this.targetWeights = new Float32Array(this.n1);
       this.currentWeights = new Float32Array(this.n1);
@@ -202,6 +214,7 @@ class DHOProcessor extends AudioWorkletProcessor {
       this.applyNodeParams(this.layer1, p.layer1);
       this.applyNodeParams(this.layer2, p.layer2);
       if (p.tensionRouter) this.tensionRouter = p.tensionRouter;
+      if (p.forceRouter1) this.forceRouter1 = p.forceRouter1;
       if (p.forceRouter2) this.forceRouter2 = p.forceRouter2;
     } else if (msg.type === 'excite') {
       for (let j = 0; j < this.n1 && j < msg.weights.length; j++) {
@@ -223,8 +236,16 @@ class DHOProcessor extends AudioWorkletProcessor {
       // one-shot energy bump for 'impulse' mode -- applied immediately
       // (handleMessage runs on the audio thread between process() calls),
       // not stored as a continuous target the way 'excite' weights are.
-      for (let j = 0; j < this.n1 && j < msg.weights.length; j++) {
-        this.layer1[j].energy += msg.weights[j] * STRIKE_ENERGY_SCALE;
+      // Routed through forceRouter1 like every other layer-1 excitation
+      // pathway (see process()'s layer-1 loop), so a strike on node j can
+      // also land on whichever nodes forceRouter1 couples it to.
+      for (let k = 0; k < this.n1; k++) {
+        let routed = 0;
+        const row = this.forceRouter1[k];
+        if (row) {
+          for (let j = 0; j < this.n1 && j < msg.weights.length; j++) routed += row[j] * msg.weights[j];
+        }
+        this.layer1[k].energy += routed * STRIKE_ENERGY_SCALE;
       }
     } else if (msg.type === 'setExcitationMode') {
       this.excitationMode = msg.mode;
@@ -331,16 +352,27 @@ class DHOProcessor extends AudioWorkletProcessor {
 
         const node = this.layer1[j];
 
+        // Layer 1 self-routes the same raw control weights every layer
+        // routes from -- a control-plane press on node j can excite other
+        // layer-1 nodes too, not just itself, mirroring forceRouter2 below
+        // (and parallel.py's per-layer force_router, applied to every
+        // layer, not just the last).
+        let routedForce = 0;
+        const forceRow1 = this.forceRouter1[j];
+        if (forceRow1) {
+          for (let jj = 0; jj < this.n1; jj++) routedForce += forceRow1[jj] * this.currentWeights[jj];
+        }
+
         // 'impulse' and 'pulse' modes drive energy directly (a one-shot bump
         // from a 'strike' message, or a periodic tick below) rather than
         // through a continuous force -- so `force` stays 0 for them here.
         let force = 0;
         if (this.excitationMode === 'sustained') {
-          force = this.currentWeights[j] * node.excitationGain;
+          force = routedForce * node.excitationGain;
         } else if (this.excitationMode === 'noise') {
-          force = this.currentWeights[j] * node.excitationGain * (Math.random() * 2 - 1);
+          force = routedForce * node.excitationGain * (Math.random() * 2 - 1);
         } else if (this.excitationMode === 'pulse' && pulseTick) {
-          node.energy += this.currentWeights[j] * node.excitationGain * PULSE_ENERGY_SCALE;
+          node.energy += routedForce * node.excitationGain * PULSE_ENERGY_SCALE;
         }
 
         // "increase damping" targeting adds a temporary boost on top of the
