@@ -397,6 +397,21 @@
     }
     #motion-pad.active { background: var(--accent); color: var(--accent-ink); }
     #motion-status { font-size: 0.75em; color: var(--muted); min-height: 1.2em; }
+    #motion-debug {
+      height: 22vh;
+      flex-shrink: 0;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 11px;
+      line-height: 1.35;
+      background: var(--panel);
+      border-radius: 8px;
+      padding: 6px 8px;
+      touch-action: pan-y;
+    }
+    #motion-debug .err { color: var(--error); font-weight: 600; }
+    #motion-debug .strike { color: var(--rust); }
+    #motion-debug .stats { color: var(--muted); }
   </style>
 </head>
 <body>
@@ -544,6 +559,8 @@
     </div>
     <div id="motion-pad">Hold to sustain<br><small>point to choose a node &middot; flick down to strike</small></div>
     <div id="motion-status"></div>
+    <!-- temporary debug log (motion-mode.js), newest first -->
+    <div id="motion-debug"></div>
   </div>
 
   <script src="main.js"></script>
