@@ -319,6 +319,84 @@
       right: 16px;
       z-index: 1;
     }
+
+    /* Motion mode (motion-mode.js): phone-as-drumstick. A node strip with a
+       pointing cursor, a strike-speed meter, and a large hold pad the
+       gripping thumb rests on. Same show/hide convention as #ar-overlay. */
+    #motion-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: var(--bg);
+      touch-action: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+    #motion-overlay[hidden] { display: none; }
+    .motion-top { display: flex; gap: 8px; }
+    .motion-top select { flex: 1; }
+    #motion-strip {
+      position: relative;
+      display: flex;
+      gap: 4px;
+      height: 72px;
+      flex-shrink: 0;
+    }
+    .motion-cell {
+      flex: 1;
+      border-radius: 8px;
+      background: var(--panel-raised);
+      transition: background 80ms;
+    }
+    .motion-cell.pointed { background: var(--mustard); }
+    .motion-cell.flash { background: var(--rust); }
+    .motion-cursor {
+      position: absolute;
+      top: -6px;
+      bottom: -6px;
+      width: 3px;
+      margin-left: -1.5px;
+      background: var(--text);
+      border-radius: 2px;
+      pointer-events: none;
+    }
+    #motion-meter {
+      position: relative;
+      height: 10px;
+      border-radius: 5px;
+      background: var(--panel);
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    #motion-meter::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: var(--threshold, 25%);
+      width: 2px;
+      background: var(--text);
+    }
+    #motion-meter-fill { height: 100%; width: 0; background: var(--accent); }
+    .motion-sliders { display: flex; flex-direction: column; gap: 6px; }
+    .motion-sliders label { display: flex; flex-direction: column; font-size: 0.85em; }
+    #motion-pad {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      border-radius: 16px;
+      background: var(--panel);
+      color: var(--muted);
+      user-select: none;
+    }
+    #motion-pad.active { background: var(--accent); color: var(--accent-ink); }
+    #motion-status { font-size: 0.75em; color: var(--muted); min-height: 1.2em; }
   </style>
 </head>
 <body>
@@ -416,6 +494,7 @@
     <button id="enterArBtn">Enter AR Mode</button>
     <button id="micInputBtn">Enable Mic Input</button>
     <button id="enterFullscreenBtn">Full-Screen Play</button>
+    <button id="enterMotionBtn">Motion Play</button>
   </div>
 
   </div>
@@ -442,6 +521,29 @@
   <div id="fullscreen-overlay" hidden>
     <canvas id="fullscreen-canvas"></canvas>
     <button id="fullscreen-exit">Exit Full-Screen</button>
+  </div>
+
+  <div id="motion-overlay" hidden>
+    <div class="motion-top">
+      <button id="motion-recenter">Recenter</button>
+      <select id="motion-heading">
+        <option value="absolute" selected>Compass heading</option>
+        <option value="relative">Gyro heading</option>
+      </select>
+      <button id="motion-exit">Exit</button>
+    </div>
+    <div id="motion-strip"></div>
+    <div id="motion-meter"><div id="motion-meter-fill"></div></div>
+    <div class="motion-sliders">
+      <label>Strike threshold <span id="motion-threshold-label"></span>
+        <input id="motion-threshold" type="range" min="1" max="20" step="0.5" value="6" />
+      </label>
+      <label>Arc width <span id="motion-arc-label"></span>
+        <input id="motion-arc" type="range" min="30" max="180" step="5" value="90" />
+      </label>
+    </div>
+    <div id="motion-pad">Hold to sustain<br><small>point to choose a node &middot; flick down to strike</small></div>
+    <div id="motion-status"></div>
   </div>
 
   <script src="main.js"></script>
